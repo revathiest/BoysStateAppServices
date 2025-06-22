@@ -22,3 +22,6 @@ paths:
                   status:
                     type: string
                     example: ok
+                  database:
+                    type: string
+                    example: ok
