@@ -14,6 +14,7 @@ const openApiDoc = yaml.parse(readFileSync(openApiPath, 'utf8'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 app.get('/health', (_req, res) => {
+  console.log("Serving /health");
   res.json({ status: 'ok' });
 });
 

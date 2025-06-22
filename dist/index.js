@@ -16,6 +16,7 @@ const openApiPath = path_1.default.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml_1.default.parse((0, fs_1.readFileSync)(openApiPath, 'utf8'));
 app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc));
 app.get('/health', (_req, res) => {
+    console.log("Serving /health");
     res.json({ status: 'ok' });
 });
 const port = process.env.PORT || 3000;
