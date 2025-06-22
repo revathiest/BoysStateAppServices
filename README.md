@@ -28,16 +28,21 @@ This repository contains the **backend REST API and core services** for Boys Sta
    npm install
    # or pip install -r requirements.txt
    ```
-2. **Set up environment variables:**
+2. **Generate Prisma client:**
+
+   ```bash
+   npm run prisma:generate
+   ```
+3. **Set up environment variables:**
 
    * Copy `.env.example` to `.env` and configure database, API, and auth credentials.
-3. **Run the service:**
+4. **Run the service:**
 
    ```bash
    npm run start
    # or python app.py / your start command
    ```
-4. **API documentation:**
+5. **API documentation:**
 
    * Access Swagger/OpenAPI docs at `/docs` or as configured.
 
