@@ -1,0 +1,24 @@
+openapi: 3.0.0
+info:
+  title: Boys State App API
+  description: |
+    **Disclaimer:** This project is being developed to support Boys State & Girls State programs affiliated with the American Legion, but is not created, funded, or officially supported by the American Legion. No endorsement or sponsorship is implied. All branding, configuration, and operational decisions are made independently by the app’s creators and participating programs.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns a simple status to verify the API is running.
+      responses:
+        '200':
+          description: Successful health response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
