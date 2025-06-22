@@ -1,150 +1,183 @@
-# AGENTS.md – BoysStateAppServices (Backend)
+# Boys State App: Agents Specification – Backend Services
+
+> **Important Disclaimer:**
+>
+> This application is being developed to support programs affiliated with the American Legion (such as Boys State and Girls State), but it is **not** created, funded, or officially supported by the American Legion or any agent or representative thereof. No endorsement or sponsorship by the American Legion is implied. All branding, configuration, and operational decisions are made independently by the app’s creators and participating programs.
 
 ## Overview
 
-This document specifies the agents, roles, backend modules, and integration points for the Boys State App backend API and services. The backend is responsible for all business logic, authentication, data management, integrations, and agent-based feature security. It serves as the source of truth for all other client applications and ensures strict per-program data isolation, privacy, and auditing.
+This document describes the backend service agents supporting the Boys State App ecosystem. Backend services manage business logic, program isolation, data security, integrations, and all API operations for both mobile and web clients. Backend agents enforce privacy, robust logging, and extensibility for all Boys/Girls State programs.
 
 ---
 
-## 1. User Role Agents (Backend responsibilities)
+## 1. Core Backend Agents
 
-### 1.1. Delegate Agent
+### 1.1. API Service Agent
 
-* Standard participant roles and permissions are enforced through backend APIs.
-* Authentication, access control, session management, and all agent role assignments are handled here.
+**Description:** REST API backend providing all business logic and data operations.
 
-### 1.2. Counselor Agent
+**Responsibilities:**
 
-* All delegate functions plus permissions for staff-only endpoints (resource management, team/group management).
+* Serves schedules, users, resources, and per-program data
+* Receives updates from staff/admins
+* All endpoints fully documented via Swagger/OpenAPI
+* Provides secure endpoints with strict per-program isolation
+* Manages user authentication and authorization for all agents
+* Stores all logs (API activity, errors, audits) for compliance
 
-### 1.3. Staff Agent (Admin)
+### 1.2. Event/WebSocket Agent (Planned)
 
-* All counselor functions, plus:
+**Description:** Provides real-time updates if required (e.g., notifications, schedule changes).
 
-  * Schedule/announcement/resource management
-  * User roles and onboarding
-  * Parent invites
-  * Branding/configuration
-  * Elections management (planned)
-  * Full API and data audit logs (program scope only)
+**Responsibilities:**
 
-### 1.4. Parent Agent (Future)
+* Sends schedule/notification updates instantly to clients
+* Handles polling fallback when WebSockets not available
 
-* View-only endpoints for their linked child(ren)'s info, schedule, milestones, and awards.
+### 1.3. Delegate Registration Agent
+
+**Description:** Manages registration and onboarding for delegates.
+
+**Responsibilities:**
+
+* Handles registration via portal or CSV import
+* Links delegates to the correct program and permissions
+* Supports inviting parents during or after registration
+* Ensures secure, auditable account creation and assignment
+
+### 1.4. Program Management Website Agent
+
+**Description:** Backend logic for the web admin portal, not directly exposed to mobile clients.
+
+**Responsibilities:**
+
+* Supports admin-only management for programs, users, and settings
+* Handles branding, contacts, settings, and advanced resources
+* Provides logs/audit access to admins for their programs
+* Supports election and integration management
 
 ---
 
-## 2. Authentication & Account Agents
+## 2. Cross-Platform/Shared Software Agents
 
 ### 2.1. Authentication Agent
 
-* Handles user login, identity verification, sessions, and token refresh.
-* Supports username/password and optional Discord OAuth (must be linked to program account).
-* API endpoints for login/logout for all roles.
+**Description:** Manages user login, sessions, and identity verification.
+
+**Responsibilities:**
+
+* Supports username/password and optional Discord OAuth
+* Handles secure sessions, token refresh, and account security
+* Manages login/logout state for all clients
 
 ### 2.2. Account Linking Agent
 
-* Manages linking of Discord or third-party accounts to Boys State accounts.
-* Ensures secure linking/unlinking, no cross-program leaks.
+**Description:** Securely links external (Discord/3rd-party) accounts to program accounts.
+
+**Responsibilities:**
+
+* Prevents hijacking or cross-program leaks
+* Provides API endpoints for linking/unlinking
 
 ### 2.3. Parent-Delegate Linking Agent
 
-* Manages relationships between parents and delegates (many-to-many, API endpoints).
+**Description:** Manages many-to-many relationships between parent and delegate accounts.
+
+**Responsibilities:**
+
+* Allows linking/inviting parents to delegates and vice versa
 
 ---
 
-## 3. Software/Feature Agents (Backend)
+## 3. Backend Feature/Integration Agents
 
 ### 3.1. Schedule Agent
 
-* REST API for schedules, updates, and user/group schedule filtering.
-* Optional Google Calendar integration (backend-managed).
-* Change/event notifications.
+**Description:** Provides schedules to clients; manages updates and Google Calendar sync.
+
+**Responsibilities:**
+
+* Fetches latest schedule from DB or Google Calendar integration
+* Notifies clients of changes/events
+* Supports program-, user-, and group-specific schedules
 
 ### 3.2. Notification Agent
 
-* Backend push/in-app notifications for targeted and global announcements.
-* All notifications logged and auditable.
+**Description:** Manages push/in-app notification dispatch, targeting, and logs.
+
+**Responsibilities:**
+
+* Delivers notifications to targeted or all users
+* Logs all notifications for audit
 
 ### 3.3. Branding/Config Agent
 
-* Loads/scopes program-specific branding/themes/assets.
-* Handles feature toggles and custom modules.
+**Description:** Manages per-program branding, theming, and feature toggles.
 
-### 3.4. API Comm Agent
+**Responsibilities:**
 
-* Manages all backend comms, auth, session.
-* Logs all API calls and errors. Retries as needed.
+* Loads and scopes branding/config/assets for programs
+* Handles toggles for features/modules
 
-### 3.5. Integration Agents (Backend)
+### 3.4. Progress Tracking Agent (Planned)
 
-* Google Calendar: Syncs/saves events per program.
-* Google Docs: Serves docs/resources via backend endpoints.
-* Discord: Account linking, announcement relays via backend only.
+**Description:** Tracks delegate milestones and awards; supports parent notifications.
 
-### 3.6. Progress Tracking Agent (Planned)
+**Responsibilities:**
 
-* Tracks milestones/awards, achievement history, and parent notifications.
+* Maintains history of achievements, nominations, and appointments
+* Notifies parents and delegates of milestones
 
-### 3.7. Election Agent (Planned)
+### 3.5. Election Agent (Planned)
 
-* Secure config/voting/results endpoints, auditable and program-scoped.
+**Description:** Manages secure setup, voting, and results for all program elections.
 
-### 3.8. Future Feature Agents
+**Responsibilities:**
 
-* Gallery, chat, surveys, voting, resource library, etc. All implemented via backend APIs.
+* Allows staff/admins to configure elections
+* Provides secure voting, ballot tallies, and results
+* Ensures all actions are logged and auditable
 
----
+### 3.6. Integration Agents (Planned)
 
-## 4. Backend Agents (API Service)
+**Google Calendar Agent:** Syncs events with external calendars, managed by admins.
 
-### 4.1. API Service Agent
+**Google Docs Agent:** Provides access to program-linked education/resources via backend endpoints.
 
-* REST API with all business logic, strict per-program isolation, full logging, and authentication.
-* OpenAPI/Swagger documented endpoints with security models.
-
-### 4.2. Event/WebSocket Agent (Planned)
-
-* Real-time updates for clients; fallback polling.
-
-### 4.3. Program Management Website Agent (Backend endpoints only)
-
-* APIs for admin portal to manage programs/settings/integrations/elections/logs.
-
-### 4.4. Delegate Registration Agent
-
-* Registration/onboarding endpoints, parent invites, account creation, security, and auditing.
+**Discord Agent:** Manages Discord account linking, announcement relay, and optional communication via backend only.
 
 ---
 
-## 5. Data Security & Privacy
+## 4. Security, Privacy, and Compliance
 
-* Per-program data isolation enforced at backend.
-* Sensitive info (esp. minors) – strict privacy per COPPA, FERPA, GDPR, etc.
-* All access is authenticated/authorized.
-* All backend comms and data access are logged (sensitive data redacted in dev logs).
-* Automated tests required for all code paths and endpoints.
-
----
-
-## 6. Agent Interactions
-
-* All agents use secure, documented backend API endpoints.
-* Integrations talk to 3rd parties via backend only.
-* All comms, errors, and events are logged.
+* **Per-program data isolation:** All data is scoped to a single program. No cross-program sharing.
+* **Sensitive info:** Strict compliance with privacy standards for minors (COPPA, FERPA, GDPR, etc.).
+* **Authentication:** All access must be authenticated and authorized.
+* **Logging:** All backend communication, actions, and errors are logged. Sensitive data is redacted as appropriate.
+* **Branding/config:** All branding and configuration are managed and loaded per program.
+* **Automated testing:** All business logic and endpoints require automated tests for core logic, error cases, and edge scenarios.
 
 ---
 
-## 7. Dev Standards (Backend)
+## 5. Agent Interactions (Backend)
 
-* API docs: Swagger/OpenAPI, with security and example models.
-* Extensibility: New agents/features spec’d and documented before implementation.
-* Error handling: All errors logged and handled gracefully.
-* Security: Encrypted transit, strong auth, no cross-program sharing.
-* Automated tests for all logic, error paths, edge cases, integrations, and security.
+* All backend agents interact via secure, documented API endpoints (Swagger/OpenAPI enforced).
+* Integration agents talk to external (third-party) services only via backend—not directly from clients.
+* Communication, error, and event logs are maintained for all agent interactions.
 
 ---
 
-## 8. Future Agents/Features
+## 6. Development Standards (Backend)
 
-* Placeholders for all planned/future modules. All must be spec’d and documented here before implementation.
+* **API docs:** All endpoints are documented with Swagger/OpenAPI, including security models and usage examples.
+* **Extensibility:** New agents/features must be spec’d here before implementation.
+* **Error handling:** All errors must be logged, handled gracefully, and returned via secure APIs.
+* **Security:** Data is encrypted in transit; strong authentication/authorization is enforced.
+* **Testing:**
+
+  * Automated tests for all new code/changes
+  * Must verify business logic, error handling, and edge cases
+  * Regression and integration tests for new APIs or dependencies
+  * Code review and passing tests required before deployment
+  * Security and integration tests must be included for external APIs
+* **Planned/future agents:** Placeholders for features not yet built must be maintained in this file.
