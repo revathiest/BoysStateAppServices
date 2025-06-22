@@ -174,10 +174,10 @@ This document describes the backend service agents supporting the Boys State App
 * **Error handling:** All errors must be logged, handled gracefully, and returned via secure APIs.
 * **Security:** Data is encrypted in transit; strong authentication/authorization is enforced.
 * **Testing:**
-
   * Automated tests for all new code/changes
   * Must verify business logic, error handling, and edge cases
   * Regression and integration tests for new APIs or dependencies
   * Code review and passing tests required before deployment
   * Security and integration tests must be included for external APIs
+  **Deployment:** Prior to generating any pull requests, but after all autotests are passing, execute npm run build to ensure the dist folder is updated and ready for deployment.
 * **Planned/future agents:** Placeholders for features not yet built must be maintained in this file.
