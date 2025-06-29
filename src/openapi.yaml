@@ -25,3 +25,49 @@ paths:
                   database:
                     type: string
                     example: ok
+  /register:
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Email already exists or invalid input
+  /login:
+    post:
+      summary: Log in with existing credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+        '400':
+          description: Missing credentials
+        '401':
+          description: Invalid credentials
