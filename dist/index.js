@@ -9,13 +9,55 @@ const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const yaml_1 = __importDefault(require("yaml"));
+const crypto_1 = require("crypto");
+const util_1 = require("util");
 const prisma_1 = __importDefault(require("./prisma"));
+const scrypt = (0, util_1.promisify)(crypto_1.scrypt);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
+app.use(express_1.default.json());
 // Load OpenAPI spec
 const openApiPath = path_1.default.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml_1.default.parse((0, fs_1.readFileSync)(openApiPath, 'utf8'));
 app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc));
+app.post('/register', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        res.status(400).json({ error: 'Email and password required' });
+        return;
+    }
+    const existing = await prisma_1.default.user.findUnique({ where: { email } });
+    if (existing) {
+        res.status(400).json({ error: 'User already exists' });
+        return;
+    }
+    const salt = (0, crypto_1.randomBytes)(16).toString('hex');
+    const buf = (await scrypt(password, salt, 64));
+    const hashed = `${salt}:${buf.toString('hex')}`;
+    await prisma_1.default.user.create({ data: { email, password: hashed } });
+    res.status(201).json({ message: 'User created' });
+    return;
+});
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        res.status(400).json({ error: 'Email and password required' });
+        return;
+    }
+    const user = await prisma_1.default.user.findUnique({ where: { email } });
+    if (!user) {
+        res.status(401).json({ error: 'Invalid credentials' });
+        return;
+    }
+    const [salt, storedHash] = user.password.split(':');
+    const buf = (await scrypt(password, salt, 64));
+    if (buf.toString('hex') !== storedHash) {
+        res.status(401).json({ error: 'Invalid credentials' });
+        return;
+    }
+    res.json({ message: 'Logged in' });
+    return;
+});
 app.get('/health', async (_req, res) => {
     console.log('Serving /health');
     let dbStatus = 'ok';
@@ -29,7 +71,9 @@ app.get('/health', async (_req, res) => {
     res.json({ status: 'ok', database: dbStatus });
 });
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(port, () => {
+        console.log(`Server listening on port ${port}`);
+    });
+}
 exports.default = app;
