@@ -3,14 +3,26 @@ info:
   title: Boys State App API
   description: |
     **Disclaimer:** This project is being developed to support Boys State & Girls State programs affiliated with the American Legion, but is not created, funded, or officially supported by the American Legion. No endorsement or sponsorship is implied. All branding, configuration, and operational decisions are made independently by the app’s creators and participating programs.
+    
+    The API provides authentication endpoints and health checks used by the Boys State App mobile and web clients. The following documentation describes the requests and responses in detail.
   version: 1.0.0
 servers:
   - url: https://boysstateappservices.up.railway.app
+
+tags:
+  - name: system
+    description: Endpoints for service monitoring and status
+  - name: auth
+    description: User registration and login
+
 paths:
   /health:
     get:
-      summary: Health check endpoint
-      description: Returns a simple status to verify the API is running.
+      tags: [system]
+      summary: Service and database status
+      description: >
+        Returns a simple JSON object indicating that the service is running and
+        whether the database connection is healthy.
       responses:
         '200':
           description: Successful health response
@@ -21,13 +33,19 @@ paths:
                 properties:
                   status:
                     type: string
+                    description: Overall service status
                     example: ok
                   database:
                     type: string
+                    description: Database connection status
                     example: ok
   /register:
     post:
-      summary: Create a new user
+      tags: [auth]
+      summary: Register a new user
+      description: >
+        Creates a new user account using an email and password. The email must be
+        unique. A successful request returns a confirmation message.
       requestBody:
         required: true
         content:
@@ -40,16 +58,41 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
+                  description: User's email address
+                  example: user@example.com
                 password:
                   type: string
+                  description: Plain text password to register
+                  example: mySecret
       responses:
         '201':
           description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created
         '400':
           description: Email already exists or invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User already exists
   /login:
     post:
-      summary: Log in with existing credentials
+      tags: [auth]
+      summary: Authenticate an existing user
+      description: >
+        Checks the provided email and password and returns a success message when
+        the credentials are valid.
       requestBody:
         required: true
         content:
@@ -62,12 +105,41 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
+                  description: Registered email address
+                  example: user@example.com
                 password:
                   type: string
+                  description: Account password
+                  example: mySecret
       responses:
         '200':
           description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged in
         '400':
           description: Missing credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Email and password required
         '401':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid credentials
