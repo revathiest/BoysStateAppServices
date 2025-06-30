@@ -2,6 +2,7 @@ import request from 'supertest';
 jest.mock('../src/prisma');
 import prisma from '../src/prisma';
 import app from '../src/index';
+import { verify } from '../src/jwt';
 
 const mockedPrisma = prisma as any;
 
@@ -43,7 +44,9 @@ describe('Auth endpoints', () => {
         .post('/login')
         .send({ email: 'test@example.com', password: 'secret' });
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ message: 'Logged in' });
+      expect(typeof res.body.token).toBe('string');
+      const payload = verify(res.body.token, 'development-secret');
+      expect(payload).toEqual({ userId: 1 });
     });
 
     it('fails with invalid credentials', async () => {

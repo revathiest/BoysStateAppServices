@@ -8,12 +8,33 @@ import yaml from 'yaml';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import prisma from './prisma';
+import { sign, verify } from './jwt';
 
 const scrypt = promisify(_scrypt);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const jwtSecret = process.env.JWT_SECRET || 'development-secret';
+
+app.use((req, res, next) => {
+  if (req.path === '/login' || req.path === '/register') {
+    return next();
+  }
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  const token = auth.slice(7);
+  try {
+    (req as any).user = verify(token, jwtSecret);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+});
 
 function ensureDatabase() {
   try {
@@ -71,7 +92,8 @@ app.post('/login', async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  res.json({ message: 'Logged in' });
+  const token = sign({ userId: user.id }, jwtSecret);
+  res.json({ token });
   return;
 });
 

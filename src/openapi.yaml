@@ -39,6 +39,8 @@ paths:
                     type: string
                     description: Database connection status
                     example: ok
+      security:
+        - bearerAuth: []
   /register:
     post:
       tags: [auth]
@@ -120,9 +122,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  token:
                     type: string
-                    example: Logged in
+                    description: JWT authentication token
+                    example: >-
+                      eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MT
+                      Y4NTg0OTc1NX0.LXrlo3wrX7rQiGZnYuxRKgXUxRvQPgFP5yxv1rdqe8E
         '400':
           description: Missing credentials
           content:
@@ -143,3 +148,9 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
