@@ -13,10 +13,30 @@ const yaml_1 = __importDefault(require("yaml"));
 const crypto_1 = require("crypto");
 const util_1 = require("util");
 const prisma_1 = __importDefault(require("./prisma"));
+const jwt_1 = require("./jwt");
 const scrypt = (0, util_1.promisify)(crypto_1.scrypt);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+const jwtSecret = process.env.JWT_SECRET || 'development-secret';
+app.use((req, res, next) => {
+    if (req.path === '/login' || req.path === '/register') {
+        return next();
+    }
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith('Bearer ')) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    const token = auth.slice(7);
+    try {
+        req.user = (0, jwt_1.verify)(token, jwtSecret);
+        next();
+    }
+    catch {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+});
 function ensureDatabase() {
     try {
         console.log('Running database synchronization');
@@ -65,7 +85,8 @@ app.post('/login', async (req, res) => {
         res.status(401).json({ error: 'Invalid credentials' });
         return;
     }
-    res.json({ message: 'Logged in' });
+    const token = (0, jwt_1.sign)({ userId: user.id }, jwtSecret);
+    res.json({ token });
     return;
 });
 app.get('/health', async (_req, res) => {
