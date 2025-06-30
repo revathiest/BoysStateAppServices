@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
+const child_process_1 = require("child_process");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const yaml_1 = __importDefault(require("yaml"));
 const crypto_1 = require("crypto");
@@ -16,6 +17,15 @@ const scrypt = (0, util_1.promisify)(crypto_1.scrypt);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+function ensureDatabase() {
+    try {
+        console.log('Running database synchronization');
+        (0, child_process_1.execSync)('npx prisma db push', { stdio: 'inherit' });
+    }
+    catch (err) {
+        console.error('Database synchronization failed', err);
+    }
+}
 // Load OpenAPI spec
 const openApiPath = path_1.default.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml_1.default.parse((0, fs_1.readFileSync)(openApiPath, 'utf8'));
@@ -72,6 +82,7 @@ app.get('/health', async (_req, res) => {
 });
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
+    ensureDatabase();
     app.listen(port, () => {
         console.log(`Server listening on port ${port}`);
     });
