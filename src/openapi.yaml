@@ -6,66 +6,169 @@ info:
   version: 1.0.0
 servers:
   - url: https://boysstateappservices.up.railway.app
+  - url: http://localhost:3000
+tags:
+  - name: health
+    description: Service status and monitoring endpoints
+  - name: auth
+    description: User registration and authentication
 paths:
   /health:
     get:
+      tags:
+        - health
       summary: Health check endpoint
-      description: Returns a simple status to verify the API is running.
+      description: |
+        Returns the status of the API and database connection. This endpoint does not require authentication.
+      security: []
       responses:
         '200':
           description: Successful health response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  database:
-                    type: string
-                    example: ok
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                success:
+                  summary: Server and database reachable
+                  value:
+                    status: ok
+                    database: ok
+                dbError:
+                  summary: Database unreachable
+                  value:
+                    status: ok
+                    database: error
   /register:
     post:
+      tags:
+        - auth
       summary: Register a new user account
+      description: |
+        Creates a new user using an email address and password. No authentication is required for this endpoint.
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
+              $ref: '#/components/schemas/UserCredentials'
+            examples:
+              example:
+                summary: Example registration request
+                value:
+                  email: user@example.com
+                  password: strongpassword
       responses:
         '201':
           description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+              examples:
+                created:
+                  value:
+                    id: 1
+                    email: user@example.com
         '400':
-          description: Registration failed
+          description: Registration failed or missing fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing:
+                  value:
+                    error: Missing fields
   /login:
     post:
+      tags:
+        - auth
       summary: Login with an existing account
+      description: |
+        Validates user credentials and returns basic account information. This endpoint is unauthenticated.
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
+              $ref: '#/components/schemas/UserCredentials'
+            examples:
+              example:
+                summary: Example login request
+                value:
+                  email: user@example.com
+                  password: strongpassword
       responses:
         '200':
           description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+              examples:
+                loggedIn:
+                  value:
+                    id: 1
+                    email: user@example.com
+        '400':
+          description: Missing fields in request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing:
+                  value:
+                    error: Missing fields
         '401':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid:
+                  value:
+                    error: Invalid credentials
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        database:
+          type: string
+          example: ok
+    UserCredentials:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message
