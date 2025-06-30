@@ -13,5 +13,5 @@
     "allowSyntheticDefaultImports": true  // Makes import syntax easier
   },
   "include": ["src/**/*.ts"],             // Include all .ts files in src/
-  "exclude": ["node_modules", "dist"]     // Ignore these folders
+  "exclude": ["node_modules", "dist", "src/__mocks__"]     // Ignore these folders and test mocks
 }
