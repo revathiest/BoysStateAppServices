@@ -10,9 +10,12 @@ function base64url(input) {
         .replace(/\//g, '_')
         .replace(/=+$/, '');
 }
-function sign(payload, secret) {
+function sign(payload, secret, expiresInSec = 30 * 60) {
+    const iat = Math.floor(Date.now() / 1000);
+    const exp = iat + expiresInSec;
+    const fullPayload = { ...payload, iat, exp };
     const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const body = base64url(JSON.stringify(payload));
+    const body = base64url(JSON.stringify(fullPayload));
     const signature = (0, crypto_1.createHmac)('sha256', secret)
         .update(`${header}.${body}`)
         .digest('base64');
@@ -30,5 +33,10 @@ function verify(token, secret) {
     if (sig !== expectedSig)
         throw new Error('Invalid signature');
     const payloadJson = Buffer.from(payloadB64.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
-    return JSON.parse(payloadJson);
+    const payload = JSON.parse(payloadJson);
+    if (payload.exp !== undefined &&
+        Math.floor(Date.now() / 1000) >= payload.exp) {
+        throw new Error('Token expired');
+    }
+    return payload;
 }
