@@ -124,7 +124,7 @@ paths:
                 properties:
                   token:
                     type: string
-                    description: JWT authentication token
+                    description: JWT authentication token (expires after 30 minutes)
                     example: >-
                       eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MT
                       Y4NTg0OTc1NX0.LXrlo3wrX7rQiGZnYuxRKgXUxRvQPgFP5yxv1rdqe8E
@@ -148,6 +148,48 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+  /programs/{username}:
+    get:
+      tags: [programs]
+      summary: List programs for a user
+      description: >
+        Returns all programs assigned to the specified user. Each item
+        includes the program id, name, and role.
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: Email or username of the user
+      responses:
+        '200':
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    description: User email or username
+                    example: jane.doe
+                  programs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        programId:
+                          type: string
+                          example: abc123
+                        programName:
+                          type: string
+                          example: Boys State Texas
+                        role:
+                          type: string
+                          example: admin
+      security:
+        - bearerAuth: []
 components:
   securitySchemes:
     bearerAuth:

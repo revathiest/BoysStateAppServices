@@ -4,6 +4,9 @@ const prisma = {
     findUnique: jest.fn(),
     create: jest.fn(),
   },
+  programAssignment: {
+    findMany: jest.fn(),
+  },
 };
 
 export default prisma;

@@ -2,7 +2,7 @@ import request from 'supertest';
 jest.mock('../src/prisma');
 import prisma from '../src/prisma';
 import app from '../src/index';
-import { verify } from '../src/jwt';
+import { verify, sign } from '../src/jwt';
 
 const mockedPrisma = prisma as any;
 
@@ -46,7 +46,8 @@ describe('Auth endpoints', () => {
       expect(res.status).toBe(200);
       expect(typeof res.body.token).toBe('string');
       const payload = verify(res.body.token, 'development-secret');
-      expect(payload).toEqual({ userId: 1 });
+      expect(payload.userId).toBe(1);
+      expect(payload.exp - payload.iat).toBe(1800);
     });
 
     it('fails with invalid credentials', async () => {
@@ -55,6 +56,11 @@ describe('Auth endpoints', () => {
         .post('/login')
         .send({ email: 'bad@example.com', password: 'nope' });
       expect(res.status).toBe(401);
+    });
+
+    it('rejects expired tokens', () => {
+      const token = sign({ userId: 1 }, 'development-secret', -1);
+      expect(() => verify(token, 'development-secret')).toThrow('Token expired');
     });
   });
 });

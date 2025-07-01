@@ -20,7 +20,9 @@ app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 app.use((req, res, next) => {
-    if (req.path === '/login' || req.path === '/register') {
+    if (req.path === '/login' ||
+        req.path === '/register' ||
+        req.path.startsWith('/docs')) {
         return next();
     }
     const auth = req.headers.authorization;
@@ -100,6 +102,28 @@ app.get('/health', async (_req, res) => {
         dbStatus = 'error';
     }
     res.json({ status: 'ok', database: dbStatus });
+});
+app.get('/programs/:username', async (req, res) => {
+    const { username } = req.params;
+    if (!username) {
+        res.status(400).json({ error: 'Username required' });
+        return;
+    }
+    const user = await prisma_1.default.user.findUnique({ where: { email: username } });
+    if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+    }
+    const assignments = await prisma_1.default.programAssignment.findMany({
+        where: { userId: user.id },
+        include: { program: true },
+    });
+    const programs = assignments.map((a) => ({
+        programId: a.program.id,
+        programName: a.program.name,
+        role: a.role,
+    }));
+    res.json({ username: user.email, programs });
 });
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
