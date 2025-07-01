@@ -148,13 +148,20 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
-  /programs:
+  /programs/{username}:
     get:
       tags: [programs]
-      summary: List programs for user
+      summary: List programs for a user
       description: >
-        Returns all programs assigned to the authenticated user. Each item
+        Returns all programs assigned to the specified user. Each item
         includes the program id, name, and role.
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: Email or username of the user
       responses:
         '200':
           description: List of programs

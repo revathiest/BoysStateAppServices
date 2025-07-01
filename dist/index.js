@@ -103,11 +103,19 @@ app.get('/health', async (_req, res) => {
     }
     res.json({ status: 'ok', database: dbStatus });
 });
-app.get('/programs', async (req, res) => {
-    const userId = req.user.userId;
-    const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+app.get('/programs/:username', async (req, res) => {
+    const { username } = req.params;
+    if (!username) {
+        res.status(400).json({ error: 'Username required' });
+        return;
+    }
+    const user = await prisma_1.default.user.findUnique({ where: { email: username } });
+    if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+    }
     const assignments = await prisma_1.default.programAssignment.findMany({
-        where: { userId },
+        where: { userId: user.id },
         include: { program: true },
     });
     const programs = assignments.map((a) => ({
@@ -115,7 +123,7 @@ app.get('/programs', async (req, res) => {
         programName: a.program.name,
         role: a.role,
     }));
-    res.json({ username: user?.email ?? '', programs });
+    res.json({ username: user.email, programs });
 });
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
