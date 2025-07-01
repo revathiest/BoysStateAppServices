@@ -19,7 +19,11 @@ app.use(express.json());
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 
 app.use((req, res, next) => {
-  if (req.path === '/login' || req.path === '/register') {
+  if (
+    req.path === '/login' ||
+    req.path === '/register' ||
+    req.path.startsWith('/docs')
+  ) {
     return next();
   }
   const auth = req.headers.authorization;
