@@ -101,6 +101,20 @@ app.get('/health', async (_req, res) => {
     }
     res.json({ status: 'ok', database: dbStatus });
 });
+app.get('/programs', async (req, res) => {
+    const userId = req.user.userId;
+    const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+    const assignments = await prisma_1.default.programAssignment.findMany({
+        where: { userId },
+        include: { program: true },
+    });
+    const programs = assignments.map((a) => ({
+        programId: a.program.id,
+        programName: a.program.name,
+        role: a.role,
+    }));
+    res.json({ username: user?.email ?? '', programs });
+});
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();

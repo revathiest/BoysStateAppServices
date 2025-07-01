@@ -148,6 +148,41 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+  /programs:
+    get:
+      tags: [programs]
+      summary: List programs for user
+      description: >
+        Returns all programs assigned to the authenticated user. Each item
+        includes the program id, name, and role.
+      responses:
+        '200':
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    description: User email or username
+                    example: jane.doe
+                  programs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        programId:
+                          type: string
+                          example: abc123
+                        programName:
+                          type: string
+                          example: Boys State Texas
+                        role:
+                          type: string
+                          example: admin
+      security:
+        - bearerAuth: []
 components:
   securitySchemes:
     bearerAuth:
