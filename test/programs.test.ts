@@ -6,7 +6,7 @@ import { sign } from '../src/jwt';
 
 const mockedPrisma = prisma as any;
 
-describe('GET /programs', () => {
+describe('GET /programs/:username', () => {
   beforeEach(() => {
     mockedPrisma.programAssignment.findMany.mockReset();
     mockedPrisma.user.findUnique.mockReset();
@@ -20,7 +20,7 @@ describe('GET /programs', () => {
     ]);
     const token = sign({ userId: 1 }, 'development-secret');
     const res = await request(app)
-      .get('/programs')
+      .get('/programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
@@ -37,7 +37,7 @@ describe('GET /programs', () => {
     mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([]);
     const token = sign({ userId: 2 }, 'development-secret');
     const res = await request(app)
-      .get('/programs')
+      .get('/programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ username: 'jane.doe', programs: [] });
