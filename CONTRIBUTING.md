@@ -25,7 +25,7 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    * Ensure database and environment are configured.
 4. **Set up environment variables:**
 
-   * Copy [`.env.example`](./.env.example) to `.env` and fill in values such as `DATABASE_URL` and `JWT_SECRET`.
+   * Create a `.env` file and update DB, API, and authentication settings.
 5. **Run the backend:**
 
    ```bash
@@ -74,8 +74,8 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
 
 ## Cross-Repo Coordination
 
-* For mobile UI/API usage, coordinate with [Mobile App](https://github.com/yourorg/boysstate-mobile).
-* For admin portal changes, see [Web Admin Portal](https://github.com/yourorg/boysstate-admin).
+* For mobile UI/API usage, coordinate with [Mobile App](https://github.com/BoysStateApp/mobile).
+* For admin portal changes, see [Web Admin Portal](https://github.com/BoysStateApp/admin-portal).
 * Discuss major features or breaking changes across all impacted repos.
 
 ---
