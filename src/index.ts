@@ -59,10 +59,20 @@ function ensureDatabase() {
 // Load OpenAPI spec
 const openApiPath = path.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml.parse(readFileSync(openApiPath, 'utf8'));
+
 app.get('/docs/swagger.json', (_req, res) => {
   res.json(openApiDoc);
 });
+
+// Override server URL when not in production so Swagger points to the local API
+const port = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+  openApiDoc.servers = [{ url: `http://localhost:${port}` }];
+}
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+
+export const swaggerDoc = openApiDoc;
 
 app.post('/register', async (req: express.Request, res: express.Response) => {
   const { email, password } = req.body as { email?: string; password?: string };
@@ -125,6 +135,29 @@ app.get('/health', async (_req, res) => {
   res.json({ status: 'ok', database: dbStatus });
 });
 
+app.post('/logs', (req: express.Request, res: express.Response) => {
+  const { programId, level, message, error } = req.body as {
+    programId?: string;
+    level?: string;
+    message?: string;
+    error?: string;
+  };
+  if (!programId || !level || !message) {
+    res.status(400).json({ error: 'programId, level, and message required' });
+    return;
+  }
+  if (level !== 'info' && level !== 'error') {
+    res.status(400).json({ error: 'Invalid level' });
+    return;
+  }
+  if (level === 'info') {
+    logger.info(programId, message);
+  } else {
+    logger.error(programId, message, error);
+  }
+  res.status(204).send();
+});
+
 export async function getUserPrograms(
   req: express.Request,
   res: express.Response
@@ -158,7 +191,6 @@ export async function getUserPrograms(
 
 app.get('/programs/:username', getUserPrograms);
 
-const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
   ensureDatabase();
   app.listen(port, () => {
