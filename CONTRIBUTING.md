@@ -21,11 +21,10 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    ```
 3. **Set up prerequisites:**
 
-   * Ensure Node.js/Python version matches `.nvmrc`, `pyproject.toml`, or docs.
    * Ensure database and environment are configured.
 4. **Set up environment variables:**
 
-   * Copy `.env.example` to `.env` and update DB/API/auth settings.
+   * Create a `.env` file and update DB, API, and authentication settings.
 5. **Run the backend:**
 
    ```bash
@@ -57,6 +56,7 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    npm run lint
    # or relevant test commands
    ```
+4. After tests pass, run `npm run build` to regenerate the `dist/` folder.
 4. Update the Swagger/OpenAPI docs as needed.
 5. Submit a PR referencing any related issues or cross-repo features.
 6. Collaborate on code review; be ready for feedback/changes.
@@ -73,8 +73,8 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
 
 ## Cross-Repo Coordination
 
-* For mobile UI/API usage, coordinate with [Mobile App](https://github.com/yourorg/boysstate-mobile).
-* For admin portal changes, see [Web Admin Portal](https://github.com/yourorg/boysstate-admin).
+* For mobile UI/API usage, coordinate with [Mobile App](https://github.com/BoysStateApp/mobile).
+* For admin portal changes, see [Web Admin Portal](https://github.com/BoysStateApp/admin-portal).
 * Discuss major features or breaking changes across all impacted repos.
 
 ---

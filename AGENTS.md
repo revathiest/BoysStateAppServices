@@ -154,6 +154,8 @@ This document describes the backend service agents supporting the Boys State App
 * **Sensitive info:** Strict compliance with privacy standards for minors (COPPA, FERPA, GDPR, etc.).
 * **Authentication:** All access must be authenticated and authorized.
 * **Logging:** All backend communication, actions, and errors are logged. Sensitive data is redacted as appropriate.
+  * Use the `src/logger.ts` utility for all logs instead of `console.log`.
+  * Each log entry records a `programId` to keep logs isolated per program and are written to `logs/<programId>.log` in JSON lines format.
 * **Branding/config:** All branding and configuration are managed and loaded per program.
 * **Automated testing:** All business logic and endpoints require automated tests for core logic, error cases, and edge scenarios.
 

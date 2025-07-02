@@ -8,7 +8,7 @@
 
 This repository contains the **backend REST API and core services** for Boys State App. The backend handles business logic, authentication, integrations, per-program data, and API endpoints for both the mobile app and web admin portal.
 
-* Node.js / Python / \[replace with stack]
+* Node.js with TypeScript
 * REST API with Swagger/OpenAPI documentation
 * Per-program data isolation and security
 * Integrations: Google Calendar, Discord, etc. (planned)
@@ -17,8 +17,8 @@ This repository contains the **backend REST API and core services** for Boys Sta
 
 ## Other Boys State App Repositories
 
-* [Mobile App](https://github.com/yourorg/boysstate-mobile): Delegate- and parent-facing mobile application for schedule, notifications, and resources.
-* [Web Admin Portal](https://github.com/yourorg/boysstate-admin): Administrative web portal for program management, integrations, elections, and logs.
+* [Mobile App](https://github.com/BoysStateApp/mobile): Delegate- and parent-facing mobile application for schedule, notifications, and resources.
+* [Web Admin Portal](https://github.com/BoysStateApp/admin-portal): Administrative web portal for program management, integrations, elections, and logs.
 
 ## Quick Start
 
@@ -26,7 +26,6 @@ This repository contains the **backend REST API and core services** for Boys Sta
 
    ```bash
    npm install
-   # or pip install -r requirements.txt
    ```
 2. **Generate Prisma client:**
 
@@ -35,14 +34,18 @@ This repository contains the **backend REST API and core services** for Boys Sta
    ```
 3. **Set up environment variables:**
 
-   * Copy `.env.example` to `.env` and configure database, API, and auth credentials.
-4. **Run the service:**
+   * Create a `.env` file and configure database, API, and authentication settings.
+4. **Build the project:**
+
+   ```bash
+   npm run build
+   ```
+5. **Run the service:**
 
    ```bash
    npm run start
-   # or python app.py / your start command
    ```
-5. **API documentation:**
+6. **API documentation:**
 
    * Access Swagger/OpenAPI docs at `/docs` or as configured.
 
@@ -53,5 +56,6 @@ See [`AGENTS.md`](./AGENTS.md) for a full list of backend agents and integration
 ## Contributing
 
 * All changes must include tests and clear documentation.
+* After running tests, execute `npm run build` to update the `dist/` folder before opening a PR.
 * PRs must pass CI and code review before merge.
-* For mobile or admin UI, see [Mobile App](https://github.com/yourorg/boysstate-mobile) and [Web Admin Portal](https://github.com/yourorg/boysstate-admin).
+* For mobile or admin UI, see [Mobile App](https://github.com/BoysStateApp/mobile) and [Web Admin Portal](https://github.com/BoysStateApp/admin-portal).

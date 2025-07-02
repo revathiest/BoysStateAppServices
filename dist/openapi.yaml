@@ -188,6 +188,26 @@ paths:
                         role:
                           type: string
                           example: admin
+        '400':
+          description: Username required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Username required
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
       security:
         - bearerAuth: []
 components:
