@@ -25,7 +25,7 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    * Ensure database and environment are configured.
 4. **Set up environment variables:**
 
-   * Copy `.env.example` to `.env` and update DB/API/auth settings.
+   * Copy [`.env.example`](./.env.example) to `.env` and fill in values such as `DATABASE_URL` and `JWT_SECRET`.
 5. **Run the backend:**
 
    ```bash
