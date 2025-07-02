@@ -122,6 +122,29 @@ app.get('/health', async (_req, res) => {
   res.json({ status: 'ok', database: dbStatus });
 });
 
+app.post('/logs', (req: express.Request, res: express.Response) => {
+  const { programId, level, message, error } = req.body as {
+    programId?: string;
+    level?: string;
+    message?: string;
+    error?: string;
+  };
+  if (!programId || !level || !message) {
+    res.status(400).json({ error: 'programId, level, and message required' });
+    return;
+  }
+  if (level !== 'info' && level !== 'error') {
+    res.status(400).json({ error: 'Invalid level' });
+    return;
+  }
+  if (level === 'info') {
+    logger.info(programId, message);
+  } else {
+    logger.error(programId, message, error);
+  }
+  res.status(204).send();
+});
+
 export async function getUserPrograms(
   req: express.Request,
   res: express.Response

@@ -148,6 +148,54 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+
+  /logs:
+    post:
+      tags: [system]
+      summary: Submit a log message
+      description: >
+        Allows authenticated clients to send a log entry associated with a
+        program. The server stores the entry for auditing and troubleshooting.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [programId, level, message]
+              properties:
+                programId:
+                  type: string
+                  description: Program identifier for the log entry
+                  example: abc123
+                level:
+                  type: string
+                  description: Log level
+                  enum: [info, error]
+                  example: info
+                message:
+                  type: string
+                  description: Log message text
+                  example: Something happened
+                error:
+                  type: string
+                  description: Optional error details for error logs
+                  example: Stack trace
+      responses:
+        '204':
+          description: Log recorded
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: programId, level, and message required
+      security:
+        - bearerAuth: []
   /programs/{username}:
     get:
       tags: [programs]
