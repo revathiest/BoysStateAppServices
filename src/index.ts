@@ -59,7 +59,16 @@ function ensureDatabase() {
 // Load OpenAPI spec
 const openApiPath = path.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml.parse(readFileSync(openApiPath, 'utf8'));
+
+// Override server URL when not in production so Swagger points to the local API
+const port = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+  openApiDoc.servers = [{ url: `http://localhost:${port}` }];
+}
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+
+export const swaggerDoc = openApiDoc;
 
 app.post('/register', async (req: express.Request, res: express.Response) => {
   const { email, password } = req.body as { email?: string; password?: string };
@@ -178,7 +187,6 @@ export async function getUserPrograms(
 
 app.get('/programs/:username', getUserPrograms);
 
-const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
   ensureDatabase();
   app.listen(port, () => {
