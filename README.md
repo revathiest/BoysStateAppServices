@@ -56,5 +56,6 @@ See [`AGENTS.md`](./AGENTS.md) for a full list of backend agents and integration
 ## Contributing
 
 * All changes must include tests and clear documentation.
+* After running tests, execute `npm run build` to update the `dist/` folder before opening a PR.
 * PRs must pass CI and code review before merge.
 * For mobile or admin UI, see [Mobile App](https://github.com/BoysStateApp/mobile) and [Web Admin Portal](https://github.com/BoysStateApp/admin-portal).

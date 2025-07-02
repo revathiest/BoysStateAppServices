@@ -57,6 +57,7 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    npm run lint
    # or relevant test commands
    ```
+4. After tests pass, run `npm run build` to regenerate the `dist/` folder.
 4. Update the Swagger/OpenAPI docs as needed.
 5. Submit a PR referencing any related issues or cross-repo features.
 6. Collaborate on code review; be ready for feedback/changes.
