@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getUserPrograms = getUserPrograms;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = require("fs");
@@ -103,7 +104,7 @@ app.get('/health', async (_req, res) => {
     }
     res.json({ status: 'ok', database: dbStatus });
 });
-app.get('/programs/:username', async (req, res) => {
+async function getUserPrograms(req, res) {
     const { username } = req.params;
     if (!username) {
         res.status(400).json({ error: 'Username required' });
@@ -124,7 +125,8 @@ app.get('/programs/:username', async (req, res) => {
         role: a.role,
     }));
     res.json({ username: user.email, programs });
-});
+}
+app.get('/programs/:username', getUserPrograms);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
