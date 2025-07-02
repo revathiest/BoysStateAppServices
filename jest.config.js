@@ -17,9 +17,6 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
     'prisma/**/*.{js,ts}',
-    'botactions/**/*.{js,ts}',
-    'jobs/**/*.{js,ts}',
-    'models/**/*.{js,ts}',
     '!**/node_modules/**',
     '!**/__mocks__/**'
   ],
