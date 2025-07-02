@@ -3,6 +3,7 @@ jest.mock('../src/prisma');
 import prisma from '../src/prisma';
 import app from '../src/index';
 import { sign } from '../src/jwt';
+import { getUserPrograms } from '../src/index';
 
 const mockedPrisma = prisma as any;
 
@@ -41,5 +42,25 @@ describe('GET /programs/:username', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ username: 'jane.doe', programs: [] });
+  });
+
+  it('returns 404 when user does not exist', async () => {
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
+    const res = await request(app)
+      .get('/programs/missing')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 400 when username missing', async () => {
+    const req: any = { params: {} };
+    const res: any = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    await getUserPrograms(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Username required' });
   });
 });

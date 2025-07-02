@@ -122,7 +122,10 @@ app.get('/health', async (_req, res) => {
   res.json({ status: 'ok', database: dbStatus });
 });
 
-app.get('/programs/:username', async (req, res) => {
+export async function getUserPrograms(
+  req: express.Request,
+  res: express.Response
+) {
   const { username } = req.params as { username?: string };
   if (!username) {
     res.status(400).json({ error: 'Username required' });
@@ -148,7 +151,9 @@ app.get('/programs/:username', async (req, res) => {
     logger.info(p.programId, `Program lookup for ${user.email}`);
   });
   res.json({ username: user.email, programs });
-});
+}
+
+app.get('/programs/:username', getUserPrograms);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
