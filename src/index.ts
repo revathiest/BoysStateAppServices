@@ -59,6 +59,9 @@ function ensureDatabase() {
 // Load OpenAPI spec
 const openApiPath = path.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml.parse(readFileSync(openApiPath, 'utf8'));
+app.get('/docs/swagger.json', (_req, res) => {
+  res.json(openApiDoc);
+});
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 app.post('/register', async (req: express.Request, res: express.Response) => {
