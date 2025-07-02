@@ -96,7 +96,7 @@ app.post('/login', async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  const token = sign({ userId: user.id }, jwtSecret);
+  const token = sign({ userId: user.id, email: user.email }, jwtSecret);
   res.json({ token });
   return;
 });
