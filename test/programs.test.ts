@@ -18,7 +18,7 @@ describe('GET /programs/:username', () => {
       { role: 'admin', program: { id: 'abc123', name: 'Boys State Texas' } },
       { role: 'counselor', program: { id: 'def456', name: 'Girls State Florida' } },
     ]);
-    const token = sign({ userId: 1 }, 'development-secret');
+    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
       .get('/programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
@@ -35,7 +35,7 @@ describe('GET /programs/:username', () => {
   it('returns empty array when user has no programs', async () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce({ id: 2, email: 'jane.doe' });
     mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([]);
-    const token = sign({ userId: 2 }, 'development-secret');
+    const token = sign({ userId: 2, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
       .get('/programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);

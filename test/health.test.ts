@@ -13,7 +13,7 @@ describe('GET /health', () => {
 
   it('returns database ok when query succeeds', async () => {
     mockedPrisma.$queryRaw.mockResolvedValueOnce(1 as any);
-    const token = sign({ userId: 1 }, 'development-secret');
+    const token = sign({ userId: 1, email: 'test@example.com' }, 'development-secret');
     const res = await request(app)
       .get('/health')
       .set('Authorization', `Bearer ${token}`);
@@ -23,7 +23,7 @@ describe('GET /health', () => {
 
   it('returns database error when query fails', async () => {
     mockedPrisma.$queryRaw.mockRejectedValueOnce(new Error('fail'));
-    const token = sign({ userId: 1 }, 'development-secret');
+    const token = sign({ userId: 1, email: 'test@example.com' }, 'development-secret');
     const res = await request(app)
       .get('/health')
       .set('Authorization', `Bearer ${token}`);
