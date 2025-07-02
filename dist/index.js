@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.swaggerDoc = void 0;
 exports.getUserPrograms = getUserPrograms;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
@@ -91,7 +92,13 @@ function ensureDatabase() {
 // Load OpenAPI spec
 const openApiPath = path_1.default.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml_1.default.parse((0, fs_1.readFileSync)(openApiPath, 'utf8'));
+// Override server URL when not in production so Swagger points to the local API
+const port = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+    openApiDoc.servers = [{ url: `http://localhost:${port}` }];
+}
 app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc));
+exports.swaggerDoc = openApiDoc;
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -171,7 +178,6 @@ async function getUserPrograms(req, res) {
     res.json({ username: user.email, programs });
 }
 app.get('/programs/:username', getUserPrograms);
-const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
