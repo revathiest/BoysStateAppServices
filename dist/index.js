@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -14,10 +47,16 @@ const crypto_1 = require("crypto");
 const util_1 = require("util");
 const prisma_1 = __importDefault(require("./prisma"));
 const jwt_1 = require("./jwt");
+const logger = __importStar(require("./logger"));
 const scrypt = (0, util_1.promisify)(crypto_1.scrypt);
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use((req, _res, next) => {
+    const programId = req.user?.programId || 'system';
+    logger.info(programId, `${req.method} ${req.path}`);
+    next();
+});
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 app.use((req, res, next) => {
     if (req.path === '/login' ||
@@ -41,11 +80,11 @@ app.use((req, res, next) => {
 });
 function ensureDatabase() {
     try {
-        console.log('Running database synchronization');
+        logger.info('system', 'Running database synchronization');
         (0, child_process_1.execSync)('npx prisma db push', { stdio: 'inherit' });
     }
     catch (err) {
-        console.error('Database synchronization failed', err);
+        logger.error('system', 'Database synchronization failed', err);
     }
 }
 // Load OpenAPI spec
@@ -67,6 +106,7 @@ app.post('/register', async (req, res) => {
     const buf = (await scrypt(password, salt, 64));
     const hashed = `${salt}:${buf.toString('hex')}`;
     await prisma_1.default.user.create({ data: { email, password: hashed } });
+    logger.info('system', `User registered: ${email}`);
     res.status(201).json({ message: 'User created' });
     return;
 });
@@ -88,17 +128,18 @@ app.post('/login', async (req, res) => {
         return;
     }
     const token = (0, jwt_1.sign)({ userId: user.id, email: user.email }, jwtSecret);
+    logger.info('system', `User logged in: ${email}`);
     res.json({ token });
     return;
 });
 app.get('/health', async (_req, res) => {
-    console.log('Serving /health');
+    logger.info('system', 'Serving /health');
     let dbStatus = 'ok';
     try {
         await prisma_1.default.$queryRaw `SELECT 1`;
     }
     catch (err) {
-        console.error('Database check failed', err);
+        logger.error('system', 'Database check failed', err);
         dbStatus = 'error';
     }
     res.json({ status: 'ok', database: dbStatus });
@@ -123,13 +164,16 @@ app.get('/programs/:username', async (req, res) => {
         programName: a.program.name,
         role: a.role,
     }));
+    programs.forEach((p) => {
+        logger.info(p.programId, `Program lookup for ${user.email}`);
+    });
     res.json({ username: user.email, programs });
 });
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
-        console.log(`Server listening on port ${port}`);
+        logger.info('system', `Server listening on port ${port}`);
     });
 }
 exports.default = app;
