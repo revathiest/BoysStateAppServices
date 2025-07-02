@@ -60,6 +60,10 @@ function ensureDatabase() {
 const openApiPath = path.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml.parse(readFileSync(openApiPath, 'utf8'));
 
+app.get('/docs/swagger.json', (_req, res) => {
+  res.json(openApiDoc);
+});
+
 // Override server URL when not in production so Swagger points to the local API
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
