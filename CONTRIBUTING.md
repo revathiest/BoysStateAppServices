@@ -21,7 +21,6 @@ Thank you for your interest in contributing to the Boys State App backend! Wheth
    ```
 3. **Set up prerequisites:**
 
-   * Ensure Node.js/Python version matches `.nvmrc`, `pyproject.toml`, or docs.
    * Ensure database and environment are configured.
 4. **Set up environment variables:**
 
