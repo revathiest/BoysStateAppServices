@@ -87,7 +87,7 @@ app.post('/login', async (req, res) => {
         res.status(401).json({ error: 'Invalid credentials' });
         return;
     }
-    const token = (0, jwt_1.sign)({ userId: user.id }, jwtSecret);
+    const token = (0, jwt_1.sign)({ userId: user.id, email: user.email }, jwtSecret);
     res.json({ token });
     return;
 });
