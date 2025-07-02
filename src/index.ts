@@ -9,12 +9,19 @@ import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import prisma from './prisma';
 import { sign, verify } from './jwt';
+import * as logger from './logger';
 
 const scrypt = promisify(_scrypt);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use((req, _res, next) => {
+  const programId = (req as any).user?.programId || 'system';
+  logger.info(programId, `${req.method} ${req.path}`);
+  next();
+});
 
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 
@@ -42,10 +49,10 @@ app.use((req, res, next) => {
 
 function ensureDatabase() {
   try {
-    console.log('Running database synchronization');
+    logger.info('system', 'Running database synchronization');
     execSync('npx prisma db push', { stdio: 'inherit' });
   } catch (err) {
-    console.error('Database synchronization failed', err);
+    logger.error('system', 'Database synchronization failed', err);
   }
 }
 
@@ -72,6 +79,7 @@ app.post('/register', async (req: express.Request, res: express.Response) => {
   const hashed = `${salt}:${buf.toString('hex')}`;
 
   await prisma.user.create({ data: { email, password: hashed } });
+  logger.info('system', `User registered: ${email}`);
   res.status(201).json({ message: 'User created' });
   return;
 });
@@ -97,17 +105,18 @@ app.post('/login', async (req: express.Request, res: express.Response) => {
   }
 
   const token = sign({ userId: user.id, email: user.email }, jwtSecret);
+  logger.info('system', `User logged in: ${email}`);
   res.json({ token });
   return;
 });
 
 app.get('/health', async (_req, res) => {
-  console.log('Serving /health');
+  logger.info('system', 'Serving /health');
   let dbStatus = 'ok';
   try {
     await prisma.$queryRaw`SELECT 1`;
   } catch (err) {
-    console.error('Database check failed', err);
+    logger.error('system', 'Database check failed', err);
     dbStatus = 'error';
   }
   res.json({ status: 'ok', database: dbStatus });
@@ -135,6 +144,9 @@ app.get('/programs/:username', async (req, res) => {
     programName: a.program.name,
     role: a.role,
   }));
+  programs.forEach((p: any) => {
+    logger.info(p.programId, `Program lookup for ${user.email}`);
+  });
   res.json({ username: user.email, programs });
 });
 
@@ -142,7 +154,7 @@ const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
   ensureDatabase();
   app.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
+    logger.info('system', `Server listening on port ${port}`);
   });
 }
 
