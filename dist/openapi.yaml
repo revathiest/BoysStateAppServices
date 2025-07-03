@@ -200,6 +200,115 @@ paths:
                     example: programId, level, and message required
       security:
         - bearerAuth: []
+    get:
+      tags: [system]
+      summary: Retrieve log messages
+      description: >
+        Returns logs filtered by program, level, source, date range, and search query.
+        Results are sorted by newest first and paginated.
+      parameters:
+        - in: query
+          name: programId
+          schema:
+            type: string
+          description: Filter logs by program ID
+        - in: query
+          name: level
+          schema:
+            type: string
+            enum: [debug, info, warn, error]
+          description: Log level to filter
+        - in: query
+          name: source
+          schema:
+            type: string
+          description: Log source (client or api)
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date-time
+          description: Include logs from this date/time (inclusive)
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date-time
+          description: Include logs up to this date/time (inclusive)
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Case-insensitive search in message, error, or source
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+          description: Number of records per page
+      responses:
+        '200':
+          description: List of logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: '2025-06-01T10:20:30Z'
+                        programId:
+                          type: string
+                          example: abc123
+                        level:
+                          type: string
+                          enum: [debug, info, warn, error]
+                        message:
+                          type: string
+                          example: Database crashed
+                        error:
+                          type: string
+                          example: Stack trace here
+                        source:
+                          type: string
+                          example: api
+                  page:
+                    type: integer
+                    example: 1
+                  pageSize:
+                    type: integer
+                    example: 50
+                  total:
+                    type: integer
+                    example: 244
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid level
+      security:
+        - bearerAuth: []
   /programs/{username}:
     get:
       tags: [programs]

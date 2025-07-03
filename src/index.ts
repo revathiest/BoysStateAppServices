@@ -178,6 +178,64 @@ app.post('/logs', (req: express.Request, res: express.Response) => {
   res.status(204).send();
 });
 
+app.get('/logs', async (req: express.Request, res: express.Response) => {
+  const {
+    programId,
+    level,
+    source,
+    dateFrom,
+    dateTo,
+    search,
+    page = '1',
+    pageSize = '50',
+  } = req.query as {
+    programId?: string;
+    level?: string;
+    source?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+    page?: string;
+    pageSize?: string;
+  };
+
+  if (level && !['debug', 'info', 'warn', 'error'].includes(level)) {
+    res.status(400).json({ error: 'Invalid level' });
+    return;
+  }
+
+  let p = parseInt(page, 10);
+  if (isNaN(p) || p < 1) p = 1;
+  let size = parseInt(pageSize, 10);
+  if (isNaN(size) || size < 1) size = 50;
+  if (size > 100) size = 100;
+
+  const where: any = {};
+  if (programId) where.programId = programId;
+  if (level) where.level = level;
+  if (source) where.source = source;
+  if (dateFrom || dateTo) {
+    where.timestamp = {} as any;
+    if (dateFrom) (where.timestamp as any).gte = new Date(dateFrom);
+    if (dateTo) (where.timestamp as any).lte = new Date(dateTo);
+  }
+
+  if (search) {
+    const contains = { contains: search, mode: 'insensitive' as const };
+    where.OR = [{ message: contains }, { error: contains }, { source: contains }];
+  }
+
+  const total = await prisma.log.count({ where });
+  const logs = await prisma.log.findMany({
+    where,
+    orderBy: { timestamp: 'desc' },
+    skip: (p - 1) * size,
+    take: size,
+  });
+
+  res.json({ logs, page: p, pageSize: size, total });
+});
+
 export async function getUserPrograms(
   req: express.Request,
   res: express.Response
