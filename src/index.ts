@@ -70,7 +70,15 @@ if (process.env.NODE_ENV !== 'production') {
   openApiDoc.servers = [{ url: `http://localhost:${port}` }];
 }
 
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
+app.get('/docs/swagger-ui-custom.js', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'swagger-ui-custom.js'));
+});
+
+const docsOptions = {
+  customJs: 'swagger-ui-custom.js',
+};
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc, docsOptions));
 
 export const swaggerDoc = openApiDoc;
 

@@ -100,7 +100,13 @@ const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
     openApiDoc.servers = [{ url: `http://localhost:${port}` }];
 }
-app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc));
+app.get('/docs/swagger-ui-custom.js', (_req, res) => {
+    res.sendFile(path_1.default.join(__dirname, 'swagger-ui-custom.js'));
+});
+const docsOptions = {
+    customJs: 'swagger-ui-custom.js',
+};
+app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc, docsOptions));
 exports.swaggerDoc = openApiDoc;
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
