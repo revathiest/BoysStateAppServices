@@ -63,3 +63,54 @@ describe('POST /logs', () => {
     expect(res.status).toBe(204);
   });
 });
+
+describe('GET /logs', () => {
+  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+
+  beforeEach(() => {
+    (prisma as any).log.findMany.mockReset();
+    (prisma as any).log.count.mockReset();
+  });
+
+  it('returns filtered logs with pagination', async () => {
+    const logs = [
+      {
+        id: 1,
+        timestamp: new Date('2025-06-01T10:20:30Z'),
+        programId: 'abc123',
+        level: 'info',
+        message: 'hello',
+        error: null,
+        source: 'api',
+      },
+    ];
+    (prisma as any).log.findMany.mockResolvedValueOnce(logs);
+    (prisma as any).log.count.mockResolvedValueOnce(1);
+
+    const res = await request(app)
+      .get('/logs?programId=abc123')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.logs.length).toBe(1);
+    expect(res.body.page).toBe(1);
+    expect(res.body.pageSize).toBe(50);
+    expect(res.body.total).toBe(1);
+    expect((prisma as any).log.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ programId: 'abc123' }),
+        skip: 0,
+        take: 50,
+        orderBy: { timestamp: 'desc' },
+      }),
+    );
+  });
+
+  it('rejects invalid level filter', async () => {
+    const res = await request(app)
+      .get('/logs?level=fatal')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+  });
+});
+

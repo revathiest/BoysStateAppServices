@@ -9,6 +9,8 @@ const prisma = {
   },
   log: {
     create: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn(),
+    count: jest.fn(),
   },
 };
 
