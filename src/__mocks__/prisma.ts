@@ -7,6 +7,9 @@ const prisma = {
   programAssignment: {
     findMany: jest.fn(),
   },
+  log: {
+    create: jest.fn().mockResolvedValue(null),
+  },
 };
 
 export default prisma;

@@ -40,3 +40,14 @@ model ProgramAssignment {
   role      String
   createdAt DateTime @default(now())
 }
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  level     String
+  source    String
+  programId String
+  message   String
+  error     String?
+}
+
