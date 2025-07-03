@@ -136,24 +136,36 @@ app.get('/health', async (_req, res) => {
 });
 
 app.post('/logs', (req: express.Request, res: express.Response) => {
-  const { programId, level, message, error } = req.body as {
+  const { programId, level, message, error, source } = req.body as {
     programId?: string;
     level?: string;
     message?: string;
     error?: string;
+    source?: string;
   };
   if (!programId || !level || !message) {
     res.status(400).json({ error: 'programId, level, and message required' });
     return;
   }
-  if (level !== 'info' && level !== 'error') {
+  const lvl = level as string;
+  if (!['debug', 'info', 'warn', 'error'].includes(lvl)) {
     res.status(400).json({ error: 'Invalid level' });
     return;
   }
-  if (level === 'info') {
-    logger.info(programId, message);
-  } else {
-    logger.error(programId, message, error);
+  const src = source || 'client';
+  switch (lvl) {
+    case 'debug':
+      logger.debug(programId, message, src);
+      break;
+    case 'info':
+      logger.info(programId, message, src);
+      break;
+    case 'warn':
+      logger.warn(programId, message, src);
+      break;
+    case 'error':
+      logger.error(programId, message, error, src);
+      break;
   }
   res.status(204).send();
 });

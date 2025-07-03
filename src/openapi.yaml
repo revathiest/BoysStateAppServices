@@ -171,7 +171,7 @@ paths:
                 level:
                   type: string
                   description: Log level
-                  enum: [info, error]
+                  enum: [debug, info, warn, error]
                   example: info
                 message:
                   type: string
@@ -181,6 +181,10 @@ paths:
                   type: string
                   description: Optional error details for error logs
                   example: Stack trace
+                source:
+                  type: string
+                  description: Where the log originated (api or client)
+                  example: client
       responses:
         '204':
           description: Log recorded
