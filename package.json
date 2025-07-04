@@ -7,7 +7,7 @@
     "pretest": "npm run prisma:generate",
     "test": "jest",
     "dev": "prisma generate && ts-node src/index.ts",
-    "build": "tsc && cp src/openapi.yaml dist/openapi.yaml",
+    "build": "tsc && cp src/openapi.yaml dist/openapi.yaml && cp src/swagger-ui-custom.js dist/swagger-ui-custom.js",
     "start": "node dist/index.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate"

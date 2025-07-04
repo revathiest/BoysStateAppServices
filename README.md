@@ -48,6 +48,7 @@ This repository contains the **backend REST API and core services** for Boys Sta
 6. **API documentation:**
 
    * Access Swagger/OpenAPI docs at `/docs` or as configured.
+   * Download the raw Swagger spec at `/docs/swagger.json` or via the link on the Swagger UI page.
 
 ## Agent Specification
 

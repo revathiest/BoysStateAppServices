@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.swaggerDoc = void 0;
 exports.getUserPrograms = getUserPrograms;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
@@ -91,7 +92,22 @@ function ensureDatabase() {
 // Load OpenAPI spec
 const openApiPath = path_1.default.join(__dirname, 'openapi.yaml');
 const openApiDoc = yaml_1.default.parse((0, fs_1.readFileSync)(openApiPath, 'utf8'));
-app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc));
+app.get('/docs/swagger.json', (_req, res) => {
+    res.json(openApiDoc);
+});
+// Override server URL when not in production so Swagger points to the local API
+const port = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+    openApiDoc.servers = [{ url: `http://localhost:${port}` }];
+}
+app.get('/docs/swagger-ui-custom.js', (_req, res) => {
+    res.sendFile(path_1.default.join(__dirname, 'swagger-ui-custom.js'));
+});
+const docsOptions = {
+    customJs: 'swagger-ui-custom.js',
+};
+app.use('/docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openApiDoc, docsOptions));
+exports.swaggerDoc = openApiDoc;
 app.post('/register', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -145,6 +161,75 @@ app.get('/health', async (_req, res) => {
     }
     res.json({ status: 'ok', database: dbStatus });
 });
+app.post('/logs', (req, res) => {
+    const { programId, level, message, error, source } = req.body;
+    if (!programId || !level || !message) {
+        res.status(400).json({ error: 'programId, level, and message required' });
+        return;
+    }
+    const lvl = level;
+    if (!['debug', 'info', 'warn', 'error'].includes(lvl)) {
+        res.status(400).json({ error: 'Invalid level' });
+        return;
+    }
+    const src = source || 'client';
+    switch (lvl) {
+        case 'debug':
+            logger.debug(programId, message, src);
+            break;
+        case 'info':
+            logger.info(programId, message, src);
+            break;
+        case 'warn':
+            logger.warn(programId, message, src);
+            break;
+        case 'error':
+            logger.error(programId, message, error, src);
+            break;
+    }
+    res.status(204).send();
+});
+app.get('/logs', async (req, res) => {
+    const { programId, level, source, dateFrom, dateTo, search, page = '1', pageSize = '50', } = req.query;
+    if (level && !['debug', 'info', 'warn', 'error'].includes(level)) {
+        res.status(400).json({ error: 'Invalid level' });
+        return;
+    }
+    let p = parseInt(page, 10);
+    if (isNaN(p) || p < 1)
+        p = 1;
+    let size = parseInt(pageSize, 10);
+    if (isNaN(size) || size < 1)
+        size = 50;
+    if (size > 100)
+        size = 100;
+    const where = {};
+    if (programId)
+        where.programId = programId;
+    if (level)
+        where.level = level;
+    if (source)
+        where.source = source;
+    if (dateFrom || dateTo) {
+        where.timestamp = {};
+        if (dateFrom)
+            where.timestamp.gte = new Date(dateFrom);
+        if (dateTo)
+            where.timestamp.lte = new Date(dateTo);
+    }
+    if (search) {
+        const contains = { contains: search, mode: 'insensitive' };
+        where.OR = [{ message: contains }, { error: contains }, { source: contains }];
+    }
+    const total = await prisma_1.default.log.count({ where });
+    const logs = await prisma_1.default.log.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        skip: (p - 1) * size,
+        take: size,
+    });
+    res.json({ logs, page: p, pageSize: size, total });
+});
 async function getUserPrograms(req, res) {
     const { username } = req.params;
     if (!username) {
@@ -171,7 +256,6 @@ async function getUserPrograms(req, res) {
     res.json({ username: user.email, programs });
 }
 app.get('/programs/:username', getUserPrograms);
-const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
