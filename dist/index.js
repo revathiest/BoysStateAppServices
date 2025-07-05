@@ -255,6 +255,86 @@ async function getUserPrograms(req, res) {
     });
     res.json({ username: user.email, programs });
 }
+async function isProgramAdmin(userId, programId) {
+    const assignment = await prisma_1.default.programAssignment.findFirst({
+        where: { userId, programId },
+    });
+    return assignment?.role === 'admin';
+}
+app.post('/programs', async (req, res) => {
+    const user = req.user;
+    const { name, year, config } = req.body;
+    if (!name || !year) {
+        res.status(400).json({ error: 'name and year required' });
+        return;
+    }
+    const program = await prisma_1.default.program.create({
+        data: {
+            name,
+            year,
+            config,
+            createdBy: { connect: { id: user.userId } },
+        },
+    });
+    await prisma_1.default.programAssignment.create({
+        data: { userId: user.userId, programId: program.id, role: 'admin' },
+    });
+    logger.info(program.id, `Program created by ${user.email}`);
+    res.status(201).json({
+        id: program.id,
+        name: program.name,
+        year: program.year,
+        createdBy: user.userId,
+        roleAssigned: 'admin',
+    });
+});
+app.post('/programs/:programId/users', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { userId, role } = req.body;
+    if (!userId || !role) {
+        res.status(400).json({ error: 'userId and role required' });
+        return;
+    }
+    await prisma_1.default.programAssignment.create({
+        data: { userId, programId, role },
+    });
+    logger.info(programId, `User ${userId} assigned role ${role}`);
+    res.status(201).json({
+        programId,
+        userId,
+        role,
+        status: 'assigned',
+    });
+});
+app.get('/programs/:programId/users', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const assignments = await prisma_1.default.programAssignment.findMany({
+        where: { programId },
+        select: { userId: true, role: true },
+    });
+    logger.info(programId, `Listed users for program`);
+    res.json(assignments);
+});
 app.get('/programs/:username', getUserPrograms);
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();

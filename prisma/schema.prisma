@@ -25,6 +25,8 @@ model User {
 model Program {
   id          String             @id @default(cuid())
   name        String
+  year        Int
+  config      Json?
   createdBy   User               @relation("ProgramCreatedBy", fields: [createdById], references: [id])
   createdById Int
   assignments ProgramAssignment[]

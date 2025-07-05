@@ -309,6 +309,140 @@ paths:
                     example: Invalid level
       security:
         - bearerAuth: []
+  /programs:
+    post:
+      tags: [programs]
+      summary: Create a new program
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, year]
+              properties:
+                name:
+                  type: string
+                  example: Texas Boys State 2025
+                year:
+                  type: integer
+                  example: 2025
+                config:
+                  type: object
+                  description: Optional program configuration
+      responses:
+        '201':
+          description: Program created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  year:
+                    type: integer
+                  createdBy:
+                    type: integer
+                  roleAssigned:
+                    type: string
+                    example: admin
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: name and year required
+      security:
+        - bearerAuth: []
+  /programs/{programId}/users:
+    post:
+      tags: [programs]
+      summary: Assign user to program
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, role]
+              properties:
+                userId:
+                  type: integer
+                role:
+                  type: string
+                  example: counselor
+      responses:
+        '201':
+          description: User assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  programId:
+                    type: string
+                  userId:
+                    type: integer
+                  role:
+                    type: string
+                  status:
+                    type: string
+                    example: assigned
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [programs]
+      summary: List users in program
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of users and roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: integer
+                    role:
+                      type: string
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
   /programs/{username}:
     get:
       tags: [programs]

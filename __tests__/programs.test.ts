@@ -64,3 +64,93 @@ describe('GET /programs/:username', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Username required' });
   });
 });
+
+describe('POST /programs', () => {
+  beforeEach(() => {
+    mockedPrisma.program.create.mockReset();
+    mockedPrisma.programAssignment.create.mockReset();
+  });
+
+  it('creates a program and assigns admin role', async () => {
+    mockedPrisma.program.create.mockResolvedValueOnce({
+      id: 'prog1',
+      name: 'Boys State 2025',
+      year: 2025,
+    });
+    mockedPrisma.programAssignment.create.mockResolvedValueOnce({});
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const res = await request(app)
+      .post('/programs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Boys State 2025', year: 2025 });
+    expect(res.status).toBe(201);
+    expect(mockedPrisma.program.create).toHaveBeenCalled();
+    expect(mockedPrisma.programAssignment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ programId: 'prog1', role: 'admin', userId: 1 }),
+      }),
+    );
+  });
+
+  it('requires name and year', async () => {
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const res = await request(app)
+      .post('/programs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Missing Year' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('Program assignments', () => {
+  beforeEach(() => {
+    mockedPrisma.programAssignment.findFirst.mockReset();
+    mockedPrisma.programAssignment.create.mockReset();
+    mockedPrisma.programAssignment.findMany.mockReset();
+  });
+
+  it('assigns user when admin', async () => {
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.programAssignment.create.mockResolvedValueOnce({});
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const res = await request(app)
+      .post('/programs/abc/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ userId: 2, role: 'counselor' });
+    expect(res.status).toBe(201);
+    expect(mockedPrisma.programAssignment.create).toHaveBeenCalled();
+  });
+
+  it('rejects non-admin assignment', async () => {
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'counselor' });
+    const token = sign({ userId: 1, email: 'counselor@example.com' }, 'development-secret');
+    const res = await request(app)
+      .post('/programs/abc/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ userId: 2, role: 'delegate' });
+    expect(res.status).toBe(403);
+  });
+
+  it('lists users in a program for admin', async () => {
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([
+      { userId: 1, role: 'admin' },
+      { userId: 2, role: 'delegate' },
+    ]);
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const res = await request(app)
+      .get('/programs/abc/users')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(2);
+  });
+
+  it('forbids listing for non-admin', async () => {
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
+    const token = sign({ userId: 2, email: 'delegate@example.com' }, 'development-secret');
+    const res = await request(app)
+      .get('/programs/abc/users')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
+});
