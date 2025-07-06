@@ -22,6 +22,8 @@ tags:
     description: Manage program parties
   - name: delegates
     description: Manage program delegates
+  - name: staff
+    description: Manage program staff
 
 paths:
   /health:
@@ -1193,6 +1195,135 @@ paths:
       responses:
         '200':
           description: Delegate withdrawn
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/staff:
+    post:
+      tags: [staff]
+      summary: Add staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, role]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                role:
+                  type: string
+                groupingId:
+                  type: integer
+      responses:
+        '201':
+          description: Staff created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [staff]
+      summary: List staff for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /staff/{id}:
+    put:
+      tags: [staff]
+      summary: Update staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                role:
+                  type: string
+                groupingId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated staff member
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [staff]
+      summary: Remove staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff removed
         '403':
           description: Forbidden
         '404':

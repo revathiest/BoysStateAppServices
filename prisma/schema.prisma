@@ -14,28 +14,28 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  programs  ProgramAssignment[]
-  createdPrograms Program[] @relation("ProgramCreatedBy")
+  id              Int                 @id @default(autoincrement())
+  email           String              @unique
+  password        String
+  createdAt       DateTime            @default(now())
+  programs        ProgramAssignment[]
+  createdPrograms Program[]           @relation("ProgramCreatedBy")
 }
 
 model Program {
-  id          String             @id @default(cuid())
-  name        String
-  year        Int
-  config      Json?
-  createdBy   User               @relation("ProgramCreatedBy", fields: [createdById], references: [id])
-  createdById Int
-  assignments ProgramAssignment[]
-  years       ProgramYear[]
+  id            String              @id @default(cuid())
+  name          String
+  year          Int
+  config        Json?
+  createdBy     User                @relation("ProgramCreatedBy", fields: [createdById], references: [id])
+  createdById   Int
+  assignments   ProgramAssignment[]
+  years         ProgramYear[]
   groupingTypes GroupingType[]
-  groupings   Grouping[]
-  parties     Party[]
-  status      String   @default("active")
-  createdAt   DateTime           @default(now())
+  groupings     Grouping[]
+  parties       Party[]
+  status        String              @default("active")
+  createdAt     DateTime            @default(now())
 }
 
 model ProgramAssignment {
@@ -59,55 +59,57 @@ model Log {
 }
 
 model ProgramYear {
-  id        Int      @id @default(autoincrement())
-  program   Program  @relation(fields: [programId], references: [id])
+  id        Int                   @id @default(autoincrement())
+  program   Program               @relation(fields: [programId], references: [id])
   programId String
   year      Int
   startDate DateTime?
   endDate   DateTime?
-  status    String   @default("active")
+  status    String                @default("active")
   notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
   groupings ProgramYearGrouping[]
   parties   ProgramYearParty[]
   delegates Delegate[]
+  staff     Staff[]
 }
 
 model GroupingType {
-  id          Int      @id @default(autoincrement())
-  program     Program  @relation(fields: [programId], references: [id])
+  id          Int        @id @default(autoincrement())
+  program     Program    @relation(fields: [programId], references: [id])
   programId   String
   defaultName String
   customName  String?
   pluralName  String?
   levelOrder  Int
-  isRequired  Boolean  @default(false)
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isRequired  Boolean    @default(false)
+  status      String     @default("active")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   groupings   Grouping[]
 
   @@index([programId])
 }
 
 model Grouping {
-  id              Int       @id @default(autoincrement())
-  program         Program   @relation(fields: [programId], references: [id])
-  programId       String
-  groupingType    GroupingType @relation(fields: [groupingTypeId], references: [id])
-  groupingTypeId  Int
-  parentGrouping  Grouping? @relation("GroupingToParent", fields: [parentGroupingId], references: [id])
+  id               Int                   @id @default(autoincrement())
+  program          Program               @relation(fields: [programId], references: [id])
+  programId        String
+  groupingType     GroupingType          @relation(fields: [groupingTypeId], references: [id])
+  groupingTypeId   Int
+  parentGrouping   Grouping?             @relation("GroupingToParent", fields: [parentGroupingId], references: [id])
   parentGroupingId Int?
-  children        Grouping[] @relation("GroupingToParent")
-  name            String
-  status          String   @default("active")
-  displayOrder    Int?
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  programYears    ProgramYearGrouping[]
-  delegates       Delegate[]
+  children         Grouping[]            @relation("GroupingToParent")
+  name             String
+  status           String                @default("active")
+  displayOrder     Int?
+  notes            String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  programYears     ProgramYearGrouping[]
+  delegates        Delegate[]
+  staff            Staff[]
 
   @@index([programId])
   @@index([groupingTypeId])
@@ -127,17 +129,17 @@ model ProgramYearGrouping {
 }
 
 model Party {
-  id           Int      @id @default(autoincrement())
-  program      Program  @relation(fields: [programId], references: [id])
-  programId    String
-  name         String
-  abbreviation String?
-  color        String?
-  icon         String?
-  status       String   @default("active")
-  displayOrder Int?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 Int                @id @default(autoincrement())
+  program            Program            @relation(fields: [programId], references: [id])
+  programId          String
+  name               String
+  abbreviation       String?
+  color              String?
+  icon               String?
+  status             String             @default("active")
+  displayOrder       Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   programYearParties ProgramYearParty[]
 
   @@index([programId])
@@ -157,24 +159,43 @@ model ProgramYearParty {
 }
 
 model Delegate {
-  id             Int             @id @default(autoincrement())
-  programYear    ProgramYear     @relation(fields: [programYearId], references: [id])
-  programYearId  Int
-  firstName      String
-  lastName       String
-  email          String
-  phone          String?
-  userId         Int?
-  grouping       Grouping        @relation(fields: [groupingId], references: [id])
-  groupingId     Int
-  party          ProgramYearParty? @relation(fields: [partyId], references: [id])
-  partyId        Int?
-  status         String          @default("active")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id            Int               @id @default(autoincrement())
+  programYear   ProgramYear       @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  userId        Int?
+  grouping      Grouping          @relation(fields: [groupingId], references: [id])
+  groupingId    Int
+  party         ProgramYearParty? @relation(fields: [partyId], references: [id])
+  partyId       Int?
+  status        String            @default("active")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([programYearId])
   @@index([groupingId])
   @@index([partyId])
 }
 
+model Staff {
+  id            Int         @id @default(autoincrement())
+  programYear   ProgramYear @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  firstName     String
+  lastName      String
+  email         String
+  phone         String?
+  userId        Int?
+  role          String
+  grouping      Grouping?   @relation(fields: [groupingId], references: [id])
+  groupingId    Int?
+  status        String      @default("active")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([programYearId])
+  @@index([groupingId])
+}

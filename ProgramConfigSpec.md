@@ -107,7 +107,7 @@
 
 ---
 
-### 9. Staff *(Not Implemented)*
+### 9. Staff *(Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -243,10 +243,10 @@
 - `DELETE /delegates/{id}` *(implemented)*
 
 ### Staff
-- `GET /program-years/{id}/staff` *(not implemented)*
-- `POST /program-years/{id}/staff` *(not implemented)*
-- `PUT /staff/{id}` *(not implemented)*
-- `DELETE /staff/{id}` *(not implemented)*
+- `GET /program-years/{id}/staff` *(implemented)*
+- `POST /program-years/{id}/staff` *(implemented)*
+- `PUT /staff/{id}` *(implemented)*
+- `DELETE /staff/{id}` *(implemented)*
 
 ### Parents & Delegate Linking
 - `GET /program-years/{id}/parents` *(not implemented)*
