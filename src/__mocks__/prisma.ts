@@ -6,6 +6,11 @@ const prisma = {
   },
   programAssignment: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  },
+  program: {
+    create: jest.fn(),
   },
   log: {
     create: jest.fn().mockResolvedValue(null),
