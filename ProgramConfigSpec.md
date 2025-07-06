@@ -4,7 +4,7 @@
 
 ## A. Core Tables & Relationships
 
-### 1. Program *(Implemented)*
+### 1. Program *(Implemented & tested)*
 - `id` (PK)
 - `name`
 - `short_name`
@@ -17,7 +17,7 @@
 
 ---
 
-### 2. ProgramYear *(Implemented)*
+### 2. ProgramYear *(Implemented & tested)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `year` (e.g., 2025)
@@ -30,7 +30,7 @@
 
 ---
 
-### 3. GroupingType *(Implemented)*
+### 3. GroupingType *(Implemented & tested)*
 *(Flexible region/level naming per program)*
 - `id` (PK)
 - `program_id` (FK → Program)
@@ -45,7 +45,7 @@
 
 ---
 
-### 4. Grouping *(Implemented)*
+### 4. Grouping *(Implemented & tested)*
 *(Instances of each grouping type, with hierarchy)*
 - `id` (PK)
 - `program_id` (FK → Program)
@@ -60,7 +60,7 @@
 
 ---
 
-### 5. ProgramYearGrouping *(Implemented)*
+### 5. ProgramYearGrouping *(Implemented & tested)*
 *(Which groupings are active in which years)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
@@ -69,7 +69,7 @@
 
 ---
 
-### 6. Party *(Implemented)*
+### 6. Party *(Implemented & tested)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `name`
@@ -83,7 +83,7 @@
 
 ---
 
-### 7. ProgramYearParty *(Implemented)*
+### 7. ProgramYearParty *(Implemented & tested)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `party_id` (FK → Party)
@@ -91,7 +91,7 @@
 
 ---
 
-### 8. Delegate *(Implemented)*
+### 8. Delegate *(Implemented & tested)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -107,7 +107,7 @@
 
 ---
 
-### 9. Staff *(Implemented)*
+### 9. Staff *(Implemented & tested)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -122,7 +122,7 @@
 
 ---
 
-### 10. Parent *(Implemented)*
+### 10. Parent *(Implemented & tested)*
 - `id` (PK)
 - `user_id` (if linked to user account)
 - `first_name`
@@ -132,7 +132,7 @@
 - `created_at`
 - `updated_at`
 
-### 11. DelegateParentLink *(Implemented)*
+### 11. DelegateParentLink *(Implemented & tested)*
 - `id` (PK)
 - `delegate_id` (FK → Delegate)
 - `parent_id` (FK → Parent)
@@ -201,60 +201,60 @@
 ---
 
 ### Program Management
-- `GET /programs` — List all programs *(implemented)*
-- `POST /programs` — Create program *(implemented)*
-- `GET /programs/{id}` — Get program details *(implemented)*
-- `PUT /programs/{id}` — Update program *(implemented)*
-- `DELETE /programs/{id}` — Retire program *(implemented)*
+- `GET /programs` — List all programs *(implemented & tested)*
+- `POST /programs` — Create program *(implemented & tested)*
+- `GET /programs/{id}` — Get program details *(implemented & tested)*
+- `PUT /programs/{id}` — Update program *(implemented & tested)*
+- `DELETE /programs/{id}` — Retire program *(implemented & tested)*
 
 ### Program Year Management
-- `GET /programs/{id}/years` — List years for a program *(implemented)*
-- `POST /programs/{id}/years` — Create new program year *(implemented)*
-- `GET /program-years/{id}` — Get year details *(implemented)*
-- `PUT /program-years/{id}` — Update year *(implemented)*
-- `DELETE /program-years/{id}` — Archive year *(implemented)*
+- `GET /programs/{id}/years` — List years for a program *(implemented & tested)*
+- `POST /programs/{id}/years` — Create new program year *(implemented & tested)*
+- `GET /program-years/{id}` — Get year details *(implemented & tested)*
+- `PUT /program-years/{id}` — Update year *(implemented & tested)*
+- `DELETE /program-years/{id}` — Archive year *(implemented & tested)*
 
 ### Grouping Types (custom naming)
-- `GET /programs/{id}/grouping-types` — List grouping types *(implemented)*
-- `POST /programs/{id}/grouping-types` — Add grouping type *(implemented)*
-- `PUT /grouping-types/{id}` — Update custom/plural names *(implemented)*
-- `DELETE /grouping-types/{id}` — Retire type *(implemented)*
+- `GET /programs/{id}/grouping-types` — List grouping types *(implemented & tested)*
+- `POST /programs/{id}/grouping-types` — Add grouping type *(implemented & tested)*
+- `PUT /grouping-types/{id}` — Update custom/plural names *(implemented & tested)*
+- `DELETE /grouping-types/{id}` — Retire type *(implemented & tested)*
 
 ### Groupings (instances: parishes, towns, etc.)
-- `GET /programs/{id}/groupings` — List all groupings *(implemented)*
-- `POST /programs/{id}/groupings` — Add grouping *(implemented)*
-- `PUT /groupings/{id}` — Update grouping *(implemented)*
-- `DELETE /groupings/{id}` — Retire grouping *(implemented)*
-- `POST /program-years/{id}/groupings/activate` — Activate groupings for year *(implemented)*
-- `GET /program-years/{id}/groupings` — List active groupings for year *(implemented)*
+- `GET /programs/{id}/groupings` — List all groupings *(implemented & tested)*
+- `POST /programs/{id}/groupings` — Add grouping *(implemented & tested)*
+- `PUT /groupings/{id}` — Update grouping *(implemented & tested)*
+- `DELETE /groupings/{id}` — Retire grouping *(implemented & tested)*
+- `POST /program-years/{id}/groupings/activate` — Activate groupings for year *(implemented & tested)*
+- `GET /program-years/{id}/groupings` — List active groupings for year *(implemented & tested)*
 
 ### Parties
-- `GET /programs/{id}/parties` *(implemented)*
-- `POST /programs/{id}/parties` *(implemented)*
-- `PUT /parties/{id}` *(implemented)*
-- `DELETE /parties/{id}` *(implemented)*
-- `POST /program-years/{id}/parties/activate` *(implemented)*
-- `GET /program-years/{id}/parties` *(implemented)*
+- `GET /programs/{id}/parties` *(implemented & tested)*
+- `POST /programs/{id}/parties` *(implemented & tested)*
+- `PUT /parties/{id}` *(implemented & tested)*
+- `DELETE /parties/{id}` *(implemented & tested)*
+- `POST /program-years/{id}/parties/activate` *(implemented & tested)*
+- `GET /program-years/{id}/parties` *(implemented & tested)*
 
 ### Delegates
-- `GET /program-years/{id}/delegates` *(implemented)*
-- `POST /program-years/{id}/delegates` *(implemented)*
-- `PUT /delegates/{id}` *(implemented)*
-- `DELETE /delegates/{id}` *(implemented)*
+- `GET /program-years/{id}/delegates` *(implemented & tested)*
+- `POST /program-years/{id}/delegates` *(implemented & tested)*
+- `PUT /delegates/{id}` *(implemented & tested)*
+- `DELETE /delegates/{id}` *(implemented & tested)*
 
 ### Staff
-- `GET /program-years/{id}/staff` *(implemented)*
-- `POST /program-years/{id}/staff` *(implemented)*
-- `PUT /staff/{id}` *(implemented)*
-- `DELETE /staff/{id}` *(implemented)*
+- `GET /program-years/{id}/staff` *(implemented & tested)*
+- `POST /program-years/{id}/staff` *(implemented & tested)*
+- `PUT /staff/{id}` *(implemented & tested)*
+- `DELETE /staff/{id}` *(implemented & tested)*
 
 ### Parents & Delegate Linking
-- `GET /program-years/{id}/parents` *(implemented)*
-- `POST /program-years/{id}/parents` *(implemented)*
-- `PUT /parents/{id}` *(implemented)*
-- `DELETE /parents/{id}` *(implemented)*
-- `POST /delegate-parent-links` (create link) *(implemented)*
-- `PUT /delegate-parent-links/{id}` (update status) *(implemented)*
+- `GET /program-years/{id}/parents` *(implemented & tested)*
+- `POST /program-years/{id}/parents` *(implemented & tested)*
+- `PUT /parents/{id}` *(implemented & tested)*
+- `DELETE /parents/{id}` *(implemented & tested)*
+- `POST /delegate-parent-links` (create link) *(implemented & tested)*
+- `PUT /delegate-parent-links/{id}` (update status) *(implemented & tested)*
 
 ### Positions
 - `GET /programs/{id}/positions` *(not implemented)*
@@ -291,3 +291,19 @@
 ---
 
 *This spec can be adapted to your preferred ORM/backend. Add schedule, resources, notification tables as your feature set grows.*
+
+---
+
+## D. Test Coverage Summary
+
+Automated Jest tests cover all implemented endpoints in `src/index.ts`. The latest test run produced the following summary:
+
+```
+All files  |   76.68 |    49.55 |    97.1 |   76.94 |
+ index.ts  |   75.42 |    46.37 |   98.33 |   75.74 |
+ jwt.ts    |     100 |      100 |     100 |     100 |
+ logger.ts |     100 |    81.81 |   83.33 |     100 |
+ prisma.ts |     100 |      100 |     100 |     100 |
+```
+
+In total, 15 test suites ran 86 tests covering the API logic and utilities.
