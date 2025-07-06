@@ -30,6 +30,13 @@ describe('POST /logs', () => {
     expect((prisma as any).log.create).toHaveBeenCalled();
   });
 
+  it('rejects unauthenticated requests', async () => {
+    const res = await request(app)
+      .post('/logs')
+      .send({ programId: 'abc123', level: 'info', message: 'hello' });
+    expect(res.status).toBe(401);
+  });
+
   it('requires all fields', async () => {
     const res = await request(app)
       .post('/logs')
@@ -53,6 +60,14 @@ describe('POST /logs', () => {
       .send({ programId: 'abc123', level: 'warn', message: 'careful' });
     expect(res.status).toBe(204);
     expect((prisma as any).log.create).toHaveBeenCalled();
+  });
+
+  it('records a debug log', async () => {
+    const res = await request(app)
+      .post('/logs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ programId: 'abc123', level: 'debug', message: 'dbg' });
+    expect(res.status).toBe(204);
   });
 
   it('records an error log with details', async () => {
@@ -88,7 +103,7 @@ describe('GET /logs', () => {
     (prisma as any).log.count.mockResolvedValueOnce(1);
 
     const res = await request(app)
-      .get('/logs?programId=abc123')
+      .get('/logs?programId=abc123&search=hello&dateFrom=2025-05-01&dateTo=2025-07-01')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
@@ -111,6 +126,11 @@ describe('GET /logs', () => {
       .get('/logs?level=fatal')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(400);
+  });
+
+  it('requires auth for log retrieval', async () => {
+    const res = await request(app).get('/logs');
+    expect(res.status).toBe(401);
   });
 });
 

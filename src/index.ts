@@ -30,6 +30,10 @@ app.use((req, _res, next) => {
 
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 
+const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
 app.use((req, res, next) => {
   if (
     req.path === '/login' ||
@@ -117,8 +121,19 @@ app.post('/login', async (req: express.Request, res: express.Response) => {
     return;
   }
 
+  const now = Date.now();
+  const ip = req.ip || '';
+  const attempt = loginAttempts.get(ip);
+  if (attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS && attempt.count >= MAX_LOGIN_ATTEMPTS) {
+    logger.warn('system', `Too many login attempts from ${ip}`);
+    res.status(429).json({ error: 'Too many login attempts' });
+    return;
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    const count = attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS ? attempt.count + 1 : 1;
+    loginAttempts.set(ip, { count, lastAttempt: now });
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
@@ -126,9 +141,13 @@ app.post('/login', async (req: express.Request, res: express.Response) => {
   const [salt, storedHash] = user.password.split(':');
   const buf = (await scrypt(password, salt, 64)) as Buffer;
   if (buf.toString('hex') !== storedHash) {
+    const count = attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS ? attempt.count + 1 : 1;
+    loginAttempts.set(ip, { count, lastAttempt: now });
     res.status(401).json({ error: 'Invalid credentials' });
     return;
   }
+
+  loginAttempts.delete(ip);
 
   const token = sign({ userId: user.id, email: user.email }, jwtSecret);
   logger.info('system', `User logged in: ${email}`);
@@ -376,4 +395,5 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
+export { loginAttempts, ensureDatabase };
 export default app;

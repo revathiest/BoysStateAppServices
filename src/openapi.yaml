@@ -148,6 +148,16 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+        '429':
+          description: Too many failed login attempts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Too many login attempts
 
   /logs:
     post:
