@@ -91,7 +91,7 @@
 
 ---
 
-### 8. Delegate *(Not Implemented)*
+### 8. Delegate *(Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -237,10 +237,10 @@
 - `GET /program-years/{id}/parties` *(implemented)*
 
 ### Delegates
-- `GET /program-years/{id}/delegates` *(not implemented)*
-- `POST /program-years/{id}/delegates` *(not implemented)*
-- `PUT /delegates/{id}` *(not implemented)*
-- `DELETE /delegates/{id}` *(not implemented)*
+- `GET /program-years/{id}/delegates` *(implemented)*
+- `POST /program-years/{id}/delegates` *(implemented)*
+- `PUT /delegates/{id}` *(implemented)*
+- `DELETE /delegates/{id}` *(implemented)*
 
 ### Staff
 - `GET /program-years/{id}/staff` *(not implemented)*

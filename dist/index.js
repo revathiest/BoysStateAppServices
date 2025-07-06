@@ -888,6 +888,107 @@ app.get('/program-years/:id/parties', async (req, res) => {
     });
     res.json(records);
 });
+app.post('/program-years/:id/delegates', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId, groupingId, partyId } = req.body;
+    if (!firstName || !lastName || !email || !groupingId) {
+        res.status(400).json({ error: 'firstName, lastName, email and groupingId required' });
+        return;
+    }
+    const delegate = await prisma_1.default.delegate.create({
+        data: {
+            programYearId: py.id,
+            firstName,
+            lastName,
+            email,
+            phone,
+            userId,
+            groupingId,
+            partyId,
+            status: 'active',
+        },
+    });
+    logger.info(py.programId, `Delegate ${delegate.id} created`);
+    res.status(201).json(delegate);
+});
+app.get('/program-years/:id/delegates', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const delegates = await prisma_1.default.delegate.findMany({ where: { programYearId: py.id } });
+    res.json(delegates);
+});
+app.put('/delegates/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const delegate = await prisma_1.default.delegate.findUnique({ where: { id: Number(id) } });
+    if (!delegate) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: delegate.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId, groupingId, partyId, status } = req.body;
+    const updated = await prisma_1.default.delegate.update({
+        where: { id: Number(id) },
+        data: { firstName, lastName, email, phone, userId, groupingId, partyId, status },
+    });
+    logger.info(py.programId, `Delegate ${delegate.id} updated`);
+    res.json(updated);
+});
+app.delete('/delegates/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const delegate = await prisma_1.default.delegate.findUnique({ where: { id: Number(id) } });
+    if (!delegate) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: delegate.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.delegate.update({
+        where: { id: Number(id) },
+        data: { status: 'withdrawn' },
+    });
+    logger.info(py.programId, `Delegate ${delegate.id} withdrawn`);
+    res.json(updated);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
