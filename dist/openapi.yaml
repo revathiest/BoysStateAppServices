@@ -331,6 +331,76 @@ paths:
                     example: Invalid level
       security:
         - bearerAuth: []
+  /audit-logs:
+    post:
+      tags: [system]
+      summary: Create an audit log entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tableName, recordId, userId, action]
+              properties:
+                tableName:
+                  type: string
+                recordId:
+                  type: string
+                userId:
+                  type: integer
+                action:
+                  type: string
+                changes:
+                  type: object
+      responses:
+        '201':
+          description: Created audit log
+        '400':
+          description: Invalid request
+      security:
+        - bearerAuth: []
+    get:
+      tags: [system]
+      summary: List audit log entries
+      parameters:
+        - in: query
+          name: tableName
+          schema:
+            type: string
+        - in: query
+          name: recordId
+          schema:
+            type: string
+        - in: query
+          name: userId
+          schema:
+            type: integer
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of audit logs
+        '400':
+          description: Invalid request
+      security:
+        - bearerAuth: []
   /programs:
     get:
       tags: [programs]
@@ -455,6 +525,68 @@ paths:
       responses:
         '200':
           description: Program retired
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{id}/branding:
+    get:
+      tags: [programs]
+      summary: Get program branding and contact info
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Branding information
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program branding and contact info
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated branding
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{id}/config:
+    get:
+      tags: [programs]
+      summary: Get full program configuration
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program configuration
         '403':
           description: Forbidden
         '404':
