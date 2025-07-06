@@ -474,6 +474,102 @@ app.delete('/program-years/:id', async (req, res) => {
     res.json(updated);
 });
 app.get('/programs/:username', getUserPrograms);
+app.post('/programs/:programId/grouping-types', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { defaultName, customName, pluralName, levelOrder, isRequired, } = req.body;
+    if (!defaultName || levelOrder === undefined) {
+        res.status(400).json({ error: 'defaultName and levelOrder required' });
+        return;
+    }
+    const gt = await prisma_1.default.groupingType.create({
+        data: {
+            programId,
+            defaultName,
+            customName,
+            pluralName,
+            levelOrder,
+            isRequired: Boolean(isRequired),
+            status: 'active',
+        },
+    });
+    logger.info(programId, `GroupingType ${gt.id} created`);
+    res.status(201).json(gt);
+});
+app.get('/programs/:programId/grouping-types', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const types = await prisma_1.default.groupingType.findMany({
+        where: { programId },
+        orderBy: { levelOrder: 'asc' },
+    });
+    res.json(types);
+});
+app.put('/grouping-types/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const gt = await prisma_1.default.groupingType.findUnique({ where: { id: Number(id) } });
+    if (!gt) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, gt.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { customName, pluralName, levelOrder, isRequired, status } = req.body;
+    const updated = await prisma_1.default.groupingType.update({
+        where: { id: Number(id) },
+        data: {
+            customName,
+            pluralName,
+            levelOrder,
+            isRequired,
+            status,
+        },
+    });
+    logger.info(gt.programId, `GroupingType ${gt.id} updated`);
+    res.json(updated);
+});
+app.delete('/grouping-types/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const gt = await prisma_1.default.groupingType.findUnique({ where: { id: Number(id) } });
+    if (!gt) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, gt.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.groupingType.update({
+        where: { id: Number(id) },
+        data: { status: 'retired' },
+    });
+    logger.info(gt.programId, `GroupingType ${gt.id} retired`);
+    res.json(updated);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {

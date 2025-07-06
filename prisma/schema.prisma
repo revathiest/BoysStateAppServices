@@ -31,6 +31,8 @@ model Program {
   createdById Int
   assignments ProgramAssignment[]
   years       ProgramYear[]
+  groupingTypes GroupingType[]
+  groupings   Grouping[]
   createdAt   DateTime           @default(now())
 }
 
@@ -65,5 +67,57 @@ model ProgramYear {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  groupings ProgramYearGrouping[]
+}
+
+model GroupingType {
+  id          Int      @id @default(autoincrement())
+  program     Program  @relation(fields: [programId], references: [id])
+  programId   String
+  defaultName String
+  customName  String?
+  pluralName  String?
+  levelOrder  Int
+  isRequired  Boolean  @default(false)
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  groupings   Grouping[]
+
+  @@index([programId])
+}
+
+model Grouping {
+  id              Int       @id @default(autoincrement())
+  program         Program   @relation(fields: [programId], references: [id])
+  programId       String
+  groupingType    GroupingType @relation(fields: [groupingTypeId], references: [id])
+  groupingTypeId  Int
+  parentGrouping  Grouping? @relation("GroupingToParent", fields: [parentGroupingId], references: [id])
+  parentGroupingId Int?
+  children        Grouping[] @relation("GroupingToParent")
+  name            String
+  status          String   @default("active")
+  displayOrder    Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  programYears    ProgramYearGrouping[]
+
+  @@index([programId])
+  @@index([groupingTypeId])
+  @@index([parentGroupingId])
+}
+
+model ProgramYearGrouping {
+  id            Int         @id @default(autoincrement())
+  programYear   ProgramYear @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  grouping      Grouping    @relation(fields: [groupingId], references: [id])
+  groupingId    Int
+  status        String      @default("active")
+
+  @@index([programYearId])
+  @@index([groupingId])
 }
 

@@ -14,6 +14,8 @@ tags:
     description: Endpoints for service monitoring and status
   - name: auth
     description: User registration and login
+  - name: groupingTypes
+    description: Manage grouping type definitions
 
 paths:
   /health:
@@ -515,6 +517,121 @@ paths:
                   type: object
         '403':
           description: Forbidden
+      security:
+        - bearerAuth: []
+  /programs/{programId}/grouping-types:
+    post:
+      tags: [groupingTypes]
+      summary: Add grouping type
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultName, levelOrder]
+              properties:
+                defaultName:
+                  type: string
+                customName:
+                  type: string
+                pluralName:
+                  type: string
+                levelOrder:
+                  type: integer
+                isRequired:
+                  type: boolean
+      responses:
+        '201':
+          description: Created grouping type
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [groupingTypes]
+      summary: List grouping types
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of grouping types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /grouping-types/{id}:
+    put:
+      tags: [groupingTypes]
+      summary: Update grouping type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customName:
+                  type: string
+                pluralName:
+                  type: string
+                levelOrder:
+                  type: integer
+                isRequired:
+                  type: boolean
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated grouping type
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [groupingTypes]
+      summary: Retire grouping type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired grouping type
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
       security:
         - bearerAuth: []
   /program-years/{id}:
