@@ -142,13 +142,11 @@
 
 ---
 
-### 12. Position *(Not Implemented)*
+### 12. Position *(Implemented & tested)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `name` (e.g., Mayor, Governor, Councilmember)
 - `description`
-- `is_elected` (boolean)
-- `grouping_type_id` (FK to GroupingType)
 - `status` (active, retired)
 - `display_order`
 - `created_at`
@@ -156,22 +154,17 @@
 
 ---
 
-### 13. ProgramYearPosition *(Not Implemented)*
+### 13. ProgramYearPosition *(Implemented & tested)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `position_id` (FK → Position)
-- `grouping_id` (FK → Grouping, instance this is attached to, e.g., Mayor of Covington Town)
-- `assigned_delegate_id` (FK → Delegate, nullable, when filled)
-- `assigned_by_staff_id` (FK → Staff, for appointed)
-- `is_elected` (copied for audit)
-- `status` (open, filled, archived)
-- `notes`
+- `delegate_id` (FK → Delegate, nullable)
+- `status` (active, inactive)
 - `created_at`
-- `updated_at`
 
 ---
 
-### 14. Election (if needed) *(Not Implemented)*
+### 14. Election *(Implemented & tested)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `position_id` (FK → ProgramYearPosition)
@@ -184,7 +177,7 @@
 
 ---
 
-### 15. ElectionVote *(Not Implemented)*
+### 15. ElectionVote *(Implemented & tested)*
 - `id` (PK)
 - `election_id` (FK → Election)
 - `voter_delegate_id` (FK → Delegate)
@@ -268,13 +261,13 @@
 - `PUT /program-year-positions/{id}` *(implemented & tested)*
 - `DELETE /program-year-positions/{id}` *(implemented & tested)*
 
-### Elections (if implemented)
-- `GET /program-years/{id}/elections` *(not implemented)*
-- `POST /program-years/{id}/elections` *(not implemented)*
-- `PUT /elections/{id}` *(not implemented)*
-- `DELETE /elections/{id}` *(not implemented)*
-- `POST /elections/{id}/vote` (submit vote) *(not implemented)*
-- `GET /elections/{id}/results` *(not implemented)*
+### Elections
+- `GET /program-years/{id}/elections` *(implemented & tested)*
+- `POST /program-years/{id}/elections` *(implemented & tested)*
+- `PUT /elections/{id}` *(implemented & tested)*
+- `DELETE /elections/{id}` *(implemented & tested)*
+- `POST /elections/{id}/vote` (submit vote) *(implemented & tested)*
+- `GET /elections/{id}/results` *(implemented & tested)*
 
 ### Other (as needed: notifications, resources, schedule, etc.)
 
@@ -299,11 +292,7 @@
 Automated Jest tests cover all implemented endpoints in `src/index.ts`. The latest test run produced the following summary:
 
 ```
-All files  |   76.68 |    49.55 |    97.1 |   76.94 |
- index.ts  |   75.42 |    46.37 |   98.33 |   75.74 |
- jwt.ts    |     100 |      100 |     100 |     100 |
- logger.ts |     100 |    81.81 |   83.33 |     100 |
- prisma.ts |     100 |      100 |     100 |     100 |
+All files  |    70.5 |     42.9 |   92.77 |   70.63 |
 ```
 
-In total, 15 test suites ran 86 tests covering the API logic and utilities.
+In total, 17 test suites ran 95 tests covering the API logic and utilities.

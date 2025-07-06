@@ -1396,6 +1396,160 @@ app.put('/delegate-parent-links/:id', async (req, res) => {
     logger.info(py.programId, `Link ${link.id} updated`);
     res.json(updated);
 });
+app.post('/program-years/:id/elections', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { positionId, groupingId, method, startTime, endTime } = req.body;
+    if (!positionId || !groupingId || !method) {
+        res.status(400).json({ error: 'positionId, groupingId and method required' });
+        return;
+    }
+    const election = await prisma_1.default.election.create({
+        data: {
+            programYearId: py.id,
+            positionId,
+            groupingId,
+            method,
+            startTime: startTime ? new Date(startTime) : undefined,
+            endTime: endTime ? new Date(endTime) : undefined,
+            status: 'scheduled',
+        },
+    });
+    logger.info(py.programId, `Election ${election.id} created`);
+    res.status(201).json(election);
+});
+app.get('/program-years/:id/elections', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const elections = await prisma_1.default.election.findMany({ where: { programYearId: py.id } });
+    res.json(elections);
+});
+app.put('/elections/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const election = await prisma_1.default.election.findUnique({ where: { id: Number(id) } });
+    if (!election) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: election.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { status, startTime, endTime } = req.body;
+    const updated = await prisma_1.default.election.update({
+        where: { id: Number(id) },
+        data: {
+            status,
+            startTime: startTime ? new Date(startTime) : undefined,
+            endTime: endTime ? new Date(endTime) : undefined,
+        },
+    });
+    logger.info(py.programId, `Election ${election.id} updated`);
+    res.json(updated);
+});
+app.delete('/elections/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const election = await prisma_1.default.election.findUnique({ where: { id: Number(id) } });
+    if (!election) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: election.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.election.update({ where: { id: Number(id) }, data: { status: 'archived' } });
+    logger.info(py.programId, `Election ${election.id} removed`);
+    res.json(updated);
+});
+app.post('/elections/:id/vote', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const election = await prisma_1.default.election.findUnique({ where: { id: Number(id) } });
+    if (!election) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: election.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { candidateId, voterId, rank } = req.body;
+    if (!candidateId || !voterId) {
+        res.status(400).json({ error: 'candidateId and voterId required' });
+        return;
+    }
+    const vote = await prisma_1.default.electionVote.create({
+        data: { electionId: election.id, candidateDelegateId: candidateId, voterDelegateId: voterId, voteRank: rank },
+    });
+    logger.info(py.programId, `Vote ${vote.id} recorded`);
+    res.status(201).json(vote);
+});
+app.get('/elections/:id/results', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const election = await prisma_1.default.election.findUnique({ where: { id: Number(id) } });
+    if (!election) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: election.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const votes = await prisma_1.default.electionVote.groupBy({
+        by: ['candidateDelegateId'],
+        where: { electionId: election.id },
+        _count: true,
+    });
+    res.json({ results: votes });
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
