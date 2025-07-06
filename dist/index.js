@@ -1087,6 +1087,148 @@ app.delete('/staff/:id', async (req, res) => {
     logger.info(py.programId, `Staff ${staff.id} removed`);
     res.json(updated);
 });
+app.post('/program-years/:id/parents', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId } = req.body;
+    if (!firstName || !lastName || !email) {
+        res.status(400).json({ error: 'firstName, lastName, and email required' });
+        return;
+    }
+    const parent = await prisma_1.default.parent.create({
+        data: {
+            programYearId: py.id,
+            firstName,
+            lastName,
+            email,
+            phone,
+            userId,
+            status: 'active',
+        },
+    });
+    logger.info(py.programId, `Parent ${parent.id} created`);
+    res.status(201).json(parent);
+});
+app.get('/program-years/:id/parents', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const parents = await prisma_1.default.parent.findMany({ where: { programYearId: py.id } });
+    res.json(parents);
+});
+app.put('/parents/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const parent = await prisma_1.default.parent.findUnique({ where: { id: Number(id) } });
+    if (!parent) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: parent.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId, status } = req.body;
+    const updated = await prisma_1.default.parent.update({
+        where: { id: Number(id) },
+        data: { firstName, lastName, email, phone, userId, status },
+    });
+    logger.info(py.programId, `Parent ${parent.id} updated`);
+    res.json(updated);
+});
+app.delete('/parents/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const parent = await prisma_1.default.parent.findUnique({ where: { id: Number(id) } });
+    if (!parent) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: parent.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.parent.update({ where: { id: Number(id) }, data: { status: 'inactive' } });
+    logger.info(py.programId, `Parent ${parent.id} removed`);
+    res.json(updated);
+});
+app.post('/delegate-parent-links', async (req, res) => {
+    const caller = req.user;
+    const { delegateId, parentId, programYearId } = req.body;
+    if (!delegateId || !parentId || !programYearId) {
+        res.status(400).json({ error: 'delegateId, parentId and programYearId required' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const link = await prisma_1.default.delegateParentLink.create({
+        data: { delegateId, parentId, programYearId, status: 'pending' },
+    });
+    logger.info(py.programId, `Link ${link.id} created`);
+    res.status(201).json(link);
+});
+app.put('/delegate-parent-links/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const link = await prisma_1.default.delegateParentLink.findUnique({ where: { id: Number(id) } });
+    if (!link) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: link.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { status } = req.body;
+    const updated = await prisma_1.default.delegateParentLink.update({ where: { id: Number(id) }, data: { status } });
+    logger.info(py.programId, `Link ${link.id} updated`);
+    res.json(updated);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {

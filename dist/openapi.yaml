@@ -1330,6 +1330,185 @@ paths:
           description: Not found
       security:
         - bearerAuth: []
+
+  /program-years/{id}/parents:
+    post:
+      tags: [parents]
+      summary: Add parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+      responses:
+        '201':
+          description: Parent created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [parents]
+      summary: List parents for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of parents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /parents/{id}:
+    put:
+      tags: [parents]
+      summary: Update parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated parent
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [parents]
+      summary: Remove parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Parent removed
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /delegate-parent-links:
+    post:
+      tags: [parents]
+      summary: Create delegate-parent link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delegateId, parentId, programYearId]
+              properties:
+                delegateId:
+                  type: integer
+                parentId:
+                  type: integer
+                programYearId:
+                  type: integer
+      responses:
+        '201':
+          description: Link created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /delegate-parent-links/{id}:
+    put:
+      tags: [parents]
+      summary: Update delegate-parent link
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated link
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
   /program-years/{id}:
     get:
       tags: [programs]

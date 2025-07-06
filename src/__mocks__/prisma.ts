@@ -59,6 +59,18 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  parent: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
+  delegateParentLink: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),
