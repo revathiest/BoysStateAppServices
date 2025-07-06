@@ -14,6 +14,13 @@
 - `feature_toggles` (JSON)
 - `created_at`
 - `updated_at`
+- `branding_logo_url` (string, optional): URL to main logo. *(NEW)*
+- `branding_primary_color` (string, optional): HEX or color name. *(NEW)*
+- `branding_secondary_color` (string, optional) *(NEW)*
+- `welcome_message` (string, optional): For onboarding/welcome. *(NEW)*
+- `contact_email` (string, optional): Public contact/support email. *(NEW)*
+- `contact_phone` (string, optional): Public phone number. *(NEW)*
+- `social_links` (JSON, optional): Facebook, Twitter, Discord, etc. *(NEW)*
 
 ---
 
@@ -27,6 +34,7 @@
 - `notes`
 - `created_at`
 - `updated_at`
+- `archived_at` (timestamp, nullable) *(NEW)*
 
 ---
 
@@ -139,6 +147,8 @@
 - `program_year_id` (FK → ProgramYear)
 - `status` (pending, accepted, revoked)
 - `created_at`
+- `invited_by_user_id` (FK, nullable): Who sent the invite *(NEW)*
+- `updated_at` (timestamp): When status changed *(NEW)*
 
 ---
 
@@ -151,6 +161,8 @@
 - `display_order`
 - `created_at`
 - `updated_at`
+- `is_elected` (boolean): Required *(NEW)*
+- `grouping_type_id` (FK to GroupingType): Required *(NEW)*
 
 ---
 
@@ -161,6 +173,10 @@
 - `delegate_id` (FK → Delegate, nullable)
 - `status` (active, inactive)
 - `created_at`
+- `grouping_id` (FK → Grouping, instance attached to, e.g., Mayor of Covington Town) *(NEW)*
+- `assigned_delegate_id` (FK → Delegate, nullable, when filled) *(NEW)*
+- `assigned_by_staff_id` (FK → Staff, for appointed) *(NEW)*
+- `is_elected` (copied for audit) *(NEW)*
 
 ---
 
@@ -184,6 +200,8 @@
 - `candidate_delegate_id` (FK → Delegate)
 - `vote_rank` (integer, if ranked)
 - `created_at`
+- `created_by_ip` (string, optional): Store the IP address of the voter *(NEW)*
+- `is_provisional` (boolean, optional): Mark vote as provisional/pending *(NEW)*
 
 ### 16. ProgramAssignment *(Implemented & tested)*
 - `id` (PK)
@@ -201,6 +219,16 @@
 - `message`
 - `error`
 
+### 18. AuditLog *(NEW Table)*
+
+- `id` (PK)
+- `table_name` (string)
+- `record_id` (string or integer)
+- `user_id` (FK → User)
+- `action` (create, update, retire, archive, delete)
+- `timestamp`
+- `changes` (JSON diff, optional)
+
 ---
 
 ## B. Core API Endpoints
@@ -215,6 +243,9 @@
 - `GET /programs/{id}` — Get program details *(implemented & tested)*
 - `PUT /programs/{id}` — Update program *(implemented & tested)*
 - `DELETE /programs/{id}` — Retire program *(implemented & tested)*
+- `GET /programs/{id}/branding` — Get branding/theme, colors, welcome, social links *(NEW)*
+- `PUT /programs/{id}/branding` — Update branding, theme, colors, welcome message *(NEW)*
+- `GET /programs/{id}/config` — Get all program config (branding, toggles, contact, etc.) *(NEW)*
 
 ### Program Year Management
 - `GET /programs/{id}/years` — List years for a program *(implemented & tested)*
@@ -296,6 +327,8 @@
 - `GET /logs` — Query log entries *(implemented & tested)*
 - `POST /register` — Register new user *(implemented & tested)*
 - `POST /login` — Authenticate user *(implemented & tested)*
+- `GET /audit-logs` — List audit log entries (filter by table, record, user, date) *(NEW)*
+- `POST /audit-logs` — Create an audit log entry (system or admin action) *(NEW)*
 
 ### Other (as needed: notifications, resources, schedule, etc.)
 
