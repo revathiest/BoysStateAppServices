@@ -570,6 +570,139 @@ app.delete('/grouping-types/:id', async (req, res) => {
     logger.info(gt.programId, `GroupingType ${gt.id} retired`);
     res.json(updated);
 });
+app.post('/programs/:programId/groupings', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { groupingTypeId, parentGroupingId, name, displayOrder, notes } = req.body;
+    if (!groupingTypeId || !name) {
+        res.status(400).json({ error: 'groupingTypeId and name required' });
+        return;
+    }
+    const grouping = await prisma_1.default.grouping.create({
+        data: {
+            programId,
+            groupingTypeId,
+            parentGroupingId,
+            name,
+            displayOrder,
+            notes,
+            status: 'active',
+        },
+    });
+    logger.info(programId, `Grouping ${grouping.id} created`);
+    res.status(201).json(grouping);
+});
+app.get('/programs/:programId/groupings', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const groupings = await prisma_1.default.grouping.findMany({
+        where: { programId },
+        orderBy: { displayOrder: 'asc' },
+    });
+    res.json(groupings);
+});
+app.put('/groupings/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const grouping = await prisma_1.default.grouping.findUnique({ where: { id: Number(id) } });
+    if (!grouping) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, grouping.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { name, displayOrder, notes, parentGroupingId, status } = req.body;
+    const updated = await prisma_1.default.grouping.update({
+        where: { id: Number(id) },
+        data: { name, displayOrder, notes, parentGroupingId, status },
+    });
+    logger.info(grouping.programId, `Grouping ${grouping.id} updated`);
+    res.json(updated);
+});
+app.delete('/groupings/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const grouping = await prisma_1.default.grouping.findUnique({ where: { id: Number(id) } });
+    if (!grouping) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, grouping.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.grouping.update({
+        where: { id: Number(id) },
+        data: { status: 'retired' },
+    });
+    logger.info(grouping.programId, `Grouping ${grouping.id} retired`);
+    res.json(updated);
+});
+app.post('/program-years/:id/groupings/activate', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { groupingIds } = req.body;
+    if (!Array.isArray(groupingIds) || groupingIds.length === 0) {
+        res.status(400).json({ error: 'groupingIds required' });
+        return;
+    }
+    const records = await Promise.all(groupingIds.map((gid) => prisma_1.default.programYearGrouping.create({
+        data: { programYearId: py.id, groupingId: gid, status: 'active' },
+    })));
+    logger.info(py.programId, `Activated ${records.length} groupings for PY ${py.year}`);
+    res.status(201).json(records);
+});
+app.get('/program-years/:id/groupings', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const records = await prisma_1.default.programYearGrouping.findMany({
+        where: { programYearId: py.id, status: 'active' },
+        include: { grouping: true },
+    });
+    res.json(records);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
