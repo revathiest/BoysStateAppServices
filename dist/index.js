@@ -763,6 +763,131 @@ app.get('/program-years/:id/groupings', async (req, res) => {
     });
     res.json(records);
 });
+app.post('/programs/:programId/parties', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { name, abbreviation, color, icon, displayOrder } = req.body;
+    if (!name) {
+        res.status(400).json({ error: 'name required' });
+        return;
+    }
+    const party = await prisma_1.default.party.create({
+        data: { programId, name, abbreviation, color, icon, displayOrder, status: 'active' },
+    });
+    logger.info(programId, `Party ${party.id} created`);
+    res.status(201).json(party);
+});
+app.get('/programs/:programId/parties', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const parties = await prisma_1.default.party.findMany({
+        where: { programId },
+        orderBy: { displayOrder: 'asc' },
+    });
+    res.json(parties);
+});
+app.put('/parties/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const party = await prisma_1.default.party.findUnique({ where: { id: Number(id) } });
+    if (!party) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, party.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { name, abbreviation, color, icon, displayOrder, status } = req.body;
+    const updated = await prisma_1.default.party.update({
+        where: { id: Number(id) },
+        data: { name, abbreviation, color, icon, displayOrder, status },
+    });
+    logger.info(party.programId, `Party ${party.id} updated`);
+    res.json(updated);
+});
+app.delete('/parties/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const party = await prisma_1.default.party.findUnique({ where: { id: Number(id) } });
+    if (!party) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, party.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.party.update({
+        where: { id: Number(id) },
+        data: { status: 'retired' },
+    });
+    logger.info(party.programId, `Party ${party.id} retired`);
+    res.json(updated);
+});
+app.post('/program-years/:id/parties/activate', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { partyIds } = req.body;
+    if (!Array.isArray(partyIds) || partyIds.length === 0) {
+        res.status(400).json({ error: 'partyIds required' });
+        return;
+    }
+    const records = await Promise.all(partyIds.map((pid) => prisma_1.default.programYearParty.create({
+        data: { programYearId: py.id, partyId: pid, status: 'active' },
+    })));
+    logger.info(py.programId, `Activated ${records.length} parties for PY ${py.year}`);
+    res.status(201).json(records);
+});
+app.get('/program-years/:id/parties', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const records = await prisma_1.default.programYearParty.findMany({
+        where: { programYearId: py.id, status: 'active' },
+        include: { party: true },
+    });
+    res.json(records);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {

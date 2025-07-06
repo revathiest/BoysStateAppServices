@@ -33,6 +33,7 @@ model Program {
   years       ProgramYear[]
   groupingTypes GroupingType[]
   groupings   Grouping[]
+  parties     Party[]
   status      String   @default("active")
   createdAt   DateTime           @default(now())
 }
@@ -69,6 +70,7 @@ model ProgramYear {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   groupings ProgramYearGrouping[]
+  parties   ProgramYearParty[]
 }
 
 model GroupingType {
@@ -120,5 +122,34 @@ model ProgramYearGrouping {
 
   @@index([programYearId])
   @@index([groupingId])
+}
+
+model Party {
+  id           Int      @id @default(autoincrement())
+  program      Program  @relation(fields: [programId], references: [id])
+  programId    String
+  name         String
+  abbreviation String?
+  color        String?
+  icon         String?
+  status       String   @default("active")
+  displayOrder Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  programYearParties ProgramYearParty[]
+
+  @@index([programId])
+}
+
+model ProgramYearParty {
+  id            Int         @id @default(autoincrement())
+  programYear   ProgramYear @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  party         Party       @relation(fields: [partyId], references: [id])
+  partyId       Int
+  status        String      @default("active")
+
+  @@index([programYearId])
+  @@index([partyId])
 }
 

@@ -69,7 +69,7 @@
 
 ---
 
-### 6. Party *(Not Implemented)*
+### 6. Party *(Implemented)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `name`
@@ -83,7 +83,7 @@
 
 ---
 
-### 7. ProgramYearParty *(Not Implemented)*
+### 7. ProgramYearParty *(Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `party_id` (FK → Party)
@@ -229,12 +229,12 @@
 - `GET /program-years/{id}/groupings` — List active groupings for year *(implemented)*
 
 ### Parties
-- `GET /programs/{id}/parties` *(not implemented)*
-- `POST /programs/{id}/parties` *(not implemented)*
-- `PUT /parties/{id}` *(not implemented)*
-- `DELETE /parties/{id}` *(not implemented)*
-- `POST /program-years/{id}/parties/activate` *(not implemented)*
-- `GET /program-years/{id}/parties` *(not implemented)*
+- `GET /programs/{id}/parties` *(implemented)*
+- `POST /programs/{id}/parties` *(implemented)*
+- `PUT /parties/{id}` *(implemented)*
+- `DELETE /parties/{id}` *(implemented)*
+- `POST /program-years/{id}/parties/activate` *(implemented)*
+- `GET /program-years/{id}/parties` *(implemented)*
 
 ### Delegates
 - `GET /program-years/{id}/delegates` *(not implemented)*

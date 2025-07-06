@@ -33,7 +33,17 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  party: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
   programYearGrouping: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
+  programYearParty: {
     create: jest.fn(),
     findMany: jest.fn(),
   },
