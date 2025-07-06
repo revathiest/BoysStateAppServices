@@ -18,6 +18,12 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  groupingType: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),
