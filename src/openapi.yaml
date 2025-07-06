@@ -18,6 +18,8 @@ tags:
     description: Manage grouping type definitions
   - name: groupings
     description: Manage program groupings
+  - name: parties
+    description: Manage program parties
 
 paths:
   /health:
@@ -877,6 +879,183 @@ paths:
       responses:
         '200':
           description: Array of active groupings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{programId}/parties:
+    post:
+      tags: [parties]
+      summary: Add party
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                abbreviation:
+                  type: string
+                color:
+                  type: string
+                icon:
+                  type: string
+                displayOrder:
+                  type: integer
+      responses:
+        '201':
+          description: Created party
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [parties]
+      summary: List parties
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of parties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /parties/{id}:
+    put:
+      tags: [parties]
+      summary: Update party
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                abbreviation:
+                  type: string
+                color:
+                  type: string
+                icon:
+                  type: string
+                displayOrder:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated party
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [parties]
+      summary: Retire party
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired party
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/parties/activate:
+    post:
+      tags: [parties]
+      summary: Activate parties for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [partyIds]
+              properties:
+                partyIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '201':
+          description: Activated parties
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /program-years/{id}/parties:
+    get:
+      tags: [parties]
+      summary: List active parties for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of active parties
           content:
             application/json:
               schema:
