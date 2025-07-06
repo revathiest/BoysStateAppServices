@@ -12,11 +12,13 @@ module.exports = {
 
   // === COVERAGE SETTINGS ===
   collectCoverage: true,                        // always gather coverage
+  coverageProvider: 'babel',
   coverageDirectory: 'coverage',               // output folder
   coverageReporters: ['text', 'lcov'],         // text = console table, lcov for HTML
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
     'prisma/**/*.{js,ts}',
+    '__tests__/**/*.{js,ts}',
     '!**/node_modules/**',
     '!**/__mocks__/**'
   ],
