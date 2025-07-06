@@ -35,6 +35,7 @@ This repository contains the **backend REST API and core services** for Boys Sta
 3. **Set up environment variables:**
 
    * Create a `.env` file and configure database, API, and authentication settings.
+   * Optionally set `CORS_ORIGIN` to the allowed origin for credentialed requests.
 4. **Build the project:**
 
    ```bash
