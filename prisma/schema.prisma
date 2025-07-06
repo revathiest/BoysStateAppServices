@@ -73,6 +73,8 @@ model ProgramYear {
   parties   ProgramYearParty[]
   delegates Delegate[]
   staff     Staff[]
+  parents   Parent[]
+  delegateParentLinks DelegateParentLink[]
 }
 
 model GroupingType {
@@ -174,6 +176,7 @@ model Delegate {
   status        String            @default("active")
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+  parentLinks   DelegateParentLink[]
 
   @@index([programYearId])
   @@index([groupingId])
@@ -198,4 +201,37 @@ model Staff {
 
   @@index([programYearId])
   @@index([groupingId])
+}
+
+model Parent {
+  id        Int         @id @default(autoincrement())
+  programYear   ProgramYear @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  userId    Int?
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  status    String      @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  links     DelegateParentLink[]
+
+  @@index([programYearId])
+}
+
+model DelegateParentLink {
+  id            Int         @id @default(autoincrement())
+  delegate      Delegate    @relation(fields: [delegateId], references: [id])
+  delegateId    Int
+  parent        Parent      @relation(fields: [parentId], references: [id])
+  parentId      Int
+  programYear   ProgramYear @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  status        String      @default("pending")
+  createdAt     DateTime    @default(now())
+
+  @@index([delegateId])
+  @@index([parentId])
+  @@index([programYearId])
 }

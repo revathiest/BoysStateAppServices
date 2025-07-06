@@ -122,7 +122,7 @@
 
 ---
 
-### 10. Parent *(Not Implemented)*
+### 10. Parent *(Implemented)*
 - `id` (PK)
 - `user_id` (if linked to user account)
 - `first_name`
@@ -132,7 +132,7 @@
 - `created_at`
 - `updated_at`
 
-### 11. DelegateParentLink *(Not Implemented)*
+### 11. DelegateParentLink *(Implemented)*
 - `id` (PK)
 - `delegate_id` (FK → Delegate)
 - `parent_id` (FK → Parent)
@@ -249,12 +249,12 @@
 - `DELETE /staff/{id}` *(implemented)*
 
 ### Parents & Delegate Linking
-- `GET /program-years/{id}/parents` *(not implemented)*
-- `POST /program-years/{id}/parents` *(not implemented)*
-- `PUT /parents/{id}` *(not implemented)*
-- `DELETE /parents/{id}` *(not implemented)*
-- `POST /delegate-parent-links` (create link) *(not implemented)*
-- `PUT /delegate-parent-links/{id}` (update status) *(not implemented)*
+- `GET /program-years/{id}/parents` *(implemented)*
+- `POST /program-years/{id}/parents` *(implemented)*
+- `PUT /parents/{id}` *(implemented)*
+- `DELETE /parents/{id}` *(implemented)*
+- `POST /delegate-parent-links` (create link) *(implemented)*
+- `PUT /delegate-parent-links/{id}` (update status) *(implemented)*
 
 ### Positions
 - `GET /programs/{id}/positions` *(not implemented)*
