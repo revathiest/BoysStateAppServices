@@ -27,6 +27,13 @@ model Program {
   name          String
   year          Int
   config        Json?
+  brandingLogoUrl       String?
+  brandingPrimaryColor  String?
+  brandingSecondaryColor String?
+  welcomeMessage        String?
+  contactEmail          String?
+  contactPhone          String?
+  socialLinks           Json?
   createdBy     User                @relation("ProgramCreatedBy", fields: [createdById], references: [id])
   createdById   Int
   assignments   ProgramAssignment[]
@@ -70,6 +77,7 @@ model ProgramYear {
   notes     String?
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
+  archivedAt DateTime?
   groupings ProgramYearGrouping[]
   parties   ProgramYearParty[]
   delegates Delegate[]
@@ -237,6 +245,8 @@ model DelegateParentLink {
   programYearId Int
   status        String      @default("pending")
   createdAt     DateTime    @default(now())
+  invitedByUserId Int?
+  updatedAt     DateTime    @updatedAt
 
   @@index([delegateId])
   @@index([parentId])
@@ -251,11 +261,14 @@ model Position {
   description   String?
   displayOrder  Int?
   status        String             @default("active")
+  isElected     Boolean            @default(false)
+  groupingTypeId Int?
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   programYearPositions ProgramYearPosition[]
 
   @@index([programId])
+  @@index([groupingTypeId])
 }
 
 model ProgramYearPosition {
@@ -266,12 +279,19 @@ model ProgramYearPosition {
   positionId    Int
   delegate      Delegate?   @relation(fields: [delegateId], references: [id])
   delegateId    Int?
+  groupingId    Int?
+  assignedDelegateId Int?
+  assignedByStaffId Int?
+  isElected    Boolean     @default(false)
   status        String      @default("active")
   elections     Election[]
 
   @@index([programYearId])
   @@index([positionId])
   @@index([delegateId])
+  @@index([groupingId])
+  @@index([assignedDelegateId])
+  @@index([assignedByStaffId])
 }
 
 model Election {
@@ -304,8 +324,24 @@ model ElectionVote {
   candidateDelegateId Int
   voteRank            Int?
   createdAt           DateTime @default(now())
+  createdByIp         String?
+  isProvisional       Boolean?
 
   @@index([electionId])
   @@index([voterDelegateId])
   @@index([candidateDelegateId])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  tableName  String
+  recordId   String
+  userId     Int
+  action     String
+  timestamp  DateTime @default(now())
+  changes    Json?
+
+  @@index([tableName])
+  @@index([recordId])
+  @@index([userId])
 }
