@@ -989,6 +989,104 @@ app.delete('/delegates/:id', async (req, res) => {
     logger.info(py.programId, `Delegate ${delegate.id} withdrawn`);
     res.json(updated);
 });
+app.post('/program-years/:id/staff', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId, role, groupingId } = req.body;
+    if (!firstName || !lastName || !email || !role) {
+        res.status(400).json({ error: 'firstName, lastName, email and role required' });
+        return;
+    }
+    const staff = await prisma_1.default.staff.create({
+        data: {
+            programYearId: py.id,
+            firstName,
+            lastName,
+            email,
+            phone,
+            userId,
+            role,
+            groupingId,
+            status: 'active',
+        },
+    });
+    logger.info(py.programId, `Staff ${staff.id} created`);
+    res.status(201).json(staff);
+});
+app.get('/program-years/:id/staff', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const staffList = await prisma_1.default.staff.findMany({ where: { programYearId: py.id } });
+    res.json(staffList);
+});
+app.put('/staff/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const staff = await prisma_1.default.staff.findUnique({ where: { id: Number(id) } });
+    if (!staff) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: staff.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { firstName, lastName, email, phone, userId, role, groupingId, status } = req.body;
+    const updated = await prisma_1.default.staff.update({
+        where: { id: Number(id) },
+        data: { firstName, lastName, email, phone, userId, role, groupingId, status },
+    });
+    logger.info(py.programId, `Staff ${staff.id} updated`);
+    res.json(updated);
+});
+app.delete('/staff/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const staff = await prisma_1.default.staff.findUnique({ where: { id: Number(id) } });
+    if (!staff) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: staff.programYearId } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.staff.update({ where: { id: Number(id) }, data: { status: 'inactive' } });
+    logger.info(py.programId, `Staff ${staff.id} removed`);
+    res.json(updated);
+});
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
     app.listen(port, () => {
