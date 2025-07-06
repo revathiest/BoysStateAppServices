@@ -36,8 +36,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.swaggerDoc = void 0;
+exports.loginAttempts = exports.swaggerDoc = void 0;
 exports.getUserPrograms = getUserPrograms;
+exports.ensureDatabase = ensureDatabase;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = require("fs");
@@ -65,6 +66,10 @@ app.use((req, _res, next) => {
     next();
 });
 const jwtSecret = process.env.JWT_SECRET || 'development-secret';
+const loginAttempts = new Map();
+exports.loginAttempts = loginAttempts;
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 app.use((req, res, next) => {
     if (req.path === '/login' ||
         req.path === '/register' ||
@@ -138,17 +143,30 @@ app.post('/login', async (req, res) => {
         res.status(400).json({ error: 'Email and password required' });
         return;
     }
+    const now = Date.now();
+    const ip = req.ip || '';
+    const attempt = loginAttempts.get(ip);
+    if (attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS && attempt.count >= MAX_LOGIN_ATTEMPTS) {
+        logger.warn('system', `Too many login attempts from ${ip}`);
+        res.status(429).json({ error: 'Too many login attempts' });
+        return;
+    }
     const user = await prisma_1.default.user.findUnique({ where: { email } });
     if (!user) {
+        const count = attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS ? attempt.count + 1 : 1;
+        loginAttempts.set(ip, { count, lastAttempt: now });
         res.status(401).json({ error: 'Invalid credentials' });
         return;
     }
     const [salt, storedHash] = user.password.split(':');
     const buf = (await scrypt(password, salt, 64));
     if (buf.toString('hex') !== storedHash) {
+        const count = attempt && now - attempt.lastAttempt < LOGIN_WINDOW_MS ? attempt.count + 1 : 1;
+        loginAttempts.set(ip, { count, lastAttempt: now });
         res.status(401).json({ error: 'Invalid credentials' });
         return;
     }
+    loginAttempts.delete(ip);
     const token = (0, jwt_1.sign)({ userId: user.id, email: user.email }, jwtSecret);
     logger.info('system', `User logged in: ${email}`);
     res.json({ token });
