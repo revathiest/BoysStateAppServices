@@ -324,6 +324,14 @@ paths:
       security:
         - bearerAuth: []
   /programs:
+    get:
+      tags: [programs]
+      summary: List all programs
+      responses:
+        '200':
+          description: Array of programs
+      security:
+        - bearerAuth: []
     post:
       tags: [programs]
       summary: Create a new program
@@ -372,7 +380,77 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: name and year required
+      example: name and year required
+      security:
+        - bearerAuth: []
+  /programs/{id}:
+    get:
+      tags: [programs]
+      summary: Get program details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                year:
+                  type: integer
+                config:
+                  type: object
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated program
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [programs]
+      summary: Retire program
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program retired
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
       security:
         - bearerAuth: []
   /programs/{programId}/users:
@@ -883,7 +961,7 @@ paths:
           description: Not found
       security:
         - bearerAuth: []
-  /programs/{username}:
+  /user-programs/{username}:
     get:
       tags: [programs]
       summary: List programs for a user

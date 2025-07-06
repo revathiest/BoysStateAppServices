@@ -338,6 +338,12 @@ app.post('/programs', async (req: express.Request, res: express.Response) => {
   });
 });
 
+app.get('/programs', async (_req: express.Request, res: express.Response) => {
+  const programs = await prisma.program.findMany();
+  res.json(programs);
+});
+
+
 app.post(
   '/programs/:programId/users',
   async (req: express.Request, res: express.Response) => {
@@ -524,7 +530,71 @@ app.delete('/program-years/:id', async (req: express.Request, res: express.Respo
   res.json(updated);
 });
 
-app.get('/programs/:username', getUserPrograms);
+app.get('/user-programs/:username', getUserPrograms);
+
+app.get('/programs/:id', async (req: express.Request, res: express.Response) => {
+  const { id } = req.params as { id?: string };
+  const caller = (req as any).user as { userId: number };
+  const program = await prisma.program.findUnique({ where: { id } });
+  if (!program) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const member = await isProgramMember(caller.userId, id!);
+  if (!member) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  res.json(program);
+});
+
+app.put('/programs/:id', async (req: express.Request, res: express.Response) => {
+  const { id } = req.params as { id?: string };
+  const caller = (req as any).user as { userId: number; email: string };
+  const program = await prisma.program.findUnique({ where: { id } });
+  if (!program) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const isAdmin = await isProgramAdmin(caller.userId, id!);
+  if (!isAdmin) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const { name, year, config, status } = req.body as {
+    name?: string;
+    year?: number;
+    config?: any;
+    status?: string;
+  };
+  const updated = await prisma.program.update({
+    where: { id },
+    data: { name, year, config, status },
+  });
+  logger.info(id!, `Program updated by ${caller.email}`);
+  res.json(updated);
+});
+
+app.delete('/programs/:id', async (req: express.Request, res: express.Response) => {
+  const { id } = req.params as { id?: string };
+  const caller = (req as any).user as { userId: number; email: string };
+  const program = await prisma.program.findUnique({ where: { id } });
+  if (!program) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const isAdmin = await isProgramAdmin(caller.userId, id!);
+  if (!isAdmin) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const updated = await prisma.program.update({
+    where: { id },
+    data: { status: 'retired' },
+  });
+  logger.info(id!, `Program retired by ${caller.email}`);
+  res.json(updated);
+});
 
 app.post(
   '/programs/:programId/grouping-types',

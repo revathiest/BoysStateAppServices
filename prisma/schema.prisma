@@ -33,6 +33,7 @@ model Program {
   years       ProgramYear[]
   groupingTypes GroupingType[]
   groupings   Grouping[]
+  status      String   @default("active")
   createdAt   DateTime           @default(now())
 }
 

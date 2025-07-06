@@ -21,7 +21,7 @@ describe('GET /programs/:username', () => {
     ]);
     const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
-      .get('/programs/jane.doe')
+      .get('/user-programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
@@ -38,7 +38,7 @@ describe('GET /programs/:username', () => {
     mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([]);
     const token = sign({ userId: 2, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
-      .get('/programs/jane.doe')
+      .get('/user-programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ username: 'jane.doe', programs: [] });
@@ -48,7 +48,7 @@ describe('GET /programs/:username', () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
     const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
-      .get('/programs/missing')
+      .get('/user-programs/missing')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
   });
@@ -152,5 +152,53 @@ describe('Program assignments', () => {
       .get('/programs/abc/users')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
+  });
+});
+
+describe('Program CRUD', () => {
+  beforeEach(() => {
+    mockedPrisma.program.findMany.mockReset();
+    mockedPrisma.program.findUnique.mockReset();
+    mockedPrisma.program.update.mockReset();
+    mockedPrisma.programAssignment.findFirst.mockReset();
+  });
+
+  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+
+  it('lists programs', async () => {
+    mockedPrisma.program.findMany.mockResolvedValueOnce([{ id: 'p1' }]);
+    const res = await request(app).get('/programs').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.program.findMany).toHaveBeenCalled();
+  });
+
+  it('gets program for member', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
+    const res = await request(app).get('/programs/p1').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+  });
+
+  it('updates program when admin', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.program.update.mockResolvedValueOnce({ id: 'p1', name: 'New' });
+    const res = await request(app)
+      .put('/programs/p1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'New' });
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.program.update).toHaveBeenCalled();
+  });
+
+  it('retires program', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.program.update.mockResolvedValueOnce({ id: 'p1', status: 'retired' });
+    const res = await request(app)
+      .delete('/programs/p1')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.program.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { status: 'retired' } });
   });
 });

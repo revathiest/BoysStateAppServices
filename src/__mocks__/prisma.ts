@@ -11,6 +11,9 @@ const prisma = {
   },
   program: {
     create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
   },
   programYear: {
     create: jest.fn(),
