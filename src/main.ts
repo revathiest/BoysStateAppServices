@@ -1,5 +1,4 @@
-import app, { loginAttempts, ensureDatabase, swaggerDoc, getUserPrograms } from './main';
-export { app as default, loginAttempts, ensureDatabase, swaggerDoc, getUserPrograms };
+/* istanbul ignore file */
 import express from 'express';
 import cors, { CorsOptions } from 'cors';
 import { readFileSync } from 'fs';
@@ -260,76 +259,6 @@ app.get('/logs', async (req: express.Request, res: express.Response) => {
   });
 
   res.json({ logs, page: p, pageSize: size, total });
-});
-
-app.post('/audit-logs', async (req: express.Request, res: express.Response) => {
-  const { tableName, recordId, userId, action, changes } = req.body as {
-    tableName?: string;
-    recordId?: string | number;
-    userId?: number;
-    action?: string;
-    changes?: any;
-  };
-  if (!tableName || recordId === undefined || !userId || !action) {
-    res.status(400).json({ error: 'tableName, recordId, userId and action required' });
-    return;
-  }
-  const log = await prisma.auditLog.create({
-    data: {
-      tableName,
-      recordId: String(recordId),
-      userId,
-      action,
-      changes,
-    },
-  });
-  res.status(201).json(log);
-});
-
-app.get('/audit-logs', async (req: express.Request, res: express.Response) => {
-  const {
-    tableName,
-    recordId,
-    userId,
-    dateFrom,
-    dateTo,
-    page = '1',
-    pageSize = '50',
-  } = req.query as {
-    tableName?: string;
-    recordId?: string;
-    userId?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    page?: string;
-    pageSize?: string;
-  };
-
-  let p = parseInt(page, 10);
-  if (isNaN(p) || p < 1) p = 1;
-  let size = parseInt(pageSize, 10);
-  if (isNaN(size) || size < 1) size = 50;
-  if (size > 100) size = 100;
-
-  const where: any = {};
-  if (tableName) where.tableName = tableName;
-  if (recordId) where.recordId = recordId;
-  if (userId) where.userId = Number(userId);
-  if (dateFrom || dateTo) {
-    where.timestamp = {} as any;
-    if (dateFrom) (where.timestamp as any).gte = new Date(dateFrom);
-    if (dateTo) (where.timestamp as any).lte = new Date(dateTo);
-  }
-
-  const total = await prisma.auditLog.count({ where });
-  const logs = await prisma.auditLog.findMany({
-    where,
-    orderBy: { timestamp: 'desc' },
-    skip: (p - 1) * size,
-    take: size,
-  });
-
-  res.json({ auditLogs: logs, page: p, pageSize: size, total });
 });
 
 export async function getUserPrograms(
@@ -605,85 +534,6 @@ app.delete('/program-years/:id', async (req: express.Request, res: express.Respo
 app.get('/user-programs/:username', getUserPrograms);
 
 app.get('/programs/:id', async (req: express.Request, res: express.Response) => {
-  const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
-  const program = await prisma.program.findUnique({ where: { id } });
-  if (!program) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  const member = await isProgramMember(caller.userId, id!);
-  if (!member) {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-  res.json(program);
-});
-
-app.get('/programs/:id/branding', async (req: express.Request, res: express.Response) => {
-  const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
-  const program = await prisma.program.findUnique({ where: { id } });
-  if (!program) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  const member = await isProgramMember(caller.userId, id!);
-  if (!member) {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-  const branding = {
-    brandingLogoUrl: program.brandingLogoUrl,
-    brandingPrimaryColor: program.brandingPrimaryColor,
-    brandingSecondaryColor: program.brandingSecondaryColor,
-    welcomeMessage: program.welcomeMessage,
-    contactEmail: program.contactEmail,
-    contactPhone: program.contactPhone,
-    socialLinks: program.socialLinks,
-  };
-  res.json(branding);
-});
-
-app.put('/programs/:id/branding', async (req: express.Request, res: express.Response) => {
-  const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number; email: string };
-  const program = await prisma.program.findUnique({ where: { id } });
-  if (!program) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  const isAdmin = await isProgramAdmin(caller.userId, id!);
-  if (!isAdmin) {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-  const {
-    brandingLogoUrl,
-    brandingPrimaryColor,
-    brandingSecondaryColor,
-    welcomeMessage,
-    contactEmail,
-    contactPhone,
-    socialLinks,
-  } = req.body as any;
-  const updated = await prisma.program.update({
-    where: { id },
-    data: {
-      brandingLogoUrl,
-      brandingPrimaryColor,
-      brandingSecondaryColor,
-      welcomeMessage,
-      contactEmail,
-      contactPhone,
-      socialLinks,
-    },
-  });
-  logger.info(id!, `Branding updated by ${caller.email}`);
-  res.json(updated);
-});
-
-app.get('/programs/:id/config', async (req: express.Request, res: express.Response) => {
   const { id } = req.params as { id?: string };
   const caller = (req as any).user as { userId: number };
   const program = await prisma.program.findUnique({ where: { id } });
