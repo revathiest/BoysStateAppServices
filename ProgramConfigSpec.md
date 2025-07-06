@@ -256,17 +256,17 @@
 - `POST /delegate-parent-links` (create link) *(implemented & tested)*
 - `PUT /delegate-parent-links/{id}` (update status) *(implemented & tested)*
 
-### Positions
-- `GET /programs/{id}/positions` *(not implemented)*
-- `POST /programs/{id}/positions` *(not implemented)*
-- `PUT /positions/{id}` *(not implemented)*
-- `DELETE /positions/{id}` *(not implemented)*
+### Positions *(Implemented & tested)*
+- `GET /programs/{id}/positions` *(implemented & tested)*
+- `POST /programs/{id}/positions` *(implemented & tested)*
+- `PUT /positions/{id}` *(implemented & tested)*
+- `DELETE /positions/{id}` *(implemented & tested)*
 
-### Program Year Positions (instances/assignments)
-- `GET /program-years/{id}/positions` *(not implemented)*
-- `POST /program-years/{id}/positions` *(not implemented)*
-- `PUT /program-year-positions/{id}` *(not implemented)*
-- `DELETE /program-year-positions/{id}` *(not implemented)*
+### Program Year Positions (instances/assignments) *(Implemented & tested)*
+- `GET /program-years/{id}/positions` *(implemented & tested)*
+- `POST /program-years/{id}/positions` *(implemented & tested)*
+- `PUT /program-year-positions/{id}` *(implemented & tested)*
+- `DELETE /program-year-positions/{id}` *(implemented & tested)*
 
 ### Elections (if implemented)
 - `GET /program-years/{id}/elections` *(not implemented)*

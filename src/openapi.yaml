@@ -24,6 +24,8 @@ tags:
     description: Manage program delegates
   - name: staff
     description: Manage program staff
+  - name: positions
+    description: Manage program positions
 
 paths:
   /health:
@@ -1324,6 +1326,220 @@ paths:
       responses:
         '200':
           description: Staff removed
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /programs/{programId}/positions:
+    post:
+      tags: [positions]
+      summary: Add position
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+      responses:
+        '201':
+          description: Created position
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [positions]
+      summary: List positions
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /positions/{id}:
+    put:
+      tags: [positions]
+      summary: Update position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [positions]
+      summary: Retire position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/positions:
+    post:
+      tags: [positions]
+      summary: Assign position to year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionId]
+              properties:
+                positionId:
+                  type: integer
+                delegateId:
+                  type: integer
+      responses:
+        '201':
+          description: Created program year position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [positions]
+      summary: List program year positions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of program year positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-year-positions/{id}:
+    put:
+      tags: [positions]
+      summary: Update program year position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delegateId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated program year position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [positions]
+      summary: Remove program year position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Removed program year position
         '403':
           description: Forbidden
         '404':
