@@ -71,6 +71,7 @@ model ProgramYear {
   updatedAt DateTime @updatedAt
   groupings ProgramYearGrouping[]
   parties   ProgramYearParty[]
+  delegates Delegate[]
 }
 
 model GroupingType {
@@ -106,6 +107,7 @@ model Grouping {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   programYears    ProgramYearGrouping[]
+  delegates       Delegate[]
 
   @@index([programId])
   @@index([groupingTypeId])
@@ -148,8 +150,31 @@ model ProgramYearParty {
   party         Party       @relation(fields: [partyId], references: [id])
   partyId       Int
   status        String      @default("active")
+  delegates     Delegate[]
 
   @@index([programYearId])
+  @@index([partyId])
+}
+
+model Delegate {
+  id             Int             @id @default(autoincrement())
+  programYear    ProgramYear     @relation(fields: [programYearId], references: [id])
+  programYearId  Int
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  userId         Int?
+  grouping       Grouping        @relation(fields: [groupingId], references: [id])
+  groupingId     Int
+  party          ProgramYearParty? @relation(fields: [partyId], references: [id])
+  partyId        Int?
+  status         String          @default("active")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([programYearId])
+  @@index([groupingId])
   @@index([partyId])
 }
 

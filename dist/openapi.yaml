@@ -20,6 +20,8 @@ tags:
     description: Manage program groupings
   - name: parties
     description: Manage program parties
+  - name: delegates
+    description: Manage program delegates
 
 paths:
   /health:
@@ -1062,6 +1064,135 @@ paths:
                 type: array
                 items:
                   type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/delegates:
+    post:
+      tags: [delegates]
+      summary: Add delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, groupingId]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                groupingId:
+                  type: integer
+                partyId:
+                  type: integer
+      responses:
+        '201':
+          description: Delegate created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [delegates]
+      summary: List delegates for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of delegates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /delegates/{id}:
+    put:
+      tags: [delegates]
+      summary: Update delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                groupingId:
+                  type: integer
+                partyId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated delegate
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [delegates]
+      summary: Withdraw delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Delegate withdrawn
         '403':
           description: Forbidden
         '404':
