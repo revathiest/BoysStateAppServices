@@ -77,6 +77,7 @@ model ProgramYear {
   parents   Parent[]
   programYearPositions ProgramYearPosition[]
   delegateParentLinks DelegateParentLink[]
+  elections Election[]
 }
 
 model GroupingType {
@@ -114,6 +115,7 @@ model Grouping {
   programYears     ProgramYearGrouping[]
   delegates        Delegate[]
   staff            Staff[]
+  elections        Election[]
 
   @@index([programId])
   @@index([groupingTypeId])
@@ -180,6 +182,8 @@ model Delegate {
   updatedAt     DateTime          @updatedAt
   parentLinks   DelegateParentLink[]
   programYearPositions ProgramYearPosition[]
+  votesCast     ElectionVote[] @relation("Voter")
+  votesReceived ElectionVote[] @relation("Candidate")
 
   @@index([programYearId])
   @@index([groupingId])
@@ -263,8 +267,45 @@ model ProgramYearPosition {
   delegate      Delegate?   @relation(fields: [delegateId], references: [id])
   delegateId    Int?
   status        String      @default("active")
+  elections     Election[]
 
   @@index([programYearId])
   @@index([positionId])
   @@index([delegateId])
+}
+
+model Election {
+  id            Int                @id @default(autoincrement())
+  programYear   ProgramYear        @relation(fields: [programYearId], references: [id])
+  programYearId Int
+  position      ProgramYearPosition @relation(fields: [positionId], references: [id])
+  positionId    Int
+  grouping      Grouping            @relation(fields: [groupingId], references: [id])
+  groupingId    Int
+  status        String             @default("scheduled")
+  method        String
+  startTime     DateTime?
+  endTime       DateTime?
+  createdAt     DateTime           @default(now())
+  votes         ElectionVote[]
+
+  @@index([programYearId])
+  @@index([positionId])
+  @@index([groupingId])
+}
+
+model ElectionVote {
+  id                  Int      @id @default(autoincrement())
+  election            Election @relation(fields: [electionId], references: [id])
+  electionId          Int
+  voter               Delegate @relation("Voter", fields: [voterDelegateId], references: [id])
+  voterDelegateId     Int
+  candidate           Delegate @relation("Candidate", fields: [candidateDelegateId], references: [id])
+  candidateDelegateId Int
+  voteRank            Int?
+  createdAt           DateTime @default(now())
+
+  @@index([electionId])
+  @@index([voterDelegateId])
+  @@index([candidateDelegateId])
 }

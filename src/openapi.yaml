@@ -1528,6 +1528,183 @@ paths:
           description: Not found
       security:
         - bearerAuth: []
+
+  /program-years/{id}/elections:
+    post:
+      tags: [elections]
+      summary: Create election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionId, groupingId, method]
+              properties:
+                positionId:
+                  type: integer
+                groupingId:
+                  type: integer
+                method:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Created election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [elections]
+      summary: List elections
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of elections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /elections/{id}:
+    put:
+      tags: [elections]
+      summary: Update election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Updated election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [elections]
+      summary: Remove election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Removed election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /elections/{id}/vote:
+    post:
+      tags: [elections]
+      summary: Cast vote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [candidateId, voterId]
+              properties:
+                candidateId:
+                  type: integer
+                voterId:
+                  type: integer
+                rank:
+                  type: integer
+      responses:
+        '201':
+          description: Vote recorded
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+
+  /elections/{id}/results:
+    get:
+      tags: [elections]
+      summary: Get election results
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Election results
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
     delete:
       tags: [positions]
       summary: Remove program year position

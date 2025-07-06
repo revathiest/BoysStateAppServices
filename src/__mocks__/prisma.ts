@@ -83,6 +83,16 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  election: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
+  electionVote: {
+    create: jest.fn(),
+    groupBy: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),
