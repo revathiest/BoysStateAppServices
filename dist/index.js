@@ -253,6 +253,56 @@ app.get('/logs', async (req, res) => {
     });
     res.json({ logs, page: p, pageSize: size, total });
 });
+app.post('/audit-logs', async (req, res) => {
+    const { tableName, recordId, userId, action, changes } = req.body;
+    if (!tableName || recordId === undefined || !userId || !action) {
+        res.status(400).json({ error: 'tableName, recordId, userId and action required' });
+        return;
+    }
+    const log = await prisma_1.default.auditLog.create({
+        data: {
+            tableName,
+            recordId: String(recordId),
+            userId,
+            action,
+            changes,
+        },
+    });
+    res.status(201).json(log);
+});
+app.get('/audit-logs', async (req, res) => {
+    const { tableName, recordId, userId, dateFrom, dateTo, page = '1', pageSize = '50', } = req.query;
+    let p = parseInt(page, 10);
+    if (isNaN(p) || p < 1)
+        p = 1;
+    let size = parseInt(pageSize, 10);
+    if (isNaN(size) || size < 1)
+        size = 50;
+    if (size > 100)
+        size = 100;
+    const where = {};
+    if (tableName)
+        where.tableName = tableName;
+    if (recordId)
+        where.recordId = recordId;
+    if (userId)
+        where.userId = Number(userId);
+    if (dateFrom || dateTo) {
+        where.timestamp = {};
+        if (dateFrom)
+            where.timestamp.gte = new Date(dateFrom);
+        if (dateTo)
+            where.timestamp.lte = new Date(dateTo);
+    }
+    const total = await prisma_1.default.auditLog.count({ where });
+    const logs = await prisma_1.default.auditLog.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        skip: (p - 1) * size,
+        take: size,
+    });
+    res.json({ auditLogs: logs, page: p, pageSize: size, total });
+});
 async function getUserPrograms(req, res) {
     const { username } = req.params;
     if (!username) {
@@ -479,6 +529,74 @@ app.delete('/program-years/:id', async (req, res) => {
 });
 app.get('/user-programs/:username', getUserPrograms);
 app.get('/programs/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const member = await isProgramMember(caller.userId, id);
+    if (!member) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    res.json(program);
+});
+app.get('/programs/:id/branding', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const member = await isProgramMember(caller.userId, id);
+    if (!member) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const branding = {
+        brandingLogoUrl: program.brandingLogoUrl,
+        brandingPrimaryColor: program.brandingPrimaryColor,
+        brandingSecondaryColor: program.brandingSecondaryColor,
+        welcomeMessage: program.welcomeMessage,
+        contactEmail: program.contactEmail,
+        contactPhone: program.contactPhone,
+        socialLinks: program.socialLinks,
+    };
+    res.json(branding);
+});
+app.put('/programs/:id/branding', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, id);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { brandingLogoUrl, brandingPrimaryColor, brandingSecondaryColor, welcomeMessage, contactEmail, contactPhone, socialLinks, } = req.body;
+    const updated = await prisma_1.default.program.update({
+        where: { id },
+        data: {
+            brandingLogoUrl,
+            brandingPrimaryColor,
+            brandingSecondaryColor,
+            welcomeMessage,
+            contactEmail,
+            contactPhone,
+            socialLinks,
+        },
+    });
+    logger.info(id, `Branding updated by ${caller.email}`);
+    res.json(updated);
+});
+app.get('/programs/:id/config', async (req, res) => {
     const { id } = req.params;
     const caller = req.user;
     const program = await prisma_1.default.program.findUnique({ where: { id } });
