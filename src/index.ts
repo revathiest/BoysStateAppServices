@@ -1,5 +1,5 @@
 import express from 'express';
-import cors from 'cors';
+import cors, { CorsOptions } from 'cors';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -14,7 +14,12 @@ import * as logger from './logger';
 const scrypt = promisify(_scrypt);
 
 const app = express();
-app.use(cors());
+// Configure CORS to allow credentialed requests
+const corsOptions: CorsOptions = {
+  origin: true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use((req, _res, next) => {

@@ -52,7 +52,12 @@ const jwt_1 = require("./jwt");
 const logger = __importStar(require("./logger"));
 const scrypt = (0, util_1.promisify)(crypto_1.scrypt);
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+// Configure CORS to allow credentialed requests
+const corsOptions = {
+    origin: true,
+    credentials: true,
+};
+app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 app.use((req, _res, next) => {
     const programId = req.user?.programId || 'system';
