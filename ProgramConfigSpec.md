@@ -185,6 +185,22 @@
 - `vote_rank` (integer, if ranked)
 - `created_at`
 
+### 16. ProgramAssignment *(Implemented & tested)*
+- `id` (PK)
+- `user_id` (FK → User)
+- `program_id` (FK → Program)
+- `role` (admin, staff, delegate, etc.)
+- `created_at`
+
+### 17. Log *(Implemented & tested)*
+- `id` (PK)
+- `timestamp`
+- `level` (debug, info, warn, error)
+- `source` (api, client)
+- `program_id`
+- `message`
+- `error`
+
 ---
 
 ## B. Core API Endpoints
@@ -268,6 +284,18 @@
 - `DELETE /elections/{id}` *(implemented & tested)*
 - `POST /elections/{id}/vote` (submit vote) *(implemented & tested)*
 - `GET /elections/{id}/results` *(implemented & tested)*
+
+### Program Assignments
+- `POST /programs/{id}/users` — Assign user role *(implemented & tested)*
+- `GET /programs/{id}/users` — List program users *(implemented & tested)*
+- `GET /user-programs/{username}` — List programs for a user *(implemented & tested)*
+
+### System & Logs
+- `GET /health` — Service health check *(implemented & tested)*
+- `POST /logs` — Submit a log entry *(implemented & tested)*
+- `GET /logs` — Query log entries *(implemented & tested)*
+- `POST /register` — Register new user *(implemented & tested)*
+- `POST /login` — Authenticate user *(implemented & tested)*
 
 ### Other (as needed: notifications, resources, schedule, etc.)
 
