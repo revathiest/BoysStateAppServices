@@ -12,6 +12,12 @@ const prisma = {
   program: {
     create: jest.fn(),
   },
+  programYear: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),

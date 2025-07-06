@@ -30,6 +30,7 @@ model Program {
   createdBy   User               @relation("ProgramCreatedBy", fields: [createdById], references: [id])
   createdById Int
   assignments ProgramAssignment[]
+  years       ProgramYear[]
   createdAt   DateTime           @default(now())
 }
 
@@ -51,5 +52,18 @@ model Log {
   programId String
   message   String
   error     String?
+}
+
+model ProgramYear {
+  id        Int      @id @default(autoincrement())
+  program   Program  @relation(fields: [programId], references: [id])
+  programId String
+  year      Int
+  startDate DateTime?
+  endDate   DateTime?
+  status    String   @default("active")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

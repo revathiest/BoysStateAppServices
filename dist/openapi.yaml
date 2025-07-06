@@ -453,6 +453,142 @@ paths:
           description: Forbidden
       security:
         - bearerAuth: []
+  /programs/{programId}/years:
+    post:
+      tags: [programs]
+      summary: Create program year
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [year]
+              properties:
+                year:
+                  type: integer
+                  example: 2025
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created program year
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [programs]
+      summary: List program years
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of program years
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /program-years/{id}:
+    get:
+      tags: [programs]
+      summary: Get program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Program year
+        '404':
+          description: Not found
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Updated program year
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [programs]
+      summary: Archive program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Archived program year
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
   /programs/{username}:
     get:
       tags: [programs]

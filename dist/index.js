@@ -284,6 +284,12 @@ async function isProgramAdmin(userId, programId) {
     });
     return assignment?.role === 'admin';
 }
+async function isProgramMember(userId, programId) {
+    const assignment = await prisma_1.default.programAssignment.findFirst({
+        where: { userId, programId },
+    });
+    return Boolean(assignment);
+}
 app.post('/programs', async (req, res) => {
     const user = req.user;
     const { name, year, config } = req.body;
@@ -357,6 +363,115 @@ app.get('/programs/:programId/users', async (req, res) => {
     });
     logger.info(programId, `Listed users for program`);
     res.json(assignments);
+});
+app.post('/programs/:programId/years', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { year, startDate, endDate, status, notes } = req.body;
+    if (!year) {
+        res.status(400).json({ error: 'year required' });
+        return;
+    }
+    const py = await prisma_1.default.programYear.create({
+        data: {
+            programId,
+            year,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            status: status || 'active',
+            notes,
+        },
+    });
+    logger.info(programId, `Program year ${year} created`);
+    res.status(201).json(py);
+});
+app.get('/programs/:programId/years', async (req, res) => {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const years = await prisma_1.default.programYear.findMany({
+        where: { programId },
+        orderBy: { year: 'desc' },
+    });
+    res.json(years);
+});
+app.get('/program-years/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isMember = await isProgramMember(caller.userId, py.programId);
+    if (!isMember) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    res.json(py);
+});
+app.put('/program-years/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { startDate, endDate, status, notes } = req.body;
+    const updated = await prisma_1.default.programYear.update({
+        where: { id: Number(id) },
+        data: {
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            status,
+            notes,
+        },
+    });
+    logger.info(py.programId, `Program year ${py.year} updated`);
+    res.json(updated);
+});
+app.delete('/program-years/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const py = await prisma_1.default.programYear.findUnique({ where: { id: Number(id) } });
+    if (!py) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.programYear.update({
+        where: { id: Number(id) },
+        data: { status: 'archived' },
+    });
+    logger.info(py.programId, `Program year ${py.year} archived`);
+    res.json(updated);
 });
 app.get('/programs/:username', getUserPrograms);
 if (process.env.NODE_ENV !== 'test') {
