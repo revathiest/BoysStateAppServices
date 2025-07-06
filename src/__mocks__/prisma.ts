@@ -39,6 +39,12 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  position: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
   programYearGrouping: {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -46,6 +52,12 @@ const prisma = {
   programYearParty: {
     create: jest.fn(),
     findMany: jest.fn(),
+  },
+  programYearPosition: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
   },
   delegate: {
     create: jest.fn(),
