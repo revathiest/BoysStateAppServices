@@ -4,7 +4,7 @@
 
 ## A. Core Tables & Relationships
 
-### 1. Program
+### 1. Program *(Implemented)*
 - `id` (PK)
 - `name`
 - `short_name`
@@ -17,7 +17,7 @@
 
 ---
 
-### 2. ProgramYear
+### 2. ProgramYear *(Implemented)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `year` (e.g., 2025)
@@ -30,7 +30,7 @@
 
 ---
 
-### 3. GroupingType
+### 3. GroupingType *(Implemented)*
 *(Flexible region/level naming per program)*
 - `id` (PK)
 - `program_id` (FK → Program)
@@ -45,7 +45,7 @@
 
 ---
 
-### 4. Grouping
+### 4. Grouping *(Partially Implemented: schema only)*
 *(Instances of each grouping type, with hierarchy)*
 - `id` (PK)
 - `program_id` (FK → Program)
@@ -60,7 +60,7 @@
 
 ---
 
-### 5. ProgramYearGrouping
+### 5. ProgramYearGrouping *(Partially Implemented: schema only)*
 *(Which groupings are active in which years)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
@@ -69,7 +69,7 @@
 
 ---
 
-### 6. Party
+### 6. Party *(Not Implemented)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `name`
@@ -83,7 +83,7 @@
 
 ---
 
-### 7. ProgramYearParty
+### 7. ProgramYearParty *(Not Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `party_id` (FK → Party)
@@ -91,7 +91,7 @@
 
 ---
 
-### 8. Delegate
+### 8. Delegate *(Not Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -107,7 +107,7 @@
 
 ---
 
-### 9. Staff
+### 9. Staff *(Not Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `first_name`
@@ -122,7 +122,7 @@
 
 ---
 
-### 10. Parent
+### 10. Parent *(Not Implemented)*
 - `id` (PK)
 - `user_id` (if linked to user account)
 - `first_name`
@@ -132,7 +132,7 @@
 - `created_at`
 - `updated_at`
 
-### 11. DelegateParentLink
+### 11. DelegateParentLink *(Not Implemented)*
 - `id` (PK)
 - `delegate_id` (FK → Delegate)
 - `parent_id` (FK → Parent)
@@ -142,7 +142,7 @@
 
 ---
 
-### 12. Position
+### 12. Position *(Not Implemented)*
 - `id` (PK)
 - `program_id` (FK → Program)
 - `name` (e.g., Mayor, Governor, Councilmember)
@@ -156,7 +156,7 @@
 
 ---
 
-### 13. ProgramYearPosition
+### 13. ProgramYearPosition *(Not Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `position_id` (FK → Position)
@@ -171,7 +171,7 @@
 
 ---
 
-### 14. Election (if needed)
+### 14. Election (if needed) *(Not Implemented)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
 - `position_id` (FK → ProgramYearPosition)
@@ -184,7 +184,7 @@
 
 ---
 
-### 15. ElectionVote
+### 15. ElectionVote *(Not Implemented)*
 - `id` (PK)
 - `election_id` (FK → Election)
 - `voter_delegate_id` (FK → Delegate)
@@ -201,80 +201,80 @@
 ---
 
 ### Program Management
-- `GET /programs` — List all programs
-- `POST /programs` — Create program
-- `GET /programs/{id}` — Get program details
-- `PUT /programs/{id}` — Update program
-- `DELETE /programs/{id}` — Retire program
+- `GET /programs` — List all programs *(not implemented)*
+- `POST /programs` — Create program *(implemented)*
+- `GET /programs/{id}` — Get program details *(not implemented)*
+- `PUT /programs/{id}` — Update program *(not implemented)*
+- `DELETE /programs/{id}` — Retire program *(not implemented)*
 
 ### Program Year Management
-- `GET /programs/{id}/years` — List years for a program
-- `POST /programs/{id}/years` — Create new program year
-- `GET /program-years/{id}` — Get year details
-- `PUT /program-years/{id}` — Update year
-- `DELETE /program-years/{id}` — Archive year
+- `GET /programs/{id}/years` — List years for a program *(implemented)*
+- `POST /programs/{id}/years` — Create new program year *(implemented)*
+- `GET /program-years/{id}` — Get year details *(implemented)*
+- `PUT /program-years/{id}` — Update year *(implemented)*
+- `DELETE /program-years/{id}` — Archive year *(implemented)*
 
 ### Grouping Types (custom naming)
-- `GET /programs/{id}/grouping-types` — List grouping types
-- `POST /programs/{id}/grouping-types` — Add grouping type
-- `PUT /grouping-types/{id}` — Update custom/plural names
-- `DELETE /grouping-types/{id}` — Retire type
+- `GET /programs/{id}/grouping-types` — List grouping types *(implemented)*
+- `POST /programs/{id}/grouping-types` — Add grouping type *(implemented)*
+- `PUT /grouping-types/{id}` — Update custom/plural names *(implemented)*
+- `DELETE /grouping-types/{id}` — Retire type *(implemented)*
 
 ### Groupings (instances: parishes, towns, etc.)
-- `GET /programs/{id}/groupings` — List all groupings
-- `POST /programs/{id}/groupings` — Add grouping
-- `PUT /groupings/{id}` — Update grouping
-- `DELETE /groupings/{id}` — Retire grouping
-- `POST /program-years/{id}/groupings/activate` — Activate groupings for year
-- `GET /program-years/{id}/groupings` — List active groupings for year
+- `GET /programs/{id}/groupings` — List all groupings *(implemented)*
+- `POST /programs/{id}/groupings` — Add grouping *(implemented)*
+- `PUT /groupings/{id}` — Update grouping *(implemented)*
+- `DELETE /groupings/{id}` — Retire grouping *(implemented)*
+- `POST /program-years/{id}/groupings/activate` — Activate groupings for year *(implemented)*
+- `GET /program-years/{id}/groupings` — List active groupings for year *(implemented)*
 
 ### Parties
-- `GET /programs/{id}/parties`
-- `POST /programs/{id}/parties`
-- `PUT /parties/{id}`
-- `DELETE /parties/{id}`
-- `POST /program-years/{id}/parties/activate`
-- `GET /program-years/{id}/parties`
+- `GET /programs/{id}/parties` *(not implemented)*
+- `POST /programs/{id}/parties` *(not implemented)*
+- `PUT /parties/{id}` *(not implemented)*
+- `DELETE /parties/{id}` *(not implemented)*
+- `POST /program-years/{id}/parties/activate` *(not implemented)*
+- `GET /program-years/{id}/parties` *(not implemented)*
 
 ### Delegates
-- `GET /program-years/{id}/delegates`
-- `POST /program-years/{id}/delegates`
-- `PUT /delegates/{id}`
-- `DELETE /delegates/{id}`
+- `GET /program-years/{id}/delegates` *(not implemented)*
+- `POST /program-years/{id}/delegates` *(not implemented)*
+- `PUT /delegates/{id}` *(not implemented)*
+- `DELETE /delegates/{id}` *(not implemented)*
 
 ### Staff
-- `GET /program-years/{id}/staff`
-- `POST /program-years/{id}/staff`
-- `PUT /staff/{id}`
-- `DELETE /staff/{id}`
+- `GET /program-years/{id}/staff` *(not implemented)*
+- `POST /program-years/{id}/staff` *(not implemented)*
+- `PUT /staff/{id}` *(not implemented)*
+- `DELETE /staff/{id}` *(not implemented)*
 
 ### Parents & Delegate Linking
-- `GET /program-years/{id}/parents`
-- `POST /program-years/{id}/parents`
-- `PUT /parents/{id}`
-- `DELETE /parents/{id}`
-- `POST /delegate-parent-links` (create link)
-- `PUT /delegate-parent-links/{id}` (update status)
+- `GET /program-years/{id}/parents` *(not implemented)*
+- `POST /program-years/{id}/parents` *(not implemented)*
+- `PUT /parents/{id}` *(not implemented)*
+- `DELETE /parents/{id}` *(not implemented)*
+- `POST /delegate-parent-links` (create link) *(not implemented)*
+- `PUT /delegate-parent-links/{id}` (update status) *(not implemented)*
 
 ### Positions
-- `GET /programs/{id}/positions`
-- `POST /programs/{id}/positions`
-- `PUT /positions/{id}`
-- `DELETE /positions/{id}`
+- `GET /programs/{id}/positions` *(not implemented)*
+- `POST /programs/{id}/positions` *(not implemented)*
+- `PUT /positions/{id}` *(not implemented)*
+- `DELETE /positions/{id}` *(not implemented)*
 
 ### Program Year Positions (instances/assignments)
-- `GET /program-years/{id}/positions`
-- `POST /program-years/{id}/positions`
-- `PUT /program-year-positions/{id}`
-- `DELETE /program-year-positions/{id}`
+- `GET /program-years/{id}/positions` *(not implemented)*
+- `POST /program-years/{id}/positions` *(not implemented)*
+- `PUT /program-year-positions/{id}` *(not implemented)*
+- `DELETE /program-year-positions/{id}` *(not implemented)*
 
 ### Elections (if implemented)
-- `GET /program-years/{id}/elections`
-- `POST /program-years/{id}/elections`
-- `PUT /elections/{id}`
-- `DELETE /elections/{id}`
-- `POST /elections/{id}/vote` (submit vote)
-- `GET /elections/{id}/results`
+- `GET /program-years/{id}/elections` *(not implemented)*
+- `POST /program-years/{id}/elections` *(not implemented)*
+- `PUT /elections/{id}` *(not implemented)*
+- `DELETE /elections/{id}` *(not implemented)*
+- `POST /elections/{id}/vote` (submit vote) *(not implemented)*
+- `GET /elections/{id}/results` *(not implemented)*
 
 ### Other (as needed: notifications, resources, schedule, etc.)
 

@@ -16,6 +16,8 @@ tags:
     description: User registration and login
   - name: groupingTypes
     description: Manage grouping type definitions
+  - name: groupings
+    description: Manage program groupings
 
 paths:
   /health:
@@ -628,6 +630,181 @@ paths:
       responses:
         '200':
           description: Retired grouping type
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{programId}/groupings:
+    post:
+      tags: [groupings]
+      summary: Add grouping
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupingTypeId, name]
+              properties:
+                groupingTypeId:
+                  type: integer
+                parentGroupingId:
+                  type: integer
+                name:
+                  type: string
+                displayOrder:
+                  type: integer
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created grouping
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [groupings]
+      summary: List groupings
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of groupings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /groupings/{id}:
+    put:
+      tags: [groupings]
+      summary: Update grouping
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                displayOrder:
+                  type: integer
+                notes:
+                  type: string
+                parentGroupingId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated grouping
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [groupings]
+      summary: Retire grouping
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired grouping
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/groupings/activate:
+    post:
+      tags: [groupings]
+      summary: Activate groupings for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupingIds]
+              properties:
+                groupingIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '201':
+          description: Activated groupings
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /program-years/{id}/groupings:
+    get:
+      tags: [groupings]
+      summary: List active groupings for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of active groupings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
         '403':
           description: Forbidden
         '404':

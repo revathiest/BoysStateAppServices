@@ -24,6 +24,16 @@ const prisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  grouping: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
+  programYearGrouping: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),
