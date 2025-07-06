@@ -317,6 +317,10 @@ app.post('/programs', async (req, res) => {
         roleAssigned: 'admin',
     });
 });
+app.get('/programs', async (_req, res) => {
+    const programs = await prisma_1.default.program.findMany();
+    res.json(programs);
+});
 app.post('/programs/:programId/users', async (req, res) => {
     const { programId } = req.params;
     const caller = req.user;
@@ -473,7 +477,63 @@ app.delete('/program-years/:id', async (req, res) => {
     logger.info(py.programId, `Program year ${py.year} archived`);
     res.json(updated);
 });
-app.get('/programs/:username', getUserPrograms);
+app.get('/user-programs/:username', getUserPrograms);
+app.get('/programs/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const member = await isProgramMember(caller.userId, id);
+    if (!member) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    res.json(program);
+});
+app.put('/programs/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, id);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { name, year, config, status } = req.body;
+    const updated = await prisma_1.default.program.update({
+        where: { id },
+        data: { name, year, config, status },
+    });
+    logger.info(id, `Program updated by ${caller.email}`);
+    res.json(updated);
+});
+app.delete('/programs/:id', async (req, res) => {
+    const { id } = req.params;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id } });
+    if (!program) {
+        res.status(404).json({ error: 'Not found' });
+        return;
+    }
+    const isAdmin = await isProgramAdmin(caller.userId, id);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const updated = await prisma_1.default.program.update({
+        where: { id },
+        data: { status: 'retired' },
+    });
+    logger.info(id, `Program retired by ${caller.email}`);
+    res.json(updated);
+});
 app.post('/programs/:programId/grouping-types', async (req, res) => {
     const { programId } = req.params;
     const caller = req.user;

@@ -45,7 +45,7 @@
 
 ---
 
-### 4. Grouping *(Partially Implemented: schema only)*
+### 4. Grouping *(Implemented)*
 *(Instances of each grouping type, with hierarchy)*
 - `id` (PK)
 - `program_id` (FK → Program)
@@ -60,7 +60,7 @@
 
 ---
 
-### 5. ProgramYearGrouping *(Partially Implemented: schema only)*
+### 5. ProgramYearGrouping *(Implemented)*
 *(Which groupings are active in which years)*
 - `id` (PK)
 - `program_year_id` (FK → ProgramYear)
@@ -201,11 +201,11 @@
 ---
 
 ### Program Management
-- `GET /programs` — List all programs *(not implemented)*
+- `GET /programs` — List all programs *(implemented)*
 - `POST /programs` — Create program *(implemented)*
-- `GET /programs/{id}` — Get program details *(not implemented)*
-- `PUT /programs/{id}` — Update program *(not implemented)*
-- `DELETE /programs/{id}` — Retire program *(not implemented)*
+- `GET /programs/{id}` — Get program details *(implemented)*
+- `PUT /programs/{id}` — Update program *(implemented)*
+- `DELETE /programs/{id}` — Retire program *(implemented)*
 
 ### Program Year Management
 - `GET /programs/{id}/years` — List years for a program *(implemented)*
