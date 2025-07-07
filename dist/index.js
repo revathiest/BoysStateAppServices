@@ -33,10 +33,11 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserPrograms = exports.swaggerDoc = exports.ensureDatabase = exports.loginAttempts = exports.default = void 0;
-const main_1 = __importStar(require("./main"));
-exports.default = main_1.default;
-Object.defineProperty(exports, "loginAttempts", { enumerable: true, get: function () { return main_1.loginAttempts; } });
-Object.defineProperty(exports, "ensureDatabase", { enumerable: true, get: function () { return main_1.ensureDatabase; } });
-Object.defineProperty(exports, "swaggerDoc", { enumerable: true, get: function () { return main_1.swaggerDoc; } });
-Object.defineProperty(exports, "getUserPrograms", { enumerable: true, get: function () { return main_1.getUserPrograms; } });
+exports.getUserPrograms = exports.swaggerDoc = exports.ensureDatabase = exports.loginAttempts = void 0;
+const app_1 = __importStar(require("./app"));
+Object.defineProperty(exports, "loginAttempts", { enumerable: true, get: function () { return app_1.loginAttempts; } });
+Object.defineProperty(exports, "swaggerDoc", { enumerable: true, get: function () { return app_1.swaggerDoc; } });
+Object.defineProperty(exports, "ensureDatabase", { enumerable: true, get: function () { return app_1.ensureDatabase; } });
+exports.default = app_1.default;
+var auth_1 = require("./utils/auth");
+Object.defineProperty(exports, "getUserPrograms", { enumerable: true, get: function () { return auth_1.getUserPrograms; } });
