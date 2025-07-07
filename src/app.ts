@@ -7,6 +7,8 @@ import authRoutes, { loginAttempts } from './routes/auth';
 import systemRoutes, { swaggerDoc } from './routes/system';
 import programsRoutes from './routes/programs';
 import programYearRoutes from './routes/programYears';
+import groupingTypeRoutes from './routes/groupingTypes';
+import groupingRoutes from './routes/groupings';
 import apiRoutes from './routes/api';
 
 const app = express();
@@ -57,6 +59,8 @@ app.use(authRoutes);
 app.use(systemRoutes);
 app.use(programsRoutes);
 app.use(programYearRoutes);
+app.use(groupingTypeRoutes);
+app.use(groupingRoutes);
 app.use(apiRoutes);
 
 const port = process.env.PORT || 3000;
