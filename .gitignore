@@ -4,4 +4,4 @@ node_modules
 /generated/prisma
 /coverage
 /dist
-logs/
+/logs
