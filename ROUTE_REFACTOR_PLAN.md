@@ -9,11 +9,11 @@ smaller domain modules under `src/routes`.
   - `programs.ts` for `/programs` and related endpoints.
   - `programYears.ts` for `/program-years` and `/programs/:programId/years`.
   - `app.ts` updated to mount these routers.
+  - `groupingTypes.ts` for grouping type CRUD.
+  - `groupings.ts` for grouping management.
 
 ## Remaining work
 - Extract remaining domains from `api.ts` into separate modules:
-  - `groupingTypes.ts`
-  - `groupings.ts`
   - `parties.ts`
   - `positions.ts`
   - `programYearPositions.ts`
