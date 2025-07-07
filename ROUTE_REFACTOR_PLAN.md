@@ -11,18 +11,18 @@ smaller domain modules under `src/routes`.
   - `app.ts` updated to mount these routers.
   - `groupingTypes.ts` for grouping type CRUD.
   - `groupings.ts` for grouping management.
+  - `parties.ts` for party management.
+  - `positions.ts` for position management.
+  - `programYearPositions.ts` for assigning positions to a program year.
+  - `delegates.ts` for delegate CRUD.
+  - `staff.ts` for staff management.
+  - `parents.ts` including delegate-parent links.
+  - `elections.ts` for election operations.
 
 ## Remaining work
 - Extract remaining domains from `api.ts` into separate modules:
-  - `parties.ts`
-  - `positions.ts`
-  - `programYearPositions.ts`
-  - `delegates.ts`
-  - `staff.ts`
-  - `parents.ts`
-  - `elections.ts`
   - `links.ts` (optional)
-  - `users.ts` for `/user-programs/:username` export has been moved, but verify.
+  - Verify `users.ts` for `/user-programs/:username` export.
 - Update `openapi.yaml` paths if needed once splitting is complete.
 
 This document should be updated as each module is migrated.
