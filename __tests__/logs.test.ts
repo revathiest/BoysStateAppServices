@@ -1,6 +1,10 @@
 import request from 'supertest';
 import { rmSync, existsSync } from 'fs';
 import path from 'path';
+import os from 'os';
+
+// Use a temporary logs directory so other tests don't interfere
+process.env.LOGS_DIR = path.join(os.tmpdir(), 'logs-test');
 jest.mock('../src/prisma');
 import app from '../src/index';
 import { sign } from '../src/jwt';
@@ -8,9 +12,15 @@ import prisma from '../src/prisma';
 
 describe('POST /logs', () => {
   const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
-  const logsDir = path.join(__dirname, '..', 'logs');
+  const logsDir = process.env.LOGS_DIR as string;
 
   beforeAll(() => {
+    if (existsSync(logsDir)) {
+      rmSync(logsDir, { recursive: true, force: true });
+    }
+  });
+
+  afterAll(() => {
     if (existsSync(logsDir)) {
       rmSync(logsDir, { recursive: true, force: true });
     }

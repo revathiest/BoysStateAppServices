@@ -13,8 +13,10 @@ interface LogEntry {
   error?: string;
 }
 
+const baseLogsDir = process.env.LOGS_DIR || path.join(__dirname, '..', 'logs');
+
 function writeLog(entry: LogEntry) {
-  const logsDir = path.join(__dirname, '..', 'logs');
+  const logsDir = baseLogsDir;
   if (!existsSync(logsDir)) {
     mkdirSync(logsDir, { recursive: true });
   }
