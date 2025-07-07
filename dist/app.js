@@ -47,6 +47,8 @@ const auth_1 = __importStar(require("./routes/auth"));
 Object.defineProperty(exports, "loginAttempts", { enumerable: true, get: function () { return auth_1.loginAttempts; } });
 const system_1 = __importStar(require("./routes/system"));
 Object.defineProperty(exports, "swaggerDoc", { enumerable: true, get: function () { return system_1.swaggerDoc; } });
+const programs_1 = __importDefault(require("./routes/programs"));
+const programYears_1 = __importDefault(require("./routes/programYears"));
 const api_1 = __importDefault(require("./routes/api"));
 const app = (0, express_1.default)();
 exports.default = app;
@@ -90,6 +92,8 @@ function ensureDatabase() {
 }
 app.use(auth_1.default);
 app.use(system_1.default);
+app.use(programs_1.default);
+app.use(programYears_1.default);
 app.use(api_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

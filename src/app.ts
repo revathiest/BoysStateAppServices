@@ -5,6 +5,8 @@ import { verify } from './jwt';
 import * as logger from './logger';
 import authRoutes, { loginAttempts } from './routes/auth';
 import systemRoutes, { swaggerDoc } from './routes/system';
+import programsRoutes from './routes/programs';
+import programYearRoutes from './routes/programYears';
 import apiRoutes from './routes/api';
 
 const app = express();
@@ -53,6 +55,8 @@ export function ensureDatabase() {
 
 app.use(authRoutes);
 app.use(systemRoutes);
+app.use(programsRoutes);
+app.use(programYearRoutes);
 app.use(apiRoutes);
 
 const port = process.env.PORT || 3000;
