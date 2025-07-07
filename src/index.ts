@@ -1,2 +1,4 @@
-import app, { loginAttempts, ensureDatabase, swaggerDoc, getUserPrograms } from './main';
-export { app as default, loginAttempts, ensureDatabase, swaggerDoc, getUserPrograms };
+import app, { loginAttempts, swaggerDoc, ensureDatabase } from './app';
+export default app;
+export { loginAttempts, ensureDatabase, swaggerDoc };
+export { getUserPrograms } from './utils/auth';
