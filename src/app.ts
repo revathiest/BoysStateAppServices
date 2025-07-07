@@ -9,7 +9,13 @@ import programsRoutes from './routes/programs';
 import programYearRoutes from './routes/programYears';
 import groupingTypeRoutes from './routes/groupingTypes';
 import groupingRoutes from './routes/groupings';
-import apiRoutes from './routes/api';
+import partiesRoutes from './routes/parties';
+import positionsRoutes from './routes/positions';
+import programYearPositionRoutes from './routes/programYearPositions';
+import delegatesRoutes from './routes/delegates';
+import staffRoutes from './routes/staff';
+import parentsRoutes from './routes/parents';
+import electionsRoutes from './routes/elections';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -61,7 +67,13 @@ app.use(programsRoutes);
 app.use(programYearRoutes);
 app.use(groupingTypeRoutes);
 app.use(groupingRoutes);
-app.use(apiRoutes);
+app.use(partiesRoutes);
+app.use(positionsRoutes);
+app.use(programYearPositionRoutes);
+app.use(delegatesRoutes);
+app.use(staffRoutes);
+app.use(parentsRoutes);
+app.use(electionsRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
