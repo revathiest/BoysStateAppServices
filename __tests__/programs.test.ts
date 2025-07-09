@@ -11,6 +11,7 @@ describe('GET /programs/:username', () => {
   beforeEach(() => {
     mockedPrisma.programAssignment.findMany.mockReset();
     mockedPrisma.user.findUnique.mockReset();
+    mockedPrisma.program.findMany.mockReset();
   });
 
   it('returns programs for the user', async () => {
@@ -29,6 +30,35 @@ describe('GET /programs/:username', () => {
       programs: [
         { programId: 'abc123', programName: 'Boys State Texas', role: 'admin' },
         { programId: 'def456', programName: 'Girls State Florida', role: 'counselor' },
+      ],
+    });
+  });
+
+  it('returns all programs when assigned to DEVELOPMENT', async () => {
+    mockedPrisma.user.findUnique.mockResolvedValueOnce({
+      id: 3,
+      email: 'dev@example.com',
+    });
+    mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([
+      { role: 'developer', program: { id: 'dev', name: 'DEVELOPMENT' } },
+      { role: 'admin', program: { id: 'abc123', name: 'Boys State Texas' } },
+    ]);
+    mockedPrisma.program.findMany.mockResolvedValueOnce([
+      { id: 'dev', name: 'DEVELOPMENT' },
+      { id: 'abc123', name: 'Boys State Texas' },
+      { id: 'def456', name: 'Girls State Florida' },
+    ]);
+    const token = sign({ userId: 3, email: 'dev@example.com' }, 'development-secret');
+    const res = await request(app)
+      .get('/user-programs/dev@example.com')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      username: 'dev@example.com',
+      programs: [
+        { programId: 'dev', programName: 'DEVELOPMENT', role: 'developer' },
+        { programId: 'abc123', programName: 'Boys State Texas', role: 'admin' },
+        { programId: 'def456', programName: 'Girls State Florida', role: 'developer' },
       ],
     });
   });

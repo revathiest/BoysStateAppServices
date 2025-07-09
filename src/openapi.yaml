@@ -2111,8 +2111,10 @@ paths:
       tags: [programs]
       summary: List programs for a user
       description: >
-        Returns all programs assigned to the specified user. Each item
-        includes the program id, name, and role.
+        Returns programs for the specified user. If the user is assigned to a
+        program named `DEVELOPMENT`, all programs are returned with the role
+        `developer` for any program to which the user is not explicitly
+        assigned. Each item includes the program id, name, and role.
       parameters:
         - in: path
           name: username
