@@ -14,6 +14,18 @@ tags:
     description: Endpoints for service monitoring and status
   - name: auth
     description: User registration and login
+  - name: groupingTypes
+    description: Manage grouping type definitions
+  - name: groupings
+    description: Manage program groupings
+  - name: parties
+    description: Manage program parties
+  - name: delegates
+    description: Manage program delegates
+  - name: staff
+    description: Manage program staff
+  - name: positions
+    description: Manage program positions
 
 paths:
   /health:
@@ -148,6 +160,16 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
+        '429':
+          description: Too many failed login attempts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Too many login attempts
 
   /logs:
     post:
@@ -309,7 +331,85 @@ paths:
                     example: Invalid level
       security:
         - bearerAuth: []
+  /audit-logs:
+    post:
+      tags: [system]
+      summary: Create an audit log entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tableName, recordId, userId, action]
+              properties:
+                tableName:
+                  type: string
+                recordId:
+                  type: string
+                userId:
+                  type: integer
+                action:
+                  type: string
+                changes:
+                  type: object
+      responses:
+        '201':
+          description: Created audit log
+        '400':
+          description: Invalid request
+      security:
+        - bearerAuth: []
+    get:
+      tags: [system]
+      summary: List audit log entries
+      parameters:
+        - in: query
+          name: tableName
+          schema:
+            type: string
+        - in: query
+          name: recordId
+          schema:
+            type: string
+        - in: query
+          name: userId
+          schema:
+            type: integer
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of audit logs
+        '400':
+          description: Invalid request
+      security:
+        - bearerAuth: []
   /programs:
+    get:
+      tags: [programs]
+      summary: List all programs
+      responses:
+        '200':
+          description: Array of programs
+      security:
+        - bearerAuth: []
     post:
       tags: [programs]
       summary: Create a new program
@@ -358,7 +458,139 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: name and year required
+      example: name and year required
+      security:
+        - bearerAuth: []
+  /programs/{id}:
+    get:
+      tags: [programs]
+      summary: Get program details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                year:
+                  type: integer
+                config:
+                  type: object
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated program
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [programs]
+      summary: Retire program
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program retired
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{id}/branding:
+    get:
+      tags: [programs]
+      summary: Get program branding and contact info
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Branding information
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program branding and contact info
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated branding
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{id}/config:
+    get:
+      tags: [programs]
+      summary: Get full program configuration
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Program configuration
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
       security:
         - bearerAuth: []
   /programs/{programId}/users:
@@ -443,7 +675,1438 @@ paths:
           description: Forbidden
       security:
         - bearerAuth: []
-  /programs/{username}:
+  /programs/{programId}/years:
+    post:
+      tags: [programs]
+      summary: Create program year
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [year]
+              properties:
+                year:
+                  type: integer
+                  example: 2025
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created program year
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [programs]
+      summary: List program years
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of program years
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /programs/{programId}/grouping-types:
+    post:
+      tags: [groupingTypes]
+      summary: Add grouping type
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultName, levelOrder]
+              properties:
+                defaultName:
+                  type: string
+                customName:
+                  type: string
+                pluralName:
+                  type: string
+                levelOrder:
+                  type: integer
+                isRequired:
+                  type: boolean
+      responses:
+        '201':
+          description: Created grouping type
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [groupingTypes]
+      summary: List grouping types
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of grouping types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /grouping-types/{id}:
+    put:
+      tags: [groupingTypes]
+      summary: Update grouping type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customName:
+                  type: string
+                pluralName:
+                  type: string
+                levelOrder:
+                  type: integer
+                isRequired:
+                  type: boolean
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated grouping type
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [groupingTypes]
+      summary: Retire grouping type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired grouping type
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{programId}/groupings:
+    post:
+      tags: [groupings]
+      summary: Add grouping
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupingTypeId, name]
+              properties:
+                groupingTypeId:
+                  type: integer
+                parentGroupingId:
+                  type: integer
+                name:
+                  type: string
+                displayOrder:
+                  type: integer
+                notes:
+                  type: string
+      responses:
+        '201':
+          description: Created grouping
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [groupings]
+      summary: List groupings
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of groupings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /groupings/{id}:
+    put:
+      tags: [groupings]
+      summary: Update grouping
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                displayOrder:
+                  type: integer
+                notes:
+                  type: string
+                parentGroupingId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated grouping
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [groupings]
+      summary: Retire grouping
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired grouping
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/groupings/activate:
+    post:
+      tags: [groupings]
+      summary: Activate groupings for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupingIds]
+              properties:
+                groupingIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '201':
+          description: Activated groupings
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /program-years/{id}/groupings:
+    get:
+      tags: [groupings]
+      summary: List active groupings for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of active groupings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /programs/{programId}/parties:
+    post:
+      tags: [parties]
+      summary: Add party
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                abbreviation:
+                  type: string
+                color:
+                  type: string
+                icon:
+                  type: string
+                displayOrder:
+                  type: integer
+      responses:
+        '201':
+          description: Created party
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [parties]
+      summary: List parties
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of parties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /parties/{id}:
+    put:
+      tags: [parties]
+      summary: Update party
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                abbreviation:
+                  type: string
+                color:
+                  type: string
+                icon:
+                  type: string
+                displayOrder:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated party
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [parties]
+      summary: Retire party
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired party
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/parties/activate:
+    post:
+      tags: [parties]
+      summary: Activate parties for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [partyIds]
+              properties:
+                partyIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '201':
+          description: Activated parties
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /program-years/{id}/parties:
+    get:
+      tags: [parties]
+      summary: List active parties for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of active parties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/delegates:
+    post:
+      tags: [delegates]
+      summary: Add delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, groupingId]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                groupingId:
+                  type: integer
+                partyId:
+                  type: integer
+      responses:
+        '201':
+          description: Delegate created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [delegates]
+      summary: List delegates for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of delegates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /delegates/{id}:
+    put:
+      tags: [delegates]
+      summary: Update delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                groupingId:
+                  type: integer
+                partyId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated delegate
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [delegates]
+      summary: Withdraw delegate
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Delegate withdrawn
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/staff:
+    post:
+      tags: [staff]
+      summary: Add staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, role]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                role:
+                  type: string
+                groupingId:
+                  type: integer
+      responses:
+        '201':
+          description: Staff created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [staff]
+      summary: List staff for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /staff/{id}:
+    put:
+      tags: [staff]
+      summary: Update staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                role:
+                  type: string
+                groupingId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated staff member
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [staff]
+      summary: Remove staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff removed
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+  /programs/{programId}/positions:
+    post:
+      tags: [positions]
+      summary: Add position
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+      responses:
+        '201':
+          description: Created position
+        '400':
+          description: Invalid input
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    get:
+      tags: [positions]
+      summary: List positions
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+          description: Program ID
+      responses:
+        '200':
+          description: Array of positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+  /positions/{id}:
+    put:
+      tags: [positions]
+      summary: Update position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                displayOrder:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [positions]
+      summary: Retire position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Retired position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}/positions:
+    post:
+      tags: [positions]
+      summary: Assign position to year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionId]
+              properties:
+                positionId:
+                  type: integer
+                delegateId:
+                  type: integer
+      responses:
+        '201':
+          description: Created program year position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [positions]
+      summary: List program year positions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of program year positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-year-positions/{id}:
+    put:
+      tags: [positions]
+      summary: Update program year position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                delegateId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated program year position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /program-years/{id}/elections:
+    post:
+      tags: [elections]
+      summary: Create election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [positionId, groupingId, method]
+              properties:
+                positionId:
+                  type: integer
+                groupingId:
+                  type: integer
+                method:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Created election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [elections]
+      summary: List elections
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of elections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /elections/{id}:
+    put:
+      tags: [elections]
+      summary: Update election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Updated election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [elections]
+      summary: Remove election
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Removed election
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /elections/{id}/vote:
+    post:
+      tags: [elections]
+      summary: Cast vote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [candidateId, voterId]
+              properties:
+                candidateId:
+                  type: integer
+                voterId:
+                  type: integer
+                rank:
+                  type: integer
+      responses:
+        '201':
+          description: Vote recorded
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+
+  /elections/{id}/results:
+    get:
+      tags: [elections]
+      summary: Get election results
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Election results
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [positions]
+      summary: Remove program year position
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Removed program year position
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+
+  /program-years/{id}/parents:
+    post:
+      tags: [parents]
+      summary: Add parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email]
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+      responses:
+        '201':
+          description: Parent created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+    get:
+      tags: [parents]
+      summary: List parents for year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: Program Year ID
+      responses:
+        '200':
+          description: Array of parents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /parents/{id}:
+    put:
+      tags: [parents]
+      summary: Update parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                userId:
+                  type: integer
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated parent
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [parents]
+      summary: Remove parent
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Parent removed
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /delegate-parent-links:
+    post:
+      tags: [parents]
+      summary: Create delegate-parent link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delegateId, parentId, programYearId]
+              properties:
+                delegateId:
+                  type: integer
+                parentId:
+                  type: integer
+                programYearId:
+                  type: integer
+      responses:
+        '201':
+          description: Link created
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '400':
+          description: Invalid input
+      security:
+        - bearerAuth: []
+  /delegate-parent-links/{id}:
+    put:
+      tags: [parents]
+      summary: Update delegate-parent link
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated link
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /program-years/{id}:
+    get:
+      tags: [programs]
+      summary: Get program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Program year
+        '404':
+          description: Not found
+        '403':
+          description: Forbidden
+      security:
+        - bearerAuth: []
+    put:
+      tags: [programs]
+      summary: Update program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date-time
+                endDate:
+                  type: string
+                  format: date-time
+                status:
+                  type: string
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Updated program year
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    delete:
+      tags: [programs]
+      summary: Archive program year
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Archived program year
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /user-programs/{username}:
     get:
       tags: [programs]
       summary: List programs for a user

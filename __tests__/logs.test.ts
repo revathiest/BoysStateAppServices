@@ -1,6 +1,10 @@
 import request from 'supertest';
 import { rmSync, existsSync } from 'fs';
 import path from 'path';
+import os from 'os';
+
+// Use a temporary logs directory so other tests don't interfere
+process.env.LOGS_DIR = path.join(os.tmpdir(), 'logs-test');
 jest.mock('../src/prisma');
 import app from '../src/index';
 import { sign } from '../src/jwt';
@@ -8,9 +12,15 @@ import prisma from '../src/prisma';
 
 describe('POST /logs', () => {
   const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
-  const logsDir = path.join(__dirname, '..', 'logs');
+  const logsDir = process.env.LOGS_DIR as string;
 
   beforeAll(() => {
+    if (existsSync(logsDir)) {
+      rmSync(logsDir, { recursive: true, force: true });
+    }
+  });
+
+  afterAll(() => {
     if (existsSync(logsDir)) {
       rmSync(logsDir, { recursive: true, force: true });
     }
@@ -28,6 +38,13 @@ describe('POST /logs', () => {
       .send({ programId: 'abc123', level: 'info', message: 'hello' });
     expect(res.status).toBe(204);
     expect((prisma as any).log.create).toHaveBeenCalled();
+  });
+
+  it('rejects unauthenticated requests', async () => {
+    const res = await request(app)
+      .post('/logs')
+      .send({ programId: 'abc123', level: 'info', message: 'hello' });
+    expect(res.status).toBe(401);
   });
 
   it('requires all fields', async () => {
@@ -53,6 +70,14 @@ describe('POST /logs', () => {
       .send({ programId: 'abc123', level: 'warn', message: 'careful' });
     expect(res.status).toBe(204);
     expect((prisma as any).log.create).toHaveBeenCalled();
+  });
+
+  it('records a debug log', async () => {
+    const res = await request(app)
+      .post('/logs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ programId: 'abc123', level: 'debug', message: 'dbg' });
+    expect(res.status).toBe(204);
   });
 
   it('records an error log with details', async () => {
@@ -88,7 +113,7 @@ describe('GET /logs', () => {
     (prisma as any).log.count.mockResolvedValueOnce(1);
 
     const res = await request(app)
-      .get('/logs?programId=abc123')
+      .get('/logs?programId=abc123&search=hello&dateFrom=2025-05-01&dateTo=2025-07-01')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
@@ -111,6 +136,11 @@ describe('GET /logs', () => {
       .get('/logs?level=fatal')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(400);
+  });
+
+  it('requires auth for log retrieval', async () => {
+    const res = await request(app).get('/logs');
+    expect(res.status).toBe(401);
   });
 });
 
