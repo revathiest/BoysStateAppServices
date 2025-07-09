@@ -94,4 +94,48 @@ describe('Parent error cases', () => {
       .send({ status: 'accepted' });
     expect(res.status).toBe(403);
   });
+it('returns 404 when listing parents and program year missing', async () => {
+  mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .get('/program-years/1/parents')
+    .set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(404);
+});
+
+it('returns 404 when removing parent program year missing', async () => {
+  mockedPrisma.parent.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1 });
+  mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .delete('/parents/1')
+    .set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(404);
+});
+
+it('returns 404 when creating link with unknown program year', async () => {
+  mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .post('/delegate-parent-links')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ delegateId: 2, parentId: 3, programYearId: 1 });
+  expect(res.status).toBe(404);
+});
+
+it('returns 404 when link to update not found', async () => {
+  mockedPrisma.delegateParentLink.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .put('/delegate-parent-links/1')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ status: 'accepted' });
+  expect(res.status).toBe(404);
+});
+
+it('returns 404 when link update program year missing', async () => {
+  mockedPrisma.delegateParentLink.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1 });
+  mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .put('/delegate-parent-links/1')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ status: 'accepted' });
+  expect(res.status).toBe(404);
+});
 });

@@ -59,4 +59,61 @@ describe('Program error cases', () => {
       .send({ name: 'New' });
     expect(res.status).toBe(403);
   });
+it('returns 404 when getting missing program', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app).get('/programs/p1').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(404);
+});
+
+it('rejects get program when not member', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+  mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce(null);
+  const res = await request(app).get('/programs/p1').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(403);
+});
+
+it('returns 404 when branding program missing', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app).get('/programs/p1/branding').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(404);
+});
+
+it('rejects branding retrieval when not member', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+  mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce(null);
+  const res = await request(app).get('/programs/p1/branding').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(403);
+});
+
+it('returns 404 when updating branding on missing program', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app)
+    .put('/programs/p1/branding')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ brandingLogoUrl: 'x' });
+  expect(res.status).toBe(404);
+});
+
+it('rejects branding update when not admin', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+  mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
+  const res = await request(app)
+    .put('/programs/p1/branding')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ brandingLogoUrl: 'x' });
+  expect(res.status).toBe(403);
+});
+
+it('returns 404 when deleting missing program', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
+  const res = await request(app).delete('/programs/p1').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(404);
+});
+
+it('rejects delete when not admin', async () => {
+  mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+  mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
+  const res = await request(app).delete('/programs/p1').set('Authorization', `Bearer ${token}`);
+  expect(res.status).toBe(403);
+});
 });
