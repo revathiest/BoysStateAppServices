@@ -36,11 +36,30 @@ export async function getUserPrograms(
     where: { userId: user.id },
     include: { program: true },
   });
-  const programs = assignments.map((a: any) => ({
+  let programs = assignments.map((a: any) => ({
     programId: a.program.id,
     programName: a.program.name,
     role: a.role,
   }));
+
+  const hasDevProgram = assignments.some(
+    (a: any) => a.program.name === 'DEVELOPMENT',
+  );
+
+  if (hasDevProgram) {
+    const allPrograms = await prisma.program.findMany();
+    programs = allPrograms.map((prog: any) => {
+      const assigned = assignments.find(
+        (a: any) => a.program.id === prog.id,
+      );
+      return {
+        programId: prog.id,
+        programName: prog.name,
+        role: assigned ? assigned.role : 'developer',
+      };
+    });
+  }
+
   programs.forEach((p: any) => {
     logger.info(p.programId, `Program lookup for ${user.email}`);
   });
