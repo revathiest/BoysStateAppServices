@@ -181,5 +181,6 @@ This document describes the backend service agents supporting the Boys State App
   * Regression and integration tests for new APIs or dependencies
   * Code review and passing tests required before deployment
   * Security and integration tests must be included for external APIs
+  * Dont ignore coverage without a very good reason
   **Deployment:** Prior to generating any pull requests, but after all autotests are passing, execute npm run build to ensure the dist folder is updated and ready for deployment.
 * **Planned/future agents:** Placeholders for features not yet built must be maintained in this file.
