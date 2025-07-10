@@ -42,6 +42,7 @@ model Program {
   groupings     Grouping[]
   parties       Party[]
   positions     Position[]
+  brandingContacts ProgramBrandingContact[]
   status        String              @default("active")
   createdAt     DateTime            @default(now())
 }
@@ -344,4 +345,55 @@ model AuditLog {
   @@index([tableName])
   @@index([recordId])
   @@index([userId])
+}
+
+model ProgramBrandingContact {
+  id                String   @id @default(cuid())
+  program           Program  @relation(fields: [programId], references: [id])
+  programId         String
+  programName       String
+  welcomeMessage    String?
+  logoUrl           String?
+  iconUrl           String?
+  bannerUrl         String?
+  colorPrimary      String?  @map("color_primary")
+  colorSecondary    String?  @map("color_secondary")
+  colorBackground   String?  @map("color_background")
+  contactEmail      String?
+  contactPhone      String?
+  contactWebsite    String?
+  contactFacebook   String?
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  audits ProgramBrandingContactAudit[]
+
+  @@index([programId])
+}
+
+model ProgramBrandingContactAudit {
+  auditId           String   @id @default(cuid())
+  brandingContact   ProgramBrandingContact? @relation(fields: [brandingContactId], references: [id])
+  brandingContactId String?
+  programId         String
+  programName       String
+  welcomeMessage    String?
+  logoUrl           String?
+  iconUrl           String?
+  bannerUrl         String?
+  colorPrimary      String? @map("color_primary")
+  colorSecondary    String? @map("color_secondary")
+  colorBackground   String? @map("color_background")
+  contactEmail      String?
+  contactPhone      String?
+  contactWebsite    String?
+  contactFacebook   String?
+  updatedAt         DateTime?
+  createdAt         DateTime?
+  changeType        String
+  changedByUserId   Int?
+  changeReason      String?
+  changedAt         DateTime @default(now())
+
+  @@index([brandingContactId])
 }
