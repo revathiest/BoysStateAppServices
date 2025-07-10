@@ -17,7 +17,6 @@ module.exports = {
   coverageReporters: ['text', 'lcov'],         // text = console table, lcov for HTML
   collectCoverageFrom: [
     'src/**/*.{js,ts}',
-    '!src/routes/brandingContact.ts',
     'prisma/**/*.{js,ts}',
     '__tests__/**/*.{js,ts}',
     '!**/node_modules/**',
