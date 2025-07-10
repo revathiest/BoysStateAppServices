@@ -16,6 +16,7 @@ import delegatesRoutes from './routes/delegates';
 import staffRoutes from './routes/staff';
 import parentsRoutes from './routes/parents';
 import electionsRoutes from './routes/elections';
+import brandingContactRoutes from './routes/brandingContact';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -74,6 +75,7 @@ app.use(delegatesRoutes);
 app.use(staffRoutes);
 app.use(parentsRoutes);
 app.use(electionsRoutes);
+app.use(brandingContactRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

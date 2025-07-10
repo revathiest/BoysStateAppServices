@@ -58,6 +58,7 @@ const delegates_1 = __importDefault(require("./routes/delegates"));
 const staff_1 = __importDefault(require("./routes/staff"));
 const parents_1 = __importDefault(require("./routes/parents"));
 const elections_1 = __importDefault(require("./routes/elections"));
+const brandingContact_1 = __importDefault(require("./routes/brandingContact"));
 const app = (0, express_1.default)();
 exports.default = app;
 const corsOptions = { origin: true, credentials: true };
@@ -111,6 +112,7 @@ app.use(delegates_1.default);
 app.use(staff_1.default);
 app.use(parents_1.default);
 app.use(elections_1.default);
+app.use(brandingContact_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
