@@ -26,8 +26,6 @@ tags:
     description: Manage program staff
   - name: positions
     description: Manage program positions
-  - name: brandingContact
-    description: Manage branding and contact details
 
 paths:
   /health:
@@ -337,6 +335,9 @@ paths:
     post:
       tags: [system]
       summary: Create an audit log entry
+      description: >-
+        Records an audit entry describing a change made to a database record.
+        Used for compliance tracking.
       requestBody:
         required: true
         content:
@@ -365,6 +366,9 @@ paths:
     get:
       tags: [system]
       summary: List audit log entries
+      description: >-
+        Returns audit entries filtered by table, record, user, or date range.
+        Results are paginated and sorted by newest first.
       parameters:
         - in: query
           name: tableName
@@ -407,6 +411,9 @@ paths:
     get:
       tags: [programs]
       summary: List all programs
+      description: >-
+        Returns every program in the system. The caller must be authenticated
+        but does not need to belong to any specific program.
       responses:
         '200':
           description: Array of programs
@@ -415,6 +422,9 @@ paths:
     post:
       tags: [programs]
       summary: Create a new program
+      description: >-
+        Creates a program record and assigns the requesting user as an admin of
+        that program.
       requestBody:
         required: true
         content:
@@ -467,6 +477,9 @@ paths:
     get:
       tags: [programs]
       summary: Get program details
+      description: >-
+        Retrieves the program record specified by `id`. The requester must be
+        assigned to the program or an admin.
       parameters:
         - in: path
           name: id
@@ -485,6 +498,9 @@ paths:
     put:
       tags: [programs]
       summary: Update program
+      description: >-
+        Updates basic program information such as name, year, or status. Only
+        program admins may call this endpoint.
       parameters:
         - in: path
           name: id
@@ -518,6 +534,9 @@ paths:
     delete:
       tags: [programs]
       summary: Retire program
+      description: >-
+        Marks the program as retired without deleting the data. Only admins can
+        retire a program.
       parameters:
         - in: path
           name: id
@@ -537,6 +556,9 @@ paths:
     get:
       tags: [programs]
       summary: Get program branding and contact info
+      description: >-
+        Returns branding colors, logos, and contact information for the
+        specified program. Requires membership in the program.
       parameters:
         - in: path
           name: id
@@ -555,6 +577,9 @@ paths:
     put:
       tags: [programs]
       summary: Update program branding and contact info
+      description: >-
+        Updates branding and contact fields for the program such as colors,
+        welcome message, and support contacts. Only admins may update branding.
       parameters:
         - in: path
           name: id
@@ -567,80 +592,42 @@ paths:
           application/json:
             schema:
               type: object
+              properties:
+                brandingLogoUrl:
+                  type: string
+                  format: uri
+                  description: URL of the program logo
+                  example: https://example.com/logo.png
+                brandingPrimaryColor:
+                  type: string
+                  description: Hex code for primary color
+                  example: "#001122"
+                brandingSecondaryColor:
+                  type: string
+                  description: Hex code for secondary color
+                  example: "#334455"
+                welcomeMessage:
+                  type: string
+                  description: Welcome message shown to users
+                  example: Welcome to Boys State!
+                contactEmail:
+                  type: string
+                  format: email
+                  description: Support email address
+                  example: info@example.com
+                contactPhone:
+                  type: string
+                  description: Support phone number
+                  example: "555-123-4567"
+                socialLinks:
+                  type: object
+                  description: Optional social media URLs keyed by service
+                  example:
+                    facebook: https://facebook.com/bs
+                    twitter: https://twitter.com/bs
       responses:
         '200':
           description: Updated branding
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-  /api/branding-contact/{programId}:
-    get:
-      tags: [brandingContact]
-      summary: Retrieve branding and contact configuration
-      parameters:
-        - in: path
-          name: programId
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Branding/contact config
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-    post:
-      tags: [brandingContact]
-      summary: Create or update branding/contact configuration
-      parameters:
-        - in: path
-          name: programId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201':
-          description: Created configuration
-        '200':
-          description: Updated configuration
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-    put:
-      tags: [brandingContact]
-      summary: Create or update branding/contact configuration
-      parameters:
-        - in: path
-          name: programId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '201':
-          description: Created configuration
-        '200':
-          description: Updated configuration
         '403':
           description: Forbidden
         '404':
@@ -651,6 +638,10 @@ paths:
     get:
       tags: [programs]
       summary: Get full program configuration
+      description: >-
+        Retrieves all configuration settings for the specified program,
+        including feature toggles and branding. Requires membership in the
+        program.
       parameters:
         - in: path
           name: id
@@ -670,6 +661,9 @@ paths:
     post:
       tags: [programs]
       summary: Assign user to program
+      description: >-
+        Adds a user to a program with the specified role. Caller must be a
+        program admin.
       parameters:
         - in: path
           name: programId
@@ -723,6 +717,9 @@ paths:
     get:
       tags: [programs]
       summary: List users in program
+      description: >-
+        Returns all users assigned to the program along with their roles.
+        Requires admin access to the program.
       parameters:
         - in: path
           name: programId
@@ -752,6 +749,9 @@ paths:
     post:
       tags: [programs]
       summary: Create program year
+      description: >-
+        Adds a new year entry to the program. This is typically used at the
+        start of a new session. Admin privileges are required.
       parameters:
         - in: path
           name: programId
@@ -792,6 +792,9 @@ paths:
     get:
       tags: [programs]
       summary: List program years
+      description: >-
+        Returns all years that have been configured for the program. Requires
+        membership in the program.
       parameters:
         - in: path
           name: programId
@@ -816,6 +819,9 @@ paths:
     post:
       tags: [groupingTypes]
       summary: Add grouping type
+      description: >-
+        Creates a new grouping type for organizing delegates (for example,
+        city, county, or district). Admin privileges are required.
       parameters:
         - in: path
           name: programId
@@ -853,6 +859,9 @@ paths:
     get:
       tags: [groupingTypes]
       summary: List grouping types
+      description: >-
+        Lists all grouping type definitions for the program in ascending order
+        by level. Requires program membership.
       parameters:
         - in: path
           name: programId
@@ -877,6 +886,9 @@ paths:
     put:
       tags: [groupingTypes]
       summary: Update grouping type
+      description: >-
+        Modifies the grouping type definition such as its display name or
+        whether it is required. Only program admins can update a grouping type.
       parameters:
         - in: path
           name: id
@@ -912,6 +924,9 @@ paths:
     delete:
       tags: [groupingTypes]
       summary: Retire grouping type
+      description: >-
+        Marks the grouping type as retired so it can no longer be used for new
+        groupings. Only admins may retire a type.
       parameters:
         - in: path
           name: id
@@ -931,6 +946,9 @@ paths:
     post:
       tags: [groupings]
       summary: Add grouping
+      description: >-
+        Creates a new grouping (for example a city or county) under the
+        specified program. Requires admin permissions.
       parameters:
         - in: path
           name: programId
@@ -968,6 +986,9 @@ paths:
     get:
       tags: [groupings]
       summary: List groupings
+      description: >-
+        Returns all groupings defined for the program. Caller must be a member
+        of the program.
       parameters:
         - in: path
           name: programId
@@ -992,6 +1013,9 @@ paths:
     put:
       tags: [groupings]
       summary: Update grouping
+      description: >-
+        Updates the specified grouping's name, parent, or status. Admin access
+        to the grouping's program is required.
       parameters:
         - in: path
           name: id
@@ -1027,6 +1051,9 @@ paths:
     delete:
       tags: [groupings]
       summary: Retire grouping
+      description: >-
+        Retires the grouping so it can no longer be assigned to delegates. Only
+        program admins may perform this action.
       parameters:
         - in: path
           name: id
@@ -1046,6 +1073,9 @@ paths:
     post:
       tags: [groupings]
       summary: Activate groupings for year
+      description: >-
+        Activates a set of groupings for the specified program year so they can
+        be assigned to delegates. Requires admin rights.
       parameters:
         - in: path
           name: id
@@ -1080,6 +1110,9 @@ paths:
     get:
       tags: [groupings]
       summary: List active groupings for year
+      description: >-
+        Lists the groupings that are active for the given program year.
+        Membership in the program is required.
       parameters:
         - in: path
           name: id
@@ -1106,6 +1139,8 @@ paths:
     post:
       tags: [parties]
       summary: Add party
+      description: >-
+        Creates a political party for the program. Admin access is required.
       parameters:
         - in: path
           name: programId
@@ -1143,6 +1178,9 @@ paths:
     get:
       tags: [parties]
       summary: List parties
+      description: >-
+        Lists all party definitions for the program. Caller must belong to the
+        program.
       parameters:
         - in: path
           name: programId
@@ -1167,6 +1205,9 @@ paths:
     put:
       tags: [parties]
       summary: Update party
+      description: >-
+        Updates party details such as name, abbreviation, or icon. Only admins
+        may modify parties.
       parameters:
         - in: path
           name: id
@@ -1204,6 +1245,9 @@ paths:
     delete:
       tags: [parties]
       summary: Retire party
+      description: >-
+        Marks the party as retired. Existing assignments remain but new ones
+        cannot be created. Admin only.
       parameters:
         - in: path
           name: id
@@ -1223,6 +1267,9 @@ paths:
     post:
       tags: [parties]
       summary: Activate parties for year
+      description: >-
+        Enables a subset of parties for the given program year. Parties must be
+        created first. Admin access required.
       parameters:
         - in: path
           name: id
@@ -1257,6 +1304,9 @@ paths:
     get:
       tags: [parties]
       summary: List active parties for year
+      description: >-
+        Returns parties that are active for the specified program year.
+        Membership in the program is required.
       parameters:
         - in: path
           name: id
@@ -1283,6 +1333,9 @@ paths:
     post:
       tags: [delegates]
       summary: Add delegate
+      description: >-
+        Creates a new delegate record for the specified program year. Admin
+        access is required.
       parameters:
         - in: path
           name: id
@@ -1326,6 +1379,9 @@ paths:
     get:
       tags: [delegates]
       summary: List delegates for year
+      description: >-
+        Returns all delegates registered for the given program year. Requires
+        membership in the program.
       parameters:
         - in: path
           name: id
@@ -1352,6 +1408,9 @@ paths:
     put:
       tags: [delegates]
       summary: Update delegate
+      description: >-
+        Updates delegate information such as contact details or grouping
+        assignment. Only program admins can update delegates.
       parameters:
         - in: path
           name: id
@@ -1393,6 +1452,9 @@ paths:
     delete:
       tags: [delegates]
       summary: Withdraw delegate
+      description: >-
+        Marks the delegate as withdrawn from the program year. Admin rights are
+        required.
       parameters:
         - in: path
           name: id
@@ -1412,6 +1474,9 @@ paths:
     post:
       tags: [staff]
       summary: Add staff member
+      description: >-
+        Adds a staff member to the specified program year. Admin permissions are
+        required.
       parameters:
         - in: path
           name: id
@@ -1455,6 +1520,9 @@ paths:
     get:
       tags: [staff]
       summary: List staff for year
+      description: >-
+        Returns all staff members assigned to the program year. Caller must be a
+        program member.
       parameters:
         - in: path
           name: id
@@ -1481,6 +1549,9 @@ paths:
     put:
       tags: [staff]
       summary: Update staff member
+      description: >-
+        Updates staff details or role assignments. Only admins can update staff
+        records.
       parameters:
         - in: path
           name: id
@@ -1522,6 +1593,9 @@ paths:
     delete:
       tags: [staff]
       summary: Remove staff member
+      description: >-
+        Removes a staff member from the program year. Admin permissions
+        required.
       parameters:
         - in: path
           name: id
@@ -1539,6 +1613,9 @@ paths:
     post:
       tags: [positions]
       summary: Add position
+      description: >-
+        Creates a position (such as an elected office) that delegates can hold.
+        Admin access required.
       parameters:
         - in: path
           name: programId
@@ -1572,6 +1649,9 @@ paths:
     get:
       tags: [positions]
       summary: List positions
+      description: >-
+        Lists all position definitions for the program. Requires program
+        membership.
       parameters:
         - in: path
           name: programId
@@ -1596,6 +1676,9 @@ paths:
     put:
       tags: [positions]
       summary: Update position
+      description: >-
+        Updates a position's details or display order. Only admins may update
+        positions.
       parameters:
         - in: path
           name: id
@@ -1629,6 +1712,9 @@ paths:
     delete:
       tags: [positions]
       summary: Retire position
+      description: >-
+        Retires the position so it can no longer be assigned. Admin access
+        required.
       parameters:
         - in: path
           name: id
@@ -1648,6 +1734,9 @@ paths:
     post:
       tags: [positions]
       summary: Assign position to year
+      description: >-
+        Activates a position for a specific program year and optionally assigns
+        an initial delegate.
       parameters:
         - in: path
           name: id
@@ -1681,6 +1770,9 @@ paths:
     get:
       tags: [positions]
       summary: List program year positions
+      description: >-
+        Returns all position assignments for the program year. Caller must be a
+        program member.
       parameters:
         - in: path
           name: id
@@ -1707,6 +1799,9 @@ paths:
     put:
       tags: [positions]
       summary: Update program year position
+      description: >-
+        Updates the delegate or status of a program year position. Admin
+        privileges required.
       parameters:
         - in: path
           name: id
@@ -1738,6 +1833,9 @@ paths:
     post:
       tags: [elections]
       summary: Create election
+      description: >-
+        Creates a new election for a position within the program year.
+        Requires admin access and specifies the voting method and timeframe.
       parameters:
         - in: path
           name: id
@@ -1779,6 +1877,9 @@ paths:
     get:
       tags: [elections]
       summary: List elections
+      description: >-
+        Lists all elections configured for the given program year. Caller must
+        be a program member.
       parameters:
         - in: path
           name: id
@@ -1806,6 +1907,9 @@ paths:
     put:
       tags: [elections]
       summary: Update election
+      description: >-
+        Updates election details such as status or end time. Only admins can
+        modify elections.
       parameters:
         - in: path
           name: id
@@ -1839,6 +1943,8 @@ paths:
     delete:
       tags: [elections]
       summary: Remove election
+      description: >-
+        Deletes an election and all associated votes. Admin only.
       parameters:
         - in: path
           name: id
@@ -1859,6 +1965,9 @@ paths:
     post:
       tags: [elections]
       summary: Cast vote
+      description: >-
+        Records a delegate's vote for the specified election. Voters must be
+        eligible for the election.
       parameters:
         - in: path
           name: id
@@ -1895,6 +2004,9 @@ paths:
     get:
       tags: [elections]
       summary: Get election results
+      description: >-
+        Retrieves tallied results for the election. Only admins or authorized
+        staff may view results.
       parameters:
         - in: path
           name: id
@@ -1913,6 +2025,9 @@ paths:
     delete:
       tags: [positions]
       summary: Remove program year position
+      description: >-
+        Deletes a position assignment from the program year. Only admins can
+        remove assignments.
       parameters:
         - in: path
           name: id
@@ -1933,6 +2048,9 @@ paths:
     post:
       tags: [parents]
       summary: Add parent
+      description: >-
+        Registers a parent account for the specified program year. Admins use
+        this to invite or create parent records.
       parameters:
         - in: path
           name: id
@@ -1972,6 +2090,9 @@ paths:
     get:
       tags: [parents]
       summary: List parents for year
+      description: >-
+        Returns all parent accounts linked to delegates in the program year.
+        Requires membership in the program.
       parameters:
         - in: path
           name: id
@@ -1998,6 +2119,9 @@ paths:
     put:
       tags: [parents]
       summary: Update parent
+      description: >-
+        Updates parent contact information or status. Only program admins can
+        update parents.
       parameters:
         - in: path
           name: id
@@ -2035,6 +2159,8 @@ paths:
     delete:
       tags: [parents]
       summary: Remove parent
+      description: >-
+        Removes the parent record from the program year. Admin access required.
       parameters:
         - in: path
           name: id
@@ -2054,6 +2180,9 @@ paths:
     post:
       tags: [parents]
       summary: Create delegate-parent link
+      description: >-
+        Links a delegate to a parent account. The caller must be an admin or
+        staff member.
       requestBody:
         required: true
         content:
@@ -2083,6 +2212,9 @@ paths:
     put:
       tags: [parents]
       summary: Update delegate-parent link
+      description: >-
+        Updates the status of an existing delegate-parent relationship. Admins
+        use this to accept or revoke links.
       parameters:
         - in: path
           name: id
@@ -2111,6 +2243,9 @@ paths:
     get:
       tags: [programs]
       summary: Get program year
+      description: >-
+        Retrieves details for a specific program year including dates and
+        status. Requires membership in the program.
       parameters:
         - in: path
           name: id
@@ -2129,6 +2264,9 @@ paths:
     put:
       tags: [programs]
       summary: Update program year
+      description: >-
+        Updates program year fields such as start/end dates or status. Only
+        program admins can modify a year.
       parameters:
         - in: path
           name: id
@@ -2164,6 +2302,8 @@ paths:
     delete:
       tags: [programs]
       summary: Archive program year
+      description: >-
+        Archives the program year, preventing further modifications. Admin only.
       parameters:
         - in: path
           name: id
