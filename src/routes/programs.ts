@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 import express from 'express';
 import prisma from '../prisma';
 import * as logger from '../logger';
