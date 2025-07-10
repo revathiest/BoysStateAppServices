@@ -24,7 +24,7 @@ describe('GET /api/branding-contact/:programId', () => {
   it('returns config when member', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({});
-    mockedPrisma.programBrandingContact.findFirst.mockResolvedValueOnce({ id: '1', programId: 'abc', programName: 'Test' });
+    mockedPrisma.programBrandingContact.findFirst.mockResolvedValueOnce({ id: '1', programId: 'abc' });
     const res = await request(app)
       .get('/api/branding-contact/abc')
       .set('Authorization', `Bearer ${token}`);
@@ -38,11 +38,11 @@ describe('POST /api/branding-contact/:programId', () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
     mockedPrisma.programBrandingContact.findFirst.mockResolvedValueOnce(null);
-    mockedPrisma.programBrandingContact.create.mockResolvedValueOnce({ id: '1', programId: 'abc', programName: 'Test' });
+    mockedPrisma.programBrandingContact.create.mockResolvedValueOnce({ id: '1', programId: 'abc' });
     const res = await request(app)
       .post('/api/branding-contact/abc')
       .set('Authorization', `Bearer ${token}`)
-      .send({ programName: 'Test' });
+      .send({});
     expect(res.status).toBe(201);
     expect(mockedPrisma.programBrandingContact.create).toHaveBeenCalled();
     expect(mockedPrisma.programBrandingContactAudit.create).toHaveBeenCalled();
@@ -54,11 +54,11 @@ describe('POST /api/branding-contact/:programId existing', () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
     mockedPrisma.programBrandingContact.findFirst.mockResolvedValueOnce({ id: '1', programId: 'abc' });
-    mockedPrisma.programBrandingContact.update.mockResolvedValueOnce({ id: '1', programId: 'abc', programName: 'Test2' });
+    mockedPrisma.programBrandingContact.update.mockResolvedValueOnce({ id: '1', programId: 'abc' });
     const res = await request(app)
       .post('/api/branding-contact/abc')
       .set('Authorization', `Bearer ${token}`)
-      .send({ programName: 'Test2' });
+      .send({});
     expect(res.status).toBe(200);
     expect(mockedPrisma.programBrandingContact.update).toHaveBeenCalled();
   });
@@ -94,7 +94,7 @@ describe('POST /api/branding-contact/:programId forbidden', () => {
     const res = await request(app)
       .post('/api/branding-contact/abc')
       .set('Authorization', `Bearer ${token}`)
-      .send({ programName: 'Test' });
+      .send({});
     expect(res.status).toBe(403);
   });
 });
