@@ -26,6 +26,8 @@ tags:
     description: Manage program staff
   - name: positions
     description: Manage program positions
+  - name: brandingContact
+    description: Manage branding and contact details
 
 paths:
   /health:
@@ -628,6 +630,77 @@ paths:
       responses:
         '200':
           description: Updated branding
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+  /api/branding-contact/{programId}:
+    get:
+      tags: [brandingContact]
+      summary: Retrieve branding and contact configuration
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Branding/contact config
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    post:
+      tags: [brandingContact]
+      summary: Create or update branding/contact configuration
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created configuration
+        '200':
+          description: Updated configuration
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+      security:
+        - bearerAuth: []
+    put:
+      tags: [brandingContact]
+      summary: Create or update branding/contact configuration
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Created configuration
+        '200':
+          description: Updated configuration
         '403':
           description: Forbidden
         '404':

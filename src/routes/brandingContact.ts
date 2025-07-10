@@ -32,7 +32,6 @@ async function saveBrandingContact(req: express.Request, res: express.Response) 
     return;
   }
   const {
-    programName,
     welcomeMessage,
     branding,
     colors,
@@ -42,7 +41,6 @@ async function saveBrandingContact(req: express.Request, res: express.Response) 
 
   const data = {
     programId,
-    programName,
     welcomeMessage,
     logoUrl: branding?.logoUrl,
     iconUrl: branding?.iconUrl,
@@ -77,7 +75,7 @@ async function saveBrandingContact(req: express.Request, res: express.Response) 
     data: {
       brandingContactId: record.id,
       programId,
-      programName: record.programName,
+      programName: program.name,
       welcomeMessage: record.welcomeMessage ?? undefined,
       logoUrl: record.logoUrl ?? undefined,
       iconUrl: record.iconUrl ?? undefined,
@@ -98,7 +96,7 @@ async function saveBrandingContact(req: express.Request, res: express.Response) 
   });
 
   logger.info(programId, `Branding/contact ${changeType}d by ${caller.email}`);
-  res.status(existing ? 200 : 201).json(record);
+  res.status(existing ? 200 : 201).json({ ...record, programName: program.name });
 }
 
 router.post('/api/branding-contact/:programId', saveBrandingContact);
@@ -134,7 +132,7 @@ router.get('/api/branding-contact/:programId', async (req, res) => {
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  res.json(record);
+  res.json({ ...record, programName: program.name });
 });
 
 export default router;
