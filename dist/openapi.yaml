@@ -947,11 +947,11 @@ paths:
                   status:
                     type: string
                     example: assigned
-              example:
-                programId: ""
-                userId: 0
-                role: ""
-                status: assigned
+                example:
+                  programId: abc123
+                  userId: 5
+                  role: counselor
+                  status: assigned
         "400":
           description: Invalid input
           content:
@@ -961,8 +961,8 @@ paths:
                 properties:
                   error:
                     type: string
-              example:
-                error: ""
+                example:
+                  error: userId and role required
         "403":
           description: Forbidden
           content:
@@ -997,9 +997,9 @@ paths:
                       type: integer
                     role:
                       type: string
-              example:
-                - userId: 0
-                  role: ""
+                example:
+                  - userId: 5
+                    role: counselor
         "403":
           description: Forbidden
           content:
@@ -1048,7 +1048,13 @@ paths:
           description: Created program year
           content:
             application/json:
-              example: {}
+                example:
+                  id: 1
+                  programId: abc123
+                  year: 2025
+                  startDate: 2025-06-01T00:00:00Z
+                  endDate: 2025-06-07T00:00:00Z
+                  status: active
         "400":
           description: Invalid input
           content:
@@ -1083,8 +1089,12 @@ paths:
                 type: array
                 items:
                   type: object
-              example:
-                - null
+                example:
+                  - id: 1
+                    year: 2025
+                    startDate: 2025-06-01T00:00:00Z
+                    endDate: 2025-06-07T00:00:00Z
+                    status: active
         "403":
           description: Forbidden
           content:
@@ -1446,7 +1456,10 @@ paths:
           description: Activated groupings
           content:
             application/json:
-              example: {}
+                example:
+                  activated:
+                    - 10
+                    - 11
         "400":
           description: Invalid input
           content:
@@ -1487,8 +1500,11 @@ paths:
                 type: array
                 items:
                   type: object
-              example:
-                - null
+                example:
+                  - id: 10
+                    name: Austin
+                    groupingTypeId: 1
+                    displayOrder: 1
         "403":
           description: Forbidden
           content:
