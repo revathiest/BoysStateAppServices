@@ -441,9 +441,6 @@ paths:
                 year:
                   type: integer
                   example: 2025
-                config:
-                  type: object
-                  description: Optional program configuration
       responses:
         '201':
           description: Program created
@@ -520,8 +517,6 @@ paths:
                   type: string
                 year:
                   type: integer
-                config:
-                  type: object
                 status:
                   type: string
       responses:
@@ -548,88 +543,6 @@ paths:
       responses:
         '200':
           description: Program retired
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-  /programs/{id}/branding:
-    get:
-      tags: [programs]
-      summary: Get program branding and contact info
-      description: >-
-        Returns branding colors, logos, and contact information for the
-        specified program. Requires membership in the program.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Branding information
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-    put:
-      tags: [programs]
-      summary: Update program branding and contact info
-      description: >-
-        Updates branding and contact fields for the program such as colors,
-        welcome message, and support contacts. Only admins may update branding.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                brandingLogoUrl:
-                  type: string
-                  format: uri
-                  description: URL of the program logo
-                  example: https://example.com/logo.png
-                brandingPrimaryColor:
-                  type: string
-                  description: Hex code for primary color
-                  example: "#001122"
-                brandingSecondaryColor:
-                  type: string
-                  description: Hex code for secondary color
-                  example: "#334455"
-                welcomeMessage:
-                  type: string
-                  description: Welcome message shown to users
-                  example: Welcome to Boys State!
-                contactEmail:
-                  type: string
-                  format: email
-                  description: Support email address
-                  example: info@example.com
-                contactPhone:
-                  type: string
-                  description: Support phone number
-                  example: "555-123-4567"
-                socialLinks:
-                  type: object
-                  description: Optional social media URLs keyed by service
-                  example:
-                    facebook: https://facebook.com/bs
-                    twitter: https://twitter.com/bs
-      responses:
-        '200':
-          description: Updated branding
         '403':
           description: Forbidden
         '404':
@@ -701,29 +614,6 @@ paths:
           description: Created configuration
         '200':
           description: Updated configuration
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-      security:
-        - bearerAuth: []
-  /programs/{id}/config:
-    get:
-      tags: [programs]
-      summary: Get full program configuration
-      description: >-
-        Retrieves all configuration settings for the specified program,
-        including feature toggles and branding. Requires membership in the
-        program.
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Program configuration
         '403':
           description: Forbidden
         '404':

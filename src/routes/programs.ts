@@ -8,10 +8,9 @@ const router = express.Router();
 // Create a program and assign the creator as admin
 router.post('/programs', async (req, res) => {
   const user = (req as any).user as { userId: number; email: string };
-  const { name, year, config } = req.body as {
+  const { name, year } = req.body as {
     name?: string;
     year?: number;
-    config?: any;
   };
   if (!name || !year) {
     res.status(400).json({ error: 'name and year required' });
@@ -21,7 +20,6 @@ router.post('/programs', async (req, res) => {
     data: {
       name,
       year,
-      config,
       createdBy: { connect: { id: user.userId } },
     },
   });
@@ -115,70 +113,6 @@ router.get('/programs/:id', async (req, res) => {
   res.json(program);
 });
 
-// Get branding information
-router.get('/programs/:id/branding', async (req, res) => {
-  const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
-  const program = await prisma.program.findUnique({ where: { id } });
-  if (!program) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  const member = await isProgramMember(caller.userId, id!);
-  if (!member) {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-  const branding = {
-    brandingLogoUrl: program.brandingLogoUrl,
-    brandingPrimaryColor: program.brandingPrimaryColor,
-    brandingSecondaryColor: program.brandingSecondaryColor,
-    welcomeMessage: program.welcomeMessage,
-    contactEmail: program.contactEmail,
-    contactPhone: program.contactPhone,
-    socialLinks: program.socialLinks,
-  };
-  res.json(branding);
-});
-
-// Update branding
-router.put('/programs/:id/branding', async (req, res) => {
-  const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number; email: string };
-  const program = await prisma.program.findUnique({ where: { id } });
-  if (!program) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  const isAdmin = await isProgramAdmin(caller.userId, id!);
-  if (!isAdmin) {
-    res.status(403).json({ error: 'Forbidden' });
-    return;
-  }
-  const {
-    brandingLogoUrl,
-    brandingPrimaryColor,
-    brandingSecondaryColor,
-    welcomeMessage,
-    contactEmail,
-    contactPhone,
-    socialLinks,
-  } = req.body as any;
-  const updated = await prisma.program.update({
-    where: { id },
-    data: {
-      brandingLogoUrl,
-      brandingPrimaryColor,
-      brandingSecondaryColor,
-      welcomeMessage,
-      contactEmail,
-      contactPhone,
-      socialLinks,
-    },
-  });
-  logger.info(id!, `Branding updated by ${caller.email}`);
-  res.json(updated);
-});
 
 // Update program fields
 router.put('/programs/:id', async (req, res) => {
@@ -194,15 +128,14 @@ router.put('/programs/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, year, config, status } = req.body as {
+  const { name, year, status } = req.body as {
     name?: string;
     year?: number;
-    config?: any;
     status?: string;
   };
   const updated = await prisma.program.update({
     where: { id },
-    data: { name, year, config, status },
+    data: { name, year, status },
   });
   logger.info(id!, `Program updated by ${caller.email}`);
   res.json(updated);

@@ -26,14 +26,6 @@ model Program {
   id            String              @id @default(cuid())
   name          String
   year          Int
-  config        Json?
-  brandingLogoUrl       String?
-  brandingPrimaryColor  String?
-  brandingSecondaryColor String?
-  welcomeMessage        String?
-  contactEmail          String?
-  contactPhone          String?
-  socialLinks           Json?
   createdBy     User                @relation("ProgramCreatedBy", fields: [createdById], references: [id])
   createdById   Int
   assignments   ProgramAssignment[]
