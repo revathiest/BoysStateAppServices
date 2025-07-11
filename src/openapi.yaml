@@ -427,7 +427,33 @@ paths:
           description: Created audit log
           content:
             application/json:
-              example: {}
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+                  tableName:
+                    type: string
+                  recordId:
+                    type: string
+                  userId:
+                    type: integer
+                  action:
+                    type: string
+                  changes:
+                    type: object
+              example:
+                id: 1
+                timestamp: 2025-06-01T10:20:30Z
+                tableName: Program
+                recordId: abc123
+                userId: 1
+                action: update
+                changes:
+                  name: New Name
         "400":
           description: Invalid request
           content:
@@ -477,7 +503,48 @@ paths:
           description: List of audit logs
           content:
             application/json:
-              example: {}
+              schema:
+                type: object
+                properties:
+                  auditLogs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        timestamp:
+                          type: string
+                          format: date-time
+                        tableName:
+                          type: string
+                        recordId:
+                          type: string
+                        userId:
+                          type: integer
+                        action:
+                          type: string
+                        changes:
+                          type: object
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+                  total:
+                    type: integer
+              example:
+                auditLogs:
+                  - id: 1
+                    timestamp: 2025-06-01T10:20:30Z
+                    tableName: Program
+                    recordId: abc123
+                    userId: 1
+                    action: update
+                    changes:
+                      name: New Name
+                page: 1
+                pageSize: 50
+                total: 1
         "400":
           description: Invalid request
           content:
@@ -497,7 +564,24 @@ paths:
           description: Array of programs
           content:
             application/json:
-              example: {}
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    year:
+                      type: integer
+                    status:
+                      type: string
+              example:
+                - id: abc123
+                  name: Texas Boys State
+                  year: 2025
+                  status: active
       security:
         - bearerAuth: []
     post:
@@ -542,10 +626,10 @@ paths:
                     type: string
                     example: admin
               example:
-                id: ""
-                name: ""
-                year: 0
-                createdBy: 0
+                id: abc123
+                name: Texas Boys State
+                year: 2025
+                createdBy: 1
                 roleAssigned: admin
         "400":
           description: Invalid input
@@ -579,7 +663,22 @@ paths:
           description: Program object
           content:
             application/json:
-              example: {}
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  year:
+                    type: integer
+                  status:
+                    type: string
+              example:
+                id: abc123
+                name: Texas Boys State
+                year: 2025
+                status: active
         "403":
           description: Forbidden
           content:
@@ -622,7 +721,22 @@ paths:
           description: Updated program
           content:
             application/json:
-              example: {}
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  year:
+                    type: integer
+                  status:
+                    type: string
+              example:
+                id: abc123
+                name: Texas Boys State
+                year: 2025
+                status: active
         "403":
           description: Forbidden
           content:
@@ -652,7 +766,22 @@ paths:
           description: Program retired
           content:
             application/json:
-              example: {}
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  year:
+                    type: integer
+                  status:
+                    type: string
+              example:
+                id: abc123
+                name: Texas Boys State
+                year: 2025
+                status: retired
         "403":
           description: Forbidden
           content:
