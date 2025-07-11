@@ -10,7 +10,8 @@
     "build": "tsc && cp src/openapi.yaml dist/openapi.yaml && cp src/swagger-ui-custom.js dist/swagger-ui-custom.js",
     "start": "node dist/index.js",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "prisma:reset": "prisma migrate reset && prisma generate"
   },
   "keywords": [],
   "author": "",
