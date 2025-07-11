@@ -1,14 +1,21 @@
 openapi: 3.0.0
 info:
   title: Boys State App API
-  description: |
-    **Disclaimer:** This project is being developed to support Boys State & Girls State programs affiliated with the American Legion, but is not created, funded, or officially supported by the American Legion. No endorsement or sponsorship is implied. All branding, configuration, and operational decisions are made independently by the app’s creators and participating programs.
-    
-    The API provides authentication endpoints and health checks used by the Boys State App mobile and web clients. The following documentation describes the requests and responses in detail.
+  description: >
+    **Disclaimer:** This project is being developed to support Boys State &
+    Girls State programs affiliated with the American Legion, but is not
+    created, funded, or officially supported by the American Legion. No
+    endorsement or sponsorship is implied. All branding, configuration, and
+    operational decisions are made independently by the app’s creators and
+    participating programs.
+
+
+    The API provides authentication endpoints and health checks used by the Boys
+    State App mobile and web clients. The following documentation describes the
+    requests and responses in detail.
   version: 1.0.0
 servers:
   - url: https://boysstateappservices.up.railway.app
-
 tags:
   - name: system
     description: Endpoints for service monitoring and status
@@ -28,17 +35,17 @@ tags:
     description: Manage program positions
   - name: brandingContact
     description: Manage branding and contact details
-
 paths:
   /health:
     get:
-      tags: [system]
+      tags:
+        - system
       summary: Service and database status
       description: >
         Returns a simple JSON object indicating that the service is running and
         whether the database connection is healthy.
       responses:
-        '200':
+        "200":
           description: Successful health response
           content:
             application/json:
@@ -53,15 +60,19 @@ paths:
                     type: string
                     description: Database connection status
                     example: ok
+              example:
+                status: ok
+                database: ok
       security:
         - bearerAuth: []
   /register:
     post:
-      tags: [auth]
+      tags:
+        - auth
       summary: Register a new user
       description: >
-        Creates a new user account using an email and password. The email must be
-        unique. A successful request returns a confirmation message.
+        Creates a new user account using an email and password. The email must
+        be unique. A successful request returns a confirmation message.
       requestBody:
         required: true
         content:
@@ -82,7 +93,7 @@ paths:
                   description: Plain text password to register
                   example: mySecret
       responses:
-        '201':
+        "201":
           description: User created
           content:
             application/json:
@@ -92,7 +103,9 @@ paths:
                   message:
                     type: string
                     example: User created
-        '400':
+              example:
+                message: User created
+        "400":
           description: Email already exists or invalid input
           content:
             application/json:
@@ -102,13 +115,16 @@ paths:
                   error:
                     type: string
                     example: User already exists
+              example:
+                error: User already exists
   /login:
     post:
-      tags: [auth]
+      tags:
+        - auth
       summary: Authenticate an existing user
       description: >
-        Checks the provided email and password and returns a success message when
-        the credentials are valid.
+        Checks the provided email and password and returns a success message
+        when the credentials are valid.
       requestBody:
         required: true
         content:
@@ -129,7 +145,7 @@ paths:
                   description: Account password
                   example: mySecret
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
@@ -138,11 +154,14 @@ paths:
                 properties:
                   token:
                     type: string
-                    description: JWT authentication token containing user id and email (expires after 30 minutes)
-                    example: >-
-                      eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MT
+                    description: JWT authentication token containing user id and email (expires
+                      after 30 minutes)
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MT
                       Y4NTg0OTc1NX0.LXrlo3wrX7rQiGZnYuxRKgXUxRvQPgFP5yxv1rdqe8E
-        '400':
+              example:
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MT
+                  Y4NTg0OTc1NX0.LXrlo3wrX7rQiGZnYuxRKgXUxRvQPgFP5yxv1rdqe8E
+        "400":
           description: Missing credentials
           content:
             application/json:
@@ -152,7 +171,9 @@ paths:
                   error:
                     type: string
                     example: Email and password required
-        '401':
+              example:
+                error: Email and password required
+        "401":
           description: Invalid credentials
           content:
             application/json:
@@ -162,7 +183,9 @@ paths:
                   error:
                     type: string
                     example: Invalid credentials
-        '429':
+              example:
+                error: Invalid credentials
+        "429":
           description: Too many failed login attempts
           content:
             application/json:
@@ -172,10 +195,12 @@ paths:
                   error:
                     type: string
                     example: Too many login attempts
-
+              example:
+                error: Too many login attempts
   /logs:
     post:
-      tags: [system]
+      tags:
+        - system
       summary: Submit a log message
       description: >
         Allows authenticated clients to send a log entry associated with a
@@ -186,7 +211,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [programId, level, message]
+              required:
+                - programId
+                - level
+                - message
               properties:
                 programId:
                   type: string
@@ -195,7 +223,11 @@ paths:
                 level:
                   type: string
                   description: Log level
-                  enum: [debug, info, warn, error]
+                  enum:
+                    - debug
+                    - info
+                    - warn
+                    - error
                   example: info
                 message:
                   type: string
@@ -210,9 +242,12 @@ paths:
                   description: Where the log originated (api or client)
                   example: client
       responses:
-        '204':
+        "204":
           description: Log recorded
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid request
           content:
             application/json:
@@ -222,14 +257,17 @@ paths:
                   error:
                     type: string
                     example: programId, level, and message required
+              example:
+                error: programId, level, and message required
       security:
         - bearerAuth: []
     get:
-      tags: [system]
+      tags:
+        - system
       summary: Retrieve log messages
       description: >
-        Returns logs filtered by program, level, source, date range, and search query.
-        Results are sorted by newest first and paginated.
+        Returns logs filtered by program, level, source, date range, and search
+        query. Results are sorted by newest first and paginated.
       parameters:
         - in: query
           name: programId
@@ -240,7 +278,11 @@ paths:
           name: level
           schema:
             type: string
-            enum: [debug, info, warn, error]
+            enum:
+              - debug
+              - info
+              - warn
+              - error
           description: Log level to filter
         - in: query
           name: source
@@ -278,7 +320,7 @@ paths:
             maximum: 100
           description: Number of records per page
       responses:
-        '200':
+        "200":
           description: List of logs
           content:
             application/json:
@@ -296,13 +338,17 @@ paths:
                         timestamp:
                           type: string
                           format: date-time
-                          example: '2025-06-01T10:20:30Z'
+                          example: 2025-06-01T10:20:30Z
                         programId:
                           type: string
                           example: abc123
                         level:
                           type: string
-                          enum: [debug, info, warn, error]
+                          enum:
+                            - debug
+                            - info
+                            - warn
+                            - error
                         message:
                           type: string
                           example: Database crashed
@@ -321,7 +367,19 @@ paths:
                   total:
                     type: integer
                     example: 244
-        '400':
+              example:
+                logs:
+                  - id: 1
+                    timestamp: 2025-06-01T10:20:30Z
+                    programId: abc123
+                    level: ""
+                    message: Database crashed
+                    error: Stack trace here
+                    source: api
+                page: 1
+                pageSize: 50
+                total: 244
+        "400":
           description: Invalid request
           content:
             application/json:
@@ -331,22 +389,28 @@ paths:
                   error:
                     type: string
                     example: Invalid level
+              example:
+                error: Invalid level
       security:
         - bearerAuth: []
   /audit-logs:
     post:
-      tags: [system]
+      tags:
+        - system
       summary: Create an audit log entry
-      description: >-
-        Records an audit entry describing a change made to a database record.
-        Used for compliance tracking.
+      description: Records an audit entry describing a change made to a database
+        record. Used for compliance tracking.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [tableName, recordId, userId, action]
+              required:
+                - tableName
+                - recordId
+                - userId
+                - action
               properties:
                 tableName:
                   type: string
@@ -359,18 +423,24 @@ paths:
                 changes:
                   type: object
       responses:
-        '201':
+        "201":
           description: Created audit log
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid request
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [system]
+      tags:
+        - system
       summary: List audit log entries
-      description: >-
-        Returns audit entries filtered by table, record, user, or date range.
-        Results are paginated and sorted by newest first.
+      description: Returns audit entries filtered by table, record, user, or date
+        range. Results are paginated and sorted by newest first.
       parameters:
         - in: query
           name: tableName
@@ -403,37 +473,48 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: List of audit logs
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid request
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs:
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: List all programs
-      description: >-
-        Returns every program in the system. The caller must be authenticated
-        but does not need to belong to any specific program.
+      description: Returns every program in the system. The caller must be
+        authenticated but does not need to belong to any specific program.
       responses:
-        '200':
+        "200":
           description: Array of programs
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     post:
-      tags: [programs]
+      tags:
+        - programs
       summary: Create a new program
-      description: >-
-        Creates a program record and assigns the requesting user as an admin of
-        that program.
+      description: Creates a program record and assigns the requesting user as an
+        admin of that program.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [name, year]
+              required:
+                - name
+                - year
               properties:
                 name:
                   type: string
@@ -442,7 +523,7 @@ paths:
                   type: integer
                   example: 2025
       responses:
-        '201':
+        "201":
           description: Program created
           content:
             application/json:
@@ -460,7 +541,13 @@ paths:
                   roleAssigned:
                     type: string
                     example: admin
-        '400':
+              example:
+                id: ""
+                name: ""
+                year: 0
+                createdBy: 0
+                roleAssigned: admin
+        "400":
           description: Invalid input
           content:
             application/json:
@@ -469,16 +556,18 @@ paths:
                 properties:
                   error:
                     type: string
+              example:
+                error: ""
       example: name and year required
       security:
         - bearerAuth: []
   /programs/{id}:
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: Get program details
-      description: >-
-        Retrieves the program record specified by `id`. The requester must be
-        assigned to the program or an admin.
+      description: Retrieves the program record specified by `id`. The requester must
+        be assigned to the program or an admin.
       parameters:
         - in: path
           name: id
@@ -486,20 +575,29 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Program object
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     put:
-      tags: [programs]
+      tags:
+        - programs
       summary: Update program
-      description: >-
-        Updates basic program information such as name, year, or status. Only
-        program admins may call this endpoint.
+      description: Updates basic program information such as name, year, or status.
+        Only program admins may call this endpoint.
       parameters:
         - in: path
           name: id
@@ -520,20 +618,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated program
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [programs]
+      tags:
+        - programs
       summary: Retire program
-      description: >-
-        Marks the program as retired without deleting the data. Only admins can
-        retire a program.
+      description: Marks the program as retired without deleting the data. Only admins
+        can retire a program.
       parameters:
         - in: path
           name: id
@@ -541,17 +648,27 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Program retired
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /api/branding-contact/{programId}:
     get:
-      tags: [brandingContact]
+      tags:
+        - brandingContact
       summary: Retrieve branding and contact configuration
       parameters:
         - in: path
@@ -560,16 +677,26 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Branding/contact config
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     post:
-      tags: [brandingContact]
+      tags:
+        - brandingContact
       summary: Create or update branding/contact configuration
       parameters:
         - in: path
@@ -584,18 +711,31 @@ paths:
             schema:
               type: object
       responses:
-        '201':
-          description: Created configuration
-        '200':
+        "200":
           description: Updated configuration
-        '403':
+          content:
+            application/json:
+              example: {}
+        "201":
+          description: Created configuration
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     put:
-      tags: [brandingContact]
+      tags:
+        - brandingContact
       summary: Create or update branding/contact configuration
       parameters:
         - in: path
@@ -610,22 +750,34 @@ paths:
             schema:
               type: object
       responses:
-        '201':
-          description: Created configuration
-        '200':
+        "200":
           description: Updated configuration
-        '403':
+          content:
+            application/json:
+              example: {}
+        "201":
+          description: Created configuration
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs/{programId}/users:
     post:
-      tags: [programs]
+      tags:
+        - programs
       summary: Assign user to program
-      description: >-
-        Adds a user to a program with the specified role. Caller must be a
+      description: Adds a user to a program with the specified role. Caller must be a
         program admin.
       parameters:
         - in: path
@@ -640,7 +792,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [userId, role]
+              required:
+                - userId
+                - role
               properties:
                 userId:
                   type: integer
@@ -648,7 +802,7 @@ paths:
                   type: string
                   example: counselor
       responses:
-        '201':
+        "201":
           description: User assigned
           content:
             application/json:
@@ -664,7 +818,12 @@ paths:
                   status:
                     type: string
                     example: assigned
-        '400':
+              example:
+                programId: ""
+                userId: 0
+                role: ""
+                status: assigned
+        "400":
           description: Invalid input
           content:
             application/json:
@@ -673,15 +832,20 @@ paths:
                 properties:
                   error:
                     type: string
-        '403':
+              example:
+                error: ""
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: List users in program
-      description: >-
-        Returns all users assigned to the program along with their roles.
+      description: Returns all users assigned to the program along with their roles.
         Requires admin access to the program.
       parameters:
         - in: path
@@ -691,7 +855,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of users and roles
           content:
             application/json:
@@ -704,16 +868,22 @@ paths:
                       type: integer
                     role:
                       type: string
-        '403':
+              example:
+                - userId: 0
+                  role: ""
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs/{programId}/years:
     post:
-      tags: [programs]
+      tags:
+        - programs
       summary: Create program year
-      description: >-
-        Adds a new year entry to the program. This is typically used at the
+      description: Adds a new year entry to the program. This is typically used at the
         start of a new session. Admin privileges are required.
       parameters:
         - in: path
@@ -728,7 +898,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [year]
+              required:
+                - year
               properties:
                 year:
                   type: integer
@@ -744,20 +915,29 @@ paths:
                 notes:
                   type: string
       responses:
-        '201':
+        "201":
           description: Created program year
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: List program years
-      description: >-
-        Returns all years that have been configured for the program. Requires
-        membership in the program.
+      description: Returns all years that have been configured for the program.
+        Requires membership in the program.
       parameters:
         - in: path
           name: programId
@@ -766,7 +946,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of program years
           content:
             application/json:
@@ -774,16 +954,21 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs/{programId}/grouping-types:
     post:
-      tags: [groupingTypes]
+      tags:
+        - groupingTypes
       summary: Add grouping type
-      description: >-
-        Creates a new grouping type for organizing delegates (for example,
+      description: Creates a new grouping type for organizing delegates (for example,
         city, county, or district). Admin privileges are required.
       parameters:
         - in: path
@@ -798,7 +983,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [defaultName, levelOrder]
+              required:
+                - defaultName
+                - levelOrder
               properties:
                 defaultName:
                   type: string
@@ -811,20 +998,29 @@ paths:
                 isRequired:
                   type: boolean
       responses:
-        '201':
+        "201":
           description: Created grouping type
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [groupingTypes]
+      tags:
+        - groupingTypes
       summary: List grouping types
-      description: >-
-        Lists all grouping type definitions for the program in ascending order
-        by level. Requires program membership.
+      description: Lists all grouping type definitions for the program in ascending
+        order by level. Requires program membership.
       parameters:
         - in: path
           name: programId
@@ -833,7 +1029,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of grouping types
           content:
             application/json:
@@ -841,16 +1037,21 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /grouping-types/{id}:
     put:
-      tags: [groupingTypes]
+      tags:
+        - groupingTypes
       summary: Update grouping type
-      description: >-
-        Modifies the grouping type definition such as its display name or
+      description: Modifies the grouping type definition such as its display name or
         whether it is required. Only program admins can update a grouping type.
       parameters:
         - in: path
@@ -876,20 +1077,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated grouping type
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [groupingTypes]
+      tags:
+        - groupingTypes
       summary: Retire grouping type
-      description: >-
-        Marks the grouping type as retired so it can no longer be used for new
-        groupings. Only admins may retire a type.
+      description: Marks the grouping type as retired so it can no longer be used for
+        new groupings. Only admins may retire a type.
       parameters:
         - in: path
           name: id
@@ -897,20 +1107,29 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Retired grouping type
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs/{programId}/groupings:
     post:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: Add grouping
-      description: >-
-        Creates a new grouping (for example a city or county) under the
+      description: Creates a new grouping (for example a city or county) under the
         specified program. Requires admin permissions.
       parameters:
         - in: path
@@ -925,7 +1144,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [groupingTypeId, name]
+              required:
+                - groupingTypeId
+                - name
               properties:
                 groupingTypeId:
                   type: integer
@@ -938,20 +1159,29 @@ paths:
                 notes:
                   type: string
       responses:
-        '201':
+        "201":
           description: Created grouping
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: List groupings
-      description: >-
-        Returns all groupings defined for the program. Caller must be a member
-        of the program.
+      description: Returns all groupings defined for the program. Caller must be a
+        member of the program.
       parameters:
         - in: path
           name: programId
@@ -960,7 +1190,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of groupings
           content:
             application/json:
@@ -968,17 +1198,22 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /groupings/{id}:
     put:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: Update grouping
-      description: >-
-        Updates the specified grouping's name, parent, or status. Admin access
-        to the grouping's program is required.
+      description: Updates the specified grouping's name, parent, or status. Admin
+        access to the grouping's program is required.
       parameters:
         - in: path
           name: id
@@ -1003,20 +1238,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated grouping
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: Retire grouping
-      description: >-
-        Retires the grouping so it can no longer be assigned to delegates. Only
-        program admins may perform this action.
+      description: Retires the grouping so it can no longer be assigned to delegates.
+        Only program admins may perform this action.
       parameters:
         - in: path
           name: id
@@ -1024,21 +1268,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Retired grouping
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/groupings/activate:
     post:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: Activate groupings for year
-      description: >-
-        Activates a set of groupings for the specified program year so they can
-        be assigned to delegates. Requires admin rights.
+      description: Activates a set of groupings for the specified program year so they
+        can be assigned to delegates. Requires admin rights.
       parameters:
         - in: path
           name: id
@@ -1052,29 +1305,42 @@ paths:
           application/json:
             schema:
               type: object
-              required: [groupingIds]
+              required:
+                - groupingIds
               properties:
                 groupingIds:
                   type: array
                   items:
                     type: integer
       responses:
-        '201':
+        "201":
           description: Activated groupings
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/groupings:
     get:
-      tags: [groupings]
+      tags:
+        - groupings
       summary: List active groupings for year
-      description: >-
-        Lists the groupings that are active for the given program year.
+      description: Lists the groupings that are active for the given program year.
         Membership in the program is required.
       parameters:
         - in: path
@@ -1084,7 +1350,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of active groupings
           content:
             application/json:
@@ -1092,18 +1358,26 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /programs/{programId}/parties:
     post:
-      tags: [parties]
+      tags:
+        - parties
       summary: Add party
-      description: >-
-        Creates a political party for the program. Admin access is required.
+      description: Creates a political party for the program. Admin access is required.
       parameters:
         - in: path
           name: programId
@@ -1117,7 +1391,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name]
+              required:
+                - name
               properties:
                 name:
                   type: string
@@ -1130,20 +1405,29 @@ paths:
                 displayOrder:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Created party
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [parties]
+      tags:
+        - parties
       summary: List parties
-      description: >-
-        Lists all party definitions for the program. Caller must belong to the
-        program.
+      description: Lists all party definitions for the program. Caller must belong to
+        the program.
       parameters:
         - in: path
           name: programId
@@ -1152,7 +1436,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of parties
           content:
             application/json:
@@ -1160,17 +1444,22 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /parties/{id}:
     put:
-      tags: [parties]
+      tags:
+        - parties
       summary: Update party
-      description: >-
-        Updates party details such as name, abbreviation, or icon. Only admins
-        may modify parties.
+      description: Updates party details such as name, abbreviation, or icon. Only
+        admins may modify parties.
       parameters:
         - in: path
           name: id
@@ -1197,20 +1486,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated party
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [parties]
+      tags:
+        - parties
       summary: Retire party
-      description: >-
-        Marks the party as retired. Existing assignments remain but new ones
-        cannot be created. Admin only.
+      description: Marks the party as retired. Existing assignments remain but new
+        ones cannot be created. Admin only.
       parameters:
         - in: path
           name: id
@@ -1218,21 +1516,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Retired party
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/parties/activate:
     post:
-      tags: [parties]
+      tags:
+        - parties
       summary: Activate parties for year
-      description: >-
-        Enables a subset of parties for the given program year. Parties must be
-        created first. Admin access required.
+      description: Enables a subset of parties for the given program year. Parties
+        must be created first. Admin access required.
       parameters:
         - in: path
           name: id
@@ -1246,29 +1553,42 @@ paths:
           application/json:
             schema:
               type: object
-              required: [partyIds]
+              required:
+                - partyIds
               properties:
                 partyIds:
                   type: array
                   items:
                     type: integer
       responses:
-        '201':
+        "201":
           description: Activated parties
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/parties:
     get:
-      tags: [parties]
+      tags:
+        - parties
       summary: List active parties for year
-      description: >-
-        Returns parties that are active for the specified program year.
+      description: Returns parties that are active for the specified program year.
         Membership in the program is required.
       parameters:
         - in: path
@@ -1278,7 +1598,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of active parties
           content:
             application/json:
@@ -1286,18 +1606,26 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/delegates:
     post:
-      tags: [delegates]
+      tags:
+        - delegates
       summary: Add delegate
-      description: >-
-        Creates a new delegate record for the specified program year. Admin
+      description: Creates a new delegate record for the specified program year. Admin
         access is required.
       parameters:
         - in: path
@@ -1312,7 +1640,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [firstName, lastName, email, groupingId]
+              required:
+                - firstName
+                - lastName
+                - email
+                - groupingId
               properties:
                 firstName:
                   type: string
@@ -1329,22 +1661,34 @@ paths:
                 partyId:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Delegate created
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [delegates]
+      tags:
+        - delegates
       summary: List delegates for year
-      description: >-
-        Returns all delegates registered for the given program year. Requires
-        membership in the program.
+      description: Returns all delegates registered for the given program year.
+        Requires membership in the program.
       parameters:
         - in: path
           name: id
@@ -1353,7 +1697,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of delegates
           content:
             application/json:
@@ -1361,18 +1705,26 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /delegates/{id}:
     put:
-      tags: [delegates]
+      tags:
+        - delegates
       summary: Update delegate
-      description: >-
-        Updates delegate information such as contact details or grouping
+      description: Updates delegate information such as contact details or grouping
         assignment. Only program admins can update delegates.
       parameters:
         - in: path
@@ -1404,20 +1756,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated delegate
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [delegates]
+      tags:
+        - delegates
       summary: Withdraw delegate
-      description: >-
-        Marks the delegate as withdrawn from the program year. Admin rights are
-        required.
+      description: Marks the delegate as withdrawn from the program year. Admin rights
+        are required.
       parameters:
         - in: path
           name: id
@@ -1425,21 +1786,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Delegate withdrawn
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/staff:
     post:
-      tags: [staff]
+      tags:
+        - staff
       summary: Add staff member
-      description: >-
-        Adds a staff member to the specified program year. Admin permissions are
-        required.
+      description: Adds a staff member to the specified program year. Admin
+        permissions are required.
       parameters:
         - in: path
           name: id
@@ -1453,7 +1823,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [firstName, lastName, email, role]
+              required:
+                - firstName
+                - lastName
+                - email
+                - role
               properties:
                 firstName:
                   type: string
@@ -1470,22 +1844,34 @@ paths:
                 groupingId:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Staff created
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [staff]
+      tags:
+        - staff
       summary: List staff for year
-      description: >-
-        Returns all staff members assigned to the program year. Caller must be a
-        program member.
+      description: Returns all staff members assigned to the program year. Caller must
+        be a program member.
       parameters:
         - in: path
           name: id
@@ -1494,7 +1880,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of staff
           content:
             application/json:
@@ -1502,19 +1888,27 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /staff/{id}:
     put:
-      tags: [staff]
+      tags:
+        - staff
       summary: Update staff member
-      description: >-
-        Updates staff details or role assignments. Only admins can update staff
-        records.
+      description: Updates staff details or role assignments. Only admins can update
+        staff records.
       parameters:
         - in: path
           name: id
@@ -1545,20 +1939,28 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated staff member
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [staff]
+      tags:
+        - staff
       summary: Remove staff member
-      description: >-
-        Removes a staff member from the program year. Admin permissions
-        required.
+      description: Removes a staff member from the program year. Admin permissions required.
       parameters:
         - in: path
           name: id
@@ -1566,19 +1968,28 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Staff removed
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
   /programs/{programId}/positions:
     post:
-      tags: [positions]
+      tags:
+        - positions
       summary: Add position
-      description: >-
-        Creates a position (such as an elected office) that delegates can hold.
-        Admin access required.
+      description: Creates a position (such as an elected office) that delegates can
+        hold. Admin access required.
       parameters:
         - in: path
           name: programId
@@ -1592,7 +2003,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name]
+              required:
+                - name
               properties:
                 name:
                   type: string
@@ -1601,19 +2013,28 @@ paths:
                 displayOrder:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Created position
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [positions]
+      tags:
+        - positions
       summary: List positions
-      description: >-
-        Lists all position definitions for the program. Requires program
+      description: Lists all position definitions for the program. Requires program
         membership.
       parameters:
         - in: path
@@ -1623,7 +2044,7 @@ paths:
             type: string
           description: Program ID
       responses:
-        '200':
+        "200":
           description: Array of positions
           content:
             application/json:
@@ -1631,17 +2052,22 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /positions/{id}:
     put:
-      tags: [positions]
+      tags:
+        - positions
       summary: Update position
-      description: >-
-        Updates a position's details or display order. Only admins may update
-        positions.
+      description: Updates a position's details or display order. Only admins may
+        update positions.
       parameters:
         - in: path
           name: id
@@ -1664,19 +2090,28 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated position
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [positions]
+      tags:
+        - positions
       summary: Retire position
-      description: >-
-        Retires the position so it can no longer be assigned. Admin access
+      description: Retires the position so it can no longer be assigned. Admin access
         required.
       parameters:
         - in: path
@@ -1685,21 +2120,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Retired position
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}/positions:
     post:
-      tags: [positions]
+      tags:
+        - positions
       summary: Assign position to year
-      description: >-
-        Activates a position for a specific program year and optionally assigns
-        an initial delegate.
+      description: Activates a position for a specific program year and optionally
+        assigns an initial delegate.
       parameters:
         - in: path
           name: id
@@ -1713,29 +2157,42 @@ paths:
           application/json:
             schema:
               type: object
-              required: [positionId]
+              required:
+                - positionId
               properties:
                 positionId:
                   type: integer
                 delegateId:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Created program year position
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [positions]
+      tags:
+        - positions
       summary: List program year positions
-      description: >-
-        Returns all position assignments for the program year. Caller must be a
-        program member.
+      description: Returns all position assignments for the program year. Caller must
+        be a program member.
       parameters:
         - in: path
           name: id
@@ -1744,7 +2201,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of program year positions
           content:
             application/json:
@@ -1752,18 +2209,26 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-year-positions/{id}:
     put:
-      tags: [positions]
+      tags:
+        - positions
       summary: Update program year position
-      description: >-
-        Updates the delegate or status of a program year position. Admin
+      description: Updates the delegate or status of a program year position. Admin
         privileges required.
       parameters:
         - in: path
@@ -1783,21 +2248,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated program year position
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
-
   /program-years/{id}/elections:
     post:
-      tags: [elections]
+      tags:
+        - elections
       summary: Create election
-      description: >-
-        Creates a new election for a position within the program year.
+      description: Creates a new election for a position within the program year.
         Requires admin access and specifies the voting method and timeframe.
       parameters:
         - in: path
@@ -1812,7 +2285,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [positionId, groupingId, method]
+              required:
+                - positionId
+                - groupingId
+                - method
               properties:
                 positionId:
                   type: integer
@@ -1827,22 +2303,34 @@ paths:
                   type: string
                   format: date-time
       responses:
-        '201':
+        "201":
           description: Created election
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [elections]
+      tags:
+        - elections
       summary: List elections
-      description: >-
-        Lists all elections configured for the given program year. Caller must
-        be a program member.
+      description: Lists all elections configured for the given program year. Caller
+        must be a program member.
       parameters:
         - in: path
           name: id
@@ -1851,7 +2339,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of elections
           content:
             application/json:
@@ -1859,20 +2347,27 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
-
   /elections/{id}:
     put:
-      tags: [elections]
+      tags:
+        - elections
       summary: Update election
-      description: >-
-        Updates election details such as status or end time. Only admins can
-        modify elections.
+      description: Updates election details such as status or end time. Only admins
+        can modify elections.
       parameters:
         - in: path
           name: id
@@ -1895,19 +2390,28 @@ paths:
                   type: string
                   format: date-time
       responses:
-        '200':
+        "200":
           description: Updated election
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [elections]
+      tags:
+        - elections
       summary: Remove election
-      description: >-
-        Deletes an election and all associated votes. Admin only.
+      description: Deletes an election and all associated votes. Admin only.
       parameters:
         - in: path
           name: id
@@ -1915,22 +2419,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Removed election
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
-
   /elections/{id}/vote:
     post:
-      tags: [elections]
+      tags:
+        - elections
       summary: Cast vote
-      description: >-
-        Records a delegate's vote for the specified election. Voters must be
-        eligible for the election.
+      description: Records a delegate's vote for the specified election. Voters must
+        be eligible for the election.
       parameters:
         - in: path
           name: id
@@ -1943,7 +2455,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [candidateId, voterId]
+              required:
+                - candidateId
+                - voterId
               properties:
                 candidateId:
                   type: integer
@@ -1952,24 +2466,35 @@ paths:
                 rank:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Vote recorded
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
-
   /elections/{id}/results:
     get:
-      tags: [elections]
+      tags:
+        - elections
       summary: Get election results
-      description: >-
-        Retrieves tallied results for the election. Only admins or authorized
-        staff may view results.
+      description: Retrieves tallied results for the election. Only admins or
+        authorized staff may view results.
       parameters:
         - in: path
           name: id
@@ -1977,20 +2502,29 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Election results
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [positions]
+      tags:
+        - positions
       summary: Remove program year position
-      description: >-
-        Deletes a position assignment from the program year. Only admins can
-        remove assignments.
+      description: Deletes a position assignment from the program year. Only admins
+        can remove assignments.
       parameters:
         - in: path
           name: id
@@ -1998,22 +2532,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Removed program year position
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
-
   /program-years/{id}/parents:
     post:
-      tags: [parents]
+      tags:
+        - parents
       summary: Add parent
-      description: >-
-        Registers a parent account for the specified program year. Admins use
-        this to invite or create parent records.
+      description: Registers a parent account for the specified program year. Admins
+        use this to invite or create parent records.
       parameters:
         - in: path
           name: id
@@ -2027,7 +2569,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [firstName, lastName, email]
+              required:
+                - firstName
+                - lastName
+                - email
               properties:
                 firstName:
                   type: string
@@ -2040,22 +2585,34 @@ paths:
                 userId:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Parent created
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     get:
-      tags: [parents]
+      tags:
+        - parents
       summary: List parents for year
-      description: >-
-        Returns all parent accounts linked to delegates in the program year.
-        Requires membership in the program.
+      description: Returns all parent accounts linked to delegates in the program
+        year. Requires membership in the program.
       parameters:
         - in: path
           name: id
@@ -2064,7 +2621,7 @@ paths:
             type: integer
           description: Program Year ID
       responses:
-        '200':
+        "200":
           description: Array of parents
           content:
             application/json:
@@ -2072,19 +2629,27 @@ paths:
                 type: array
                 items:
                   type: object
-        '403':
+              example:
+                - null
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /parents/{id}:
     put:
-      tags: [parents]
+      tags:
+        - parents
       summary: Update parent
-      description: >-
-        Updates parent contact information or status. Only program admins can
-        update parents.
+      description: Updates parent contact information or status. Only program admins
+        can update parents.
       parameters:
         - in: path
           name: id
@@ -2111,19 +2676,28 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated parent
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [parents]
+      tags:
+        - parents
       summary: Remove parent
-      description: >-
-        Removes the parent record from the program year. Admin access required.
+      description: Removes the parent record from the program year. Admin access required.
       parameters:
         - in: path
           name: id
@@ -2131,28 +2705,40 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Parent removed
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /delegate-parent-links:
     post:
-      tags: [parents]
+      tags:
+        - parents
       summary: Create delegate-parent link
-      description: >-
-        Links a delegate to a parent account. The caller must be an admin or
-        staff member.
+      description: Links a delegate to a parent account. The caller must be an admin
+        or staff member.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [delegateId, parentId, programYearId]
+              required:
+                - delegateId
+                - parentId
+                - programYearId
               properties:
                 delegateId:
                   type: integer
@@ -2161,23 +2747,35 @@ paths:
                 programYearId:
                   type: integer
       responses:
-        '201':
+        "201":
           description: Link created
-        '403':
-          description: Forbidden
-        '404':
-          description: Not found
-        '400':
+          content:
+            application/json:
+              example: {}
+        "400":
           description: Invalid input
+          content:
+            application/json:
+              example: {}
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /delegate-parent-links/{id}:
     put:
-      tags: [parents]
+      tags:
+        - parents
       summary: Update delegate-parent link
-      description: >-
-        Updates the status of an existing delegate-parent relationship. Admins
-        use this to accept or revoke links.
+      description: Updates the status of an existing delegate-parent relationship.
+        Admins use this to accept or revoke links.
       parameters:
         - in: path
           name: id
@@ -2194,20 +2792,29 @@ paths:
                 status:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated link
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /program-years/{id}:
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: Get program year
-      description: >-
-        Retrieves details for a specific program year including dates and
+      description: Retrieves details for a specific program year including dates and
         status. Requires membership in the program.
       parameters:
         - in: path
@@ -2216,19 +2823,28 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Program year
-        '404':
-          description: Not found
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     put:
-      tags: [programs]
+      tags:
+        - programs
       summary: Update program year
-      description: >-
-        Updates program year fields such as start/end dates or status. Only
+      description: Updates program year fields such as start/end dates or status. Only
         program admins can modify a year.
       parameters:
         - in: path
@@ -2254,19 +2870,28 @@ paths:
                 notes:
                   type: string
       responses:
-        '200':
+        "200":
           description: Updated program year
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
     delete:
-      tags: [programs]
+      tags:
+        - programs
       summary: Archive program year
-      description: >-
-        Archives the program year, preventing further modifications. Admin only.
+      description: Archives the program year, preventing further modifications. Admin only.
       parameters:
         - in: path
           name: id
@@ -2274,17 +2899,27 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Archived program year
-        '403':
+          content:
+            application/json:
+              example: {}
+        "403":
           description: Forbidden
-        '404':
+          content:
+            application/json:
+              example: {}
+        "404":
           description: Not found
+          content:
+            application/json:
+              example: {}
       security:
         - bearerAuth: []
   /user-programs/{username}:
     get:
-      tags: [programs]
+      tags:
+        - programs
       summary: List programs for a user
       description: >
         Returns programs for the specified user. If the user is assigned to a
@@ -2299,7 +2934,7 @@ paths:
             type: string
           description: Email or username of the user
       responses:
-        '200':
+        "200":
           description: List of programs
           content:
             application/json:
@@ -2324,7 +2959,13 @@ paths:
                         role:
                           type: string
                           example: admin
-        '400':
+              example:
+                username: jane.doe
+                programs:
+                  - programId: abc123
+                    programName: Boys State Texas
+                    role: admin
+        "400":
           description: Username required
           content:
             application/json:
@@ -2334,7 +2975,9 @@ paths:
                   error:
                     type: string
                     example: Username required
-        '404':
+              example:
+                error: Username required
+        "404":
           description: User not found
           content:
             application/json:
@@ -2344,6 +2987,8 @@ paths:
                   error:
                     type: string
                     example: User not found
+              example:
+                error: User not found
       security:
         - bearerAuth: []
 components:
