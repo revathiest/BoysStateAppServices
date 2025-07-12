@@ -1946,7 +1946,17 @@ paths:
           description: Delegate created
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                firstName: John
+                lastName: Doe
+                email: john@example.com
+                phone: "123-456-7890"
+                userId: 5
+                groupingId: 2
+                partyId: 1
+                status: active
         "400":
           description: Invalid input
           content:
@@ -1987,7 +1997,16 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programYearId: 1
+                  firstName: John
+                  lastName: Doe
+                  email: john@example.com
+                  phone: "123-456-7890"
+                  userId: 5
+                  groupingId: 2
+                  partyId: 1
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -2041,7 +2060,17 @@ paths:
           description: Updated delegate
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                firstName: Jane
+                lastName: Doe
+                email: jane@example.com
+                phone: "123-456-7890"
+                userId: 5
+                groupingId: 2
+                partyId: 1
+                status: active
         "403":
           description: Forbidden
           content:
@@ -2071,7 +2100,9 @@ paths:
           description: Delegate withdrawn
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: withdrawn
         "403":
           description: Forbidden
           content:
@@ -2129,7 +2160,17 @@ paths:
           description: Staff created
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                firstName: Jane
+                lastName: Doe
+                email: jane@example.com
+                phone: "555-123-4567"
+                userId: 3
+                role: counselor
+                groupingId: 2
+                status: active
         "400":
           description: Invalid input
           content:
@@ -2170,7 +2211,16 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programYearId: 1
+                  firstName: Jane
+                  lastName: Doe
+                  email: jane@example.com
+                  phone: "555-123-4567"
+                  userId: 3
+                  role: counselor
+                  groupingId: 2
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -2224,7 +2274,17 @@ paths:
           description: Updated staff member
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                firstName: Janet
+                lastName: Doe
+                email: janet@example.com
+                phone: "555-123-4567"
+                userId: 3
+                role: counselor
+                groupingId: 2
+                status: active
         "403":
           description: Forbidden
           content:
@@ -2253,7 +2313,9 @@ paths:
           description: Staff removed
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: inactive
         "403":
           description: Forbidden
           content:
@@ -2298,7 +2360,13 @@ paths:
           description: Created position
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                name: Governor
+                description: State governor
+                displayOrder: 1
+                status: active
         "400":
           description: Invalid input
           content:
@@ -2334,7 +2402,12 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programId: abc123
+                  name: Governor
+                  description: State governor
+                  displayOrder: 1
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -2375,7 +2448,13 @@ paths:
           description: Updated position
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                name: Governor
+                description: Updated description
+                displayOrder: 1
+                status: active
         "403":
           description: Forbidden
           content:
@@ -2405,7 +2484,9 @@ paths:
           description: Retired position
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: retired
         "403":
           description: Forbidden
           content:
@@ -2450,7 +2531,12 @@ paths:
           description: Created program year position
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                positionId: 1
+                delegateId: 2
+                status: active
         "400":
           description: Invalid input
           content:
@@ -2491,7 +2577,11 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programYearId: 1
+                  positionId: 1
+                  delegateId: 2
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -2533,7 +2623,12 @@ paths:
           description: Updated program year position
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                positionId: 1
+                delegateId: 2
+                status: filled
         "403":
           description: Forbidden
           content:
@@ -2588,7 +2683,15 @@ paths:
           description: Created election
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                positionId: 1
+                groupingId: 2
+                method: fptp
+                status: scheduled
+                startTime: 2025-06-05T00:00:00Z
+                endTime: 2025-06-06T00:00:00Z
         "400":
           description: Invalid input
           content:
@@ -2629,7 +2732,12 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programYearId: 1
+                  positionId: 1
+                  groupingId: 2
+                  method: fptp
+                  status: scheduled
         "403":
           description: Forbidden
           content:
@@ -2675,7 +2783,11 @@ paths:
           description: Updated election
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: closed
+                startTime: 2025-06-05T00:00:00Z
+                endTime: 2025-06-06T00:00:00Z
         "403":
           description: Forbidden
           content:
@@ -2704,7 +2816,9 @@ paths:
           description: Removed election
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: archived
         "403":
           description: Forbidden
           content:
@@ -2751,7 +2865,12 @@ paths:
           description: Vote recorded
           content:
             application/json:
-              example: {}
+              example:
+                id: 10
+                electionId: 1
+                candidateDelegateId: 2
+                voterDelegateId: 3
+                voteRank: 1
         "400":
           description: Invalid input
           content:
@@ -2787,7 +2906,10 @@ paths:
           description: Election results
           content:
             application/json:
-              example: {}
+              example:
+                results:
+                  - candidateDelegateId: 2
+                    _count: 10
         "403":
           description: Forbidden
           content:
@@ -2802,10 +2924,9 @@ paths:
         - bearerAuth: []
     delete:
       tags:
-        - positions
-      summary: Remove program year position
-      description: Deletes a position assignment from the program year. Only admins
-        can remove assignments.
+        - elections
+      summary: Delete election results
+      description: Removes all vote results for the election. Admin only.
       parameters:
         - in: path
           name: id
@@ -2814,7 +2935,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Removed program year position
+          description: Results deleted
           content:
             application/json:
               example: {}
@@ -2870,7 +2991,15 @@ paths:
           description: Parent created
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programYearId: 1
+                firstName: Jane
+                lastName: Doe
+                email: jane.doe@example.com
+                phone: "123-456-7890"
+                userId: 4
+                status: active
         "400":
           description: Invalid input
           content:
@@ -2911,7 +3040,14 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  programYearId: 1
+                  firstName: Jane
+                  lastName: Doe
+                  email: jane.doe@example.com
+                  phone: "123-456-7890"
+                  userId: 4
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -2961,7 +3097,14 @@ paths:
           description: Updated parent
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                firstName: Janet
+                lastName: Doe
+                email: janet.doe@example.com
+                phone: "123-456-7890"
+                userId: 4
+                status: active
         "403":
           description: Forbidden
           content:
@@ -2990,7 +3133,9 @@ paths:
           description: Parent removed
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: inactive
         "403":
           description: Forbidden
           content:
@@ -3032,7 +3177,12 @@ paths:
           description: Link created
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                delegateId: 2
+                parentId: 3
+                programYearId: 1
+                status: pending
         "400":
           description: Invalid input
           content:
@@ -3077,7 +3227,12 @@ paths:
           description: Updated link
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                delegateId: 2
+                parentId: 3
+                programYearId: 1
+                status: accepted
         "403":
           description: Forbidden
           content:
@@ -3108,7 +3263,13 @@ paths:
           description: Program year
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                year: 2025
+                startDate: 2025-06-01T00:00:00Z
+                endDate: 2025-06-07T00:00:00Z
+                status: active
         "403":
           description: Forbidden
           content:
@@ -3155,7 +3316,12 @@ paths:
           description: Updated program year
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                startDate: 2025-06-01T00:00:00Z
+                endDate: 2025-06-07T00:00:00Z
+                status: active
+                notes: Updated notes
         "403":
           description: Forbidden
           content:
@@ -3184,7 +3350,9 @@ paths:
           description: Archived program year
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: archived
         "403":
           description: Forbidden
           content:

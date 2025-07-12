@@ -33,35 +33,35 @@ PUT /parties/{id} - completed
 DELETE /parties/{id} - completed
 POST /program-years/{id}/parties/activate - completed
 GET /program-years/{id}/parties - completed
-POST /program-years/{id}/delegates
+POST /program-years/{id}/delegates - completed
 GET /program-years/{id}/delegates - completed
-PUT /delegates/{id}
-DELETE /delegates/{id}
-POST /program-years/{id}/staff
+PUT /delegates/{id} - completed
+DELETE /delegates/{id} - completed
+POST /program-years/{id}/staff - completed
 GET /program-years/{id}/staff - completed
-PUT /staff/{id}
-DELETE /staff/{id}
-POST /programs/{programId}/positions
+PUT /staff/{id} - completed
+DELETE /staff/{id} - completed
+POST /programs/{programId}/positions - completed
 GET /programs/{programId}/positions - completed
-PUT /positions/{id}
-DELETE /positions/{id}
-POST /program-years/{id}/positions
+PUT /positions/{id} - completed
+DELETE /positions/{id} - completed
+POST /program-years/{id}/positions - completed
 GET /program-years/{id}/positions - completed
-PUT /program-year-positions/{id}
-POST /program-years/{id}/elections
+PUT /program-year-positions/{id} - completed
+POST /program-years/{id}/elections - completed
 GET /program-years/{id}/elections - completed
-PUT /elections/{id}
-DELETE /elections/{id}
-POST /elections/{id}/vote
-GET /elections/{id}/results
-DELETE /elections/{id}/results
-POST /program-years/{id}/parents
+PUT /elections/{id} - completed
+DELETE /elections/{id} - completed
+POST /elections/{id}/vote - completed
+GET /elections/{id}/results - completed
+DELETE /elections/{id}/results - completed
+POST /program-years/{id}/parents - completed
 GET /program-years/{id}/parents - completed
-PUT /parents/{id}
-DELETE /parents/{id}
-POST /delegate-parent-links
-PUT /delegate-parent-links/{id}
-GET /program-years/{id}
-PUT /program-years/{id}
-DELETE /program-years/{id}
+PUT /parents/{id} - completed
+DELETE /parents/{id} - completed
+POST /delegate-parent-links - completed
+PUT /delegate-parent-links/{id} - completed
+GET /program-years/{id} - completed
+PUT /program-years/{id} - completed
+DELETE /program-years/{id} - completed
 GET /user-programs/{username} - completed
