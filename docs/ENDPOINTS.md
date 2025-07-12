@@ -10,28 +10,28 @@ POST /programs - completed
 GET /programs/{id} - completed
 PUT /programs/{id} - completed
 DELETE /programs/{id} - completed
-GET /api/branding-contact/{programId}
-POST /api/branding-contact/{programId}
-PUT /api/branding-contact/{programId}
+GET /api/branding-contact/{programId} - completed
+POST /api/branding-contact/{programId} - completed
+PUT /api/branding-contact/{programId} - completed
 POST /programs/{programId}/users - completed
 GET /programs/{programId}/users - completed
 POST /programs/{programId}/years - completed
 GET /programs/{programId}/years - completed
-POST /programs/{programId}/grouping-types
+POST /programs/{programId}/grouping-types - completed
 GET /programs/{programId}/grouping-types - completed
-PUT /grouping-types/{id}
-DELETE /grouping-types/{id}
-POST /programs/{programId}/groupings
+PUT /grouping-types/{id} - completed
+DELETE /grouping-types/{id} - completed
+POST /programs/{programId}/groupings - completed
 GET /programs/{programId}/groupings - completed
-PUT /groupings/{id}
-DELETE /groupings/{id}
+PUT /groupings/{id} - completed
+DELETE /groupings/{id} - completed
 POST /program-years/{id}/groupings/activate - completed
 GET /program-years/{id}/groupings - completed
-POST /programs/{programId}/parties
+POST /programs/{programId}/parties - completed
 GET /programs/{programId}/parties - completed
-PUT /parties/{id}
-DELETE /parties/{id}
-POST /program-years/{id}/parties/activate
+PUT /parties/{id} - completed
+DELETE /parties/{id} - completed
+POST /program-years/{id}/parties/activate - completed
 GET /program-years/{id}/parties - completed
 POST /program-years/{id}/delegates
 GET /program-years/{id}/delegates - completed

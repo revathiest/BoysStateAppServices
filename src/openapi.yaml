@@ -810,7 +810,21 @@ paths:
           description: Branding/contact config
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                programName: Texas Boys State
+                welcomeMessage: Welcome to the program
+                logoUrl: https://cdn.example.com/logo.png
+                iconUrl: https://cdn.example.com/icon.png
+                bannerUrl: https://cdn.example.com/banner.png
+                colorPrimary: "#003366"
+                colorSecondary: "#CC0000"
+                colorBackground: "#FFFFFF"
+                contactEmail: info@txboysstate.org
+                contactPhone: "123-456-7890"
+                contactWebsite: https://txboysstate.org
+                contactFacebook: https://facebook.com/txboysstate
         "403":
           description: Forbidden
           content:
@@ -844,12 +858,31 @@ paths:
           description: Updated configuration
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                programName: Texas Boys State
+                welcomeMessage: Welcome to the program
+                logoUrl: https://cdn.example.com/logo.png
         "201":
           description: Created configuration
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                programName: Texas Boys State
+                welcomeMessage: Welcome to the program
+                logoUrl: https://cdn.example.com/logo.png
+                iconUrl: https://cdn.example.com/icon.png
+                bannerUrl: https://cdn.example.com/banner.png
+                colorPrimary: "#003366"
+                colorSecondary: "#CC0000"
+                colorBackground: "#FFFFFF"
+                contactEmail: info@txboysstate.org
+                contactPhone: "123-456-7890"
+                contactWebsite: https://txboysstate.org
+                contactFacebook: https://facebook.com/txboysstate
         "403":
           description: Forbidden
           content:
@@ -883,12 +916,40 @@ paths:
           description: Updated configuration
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                programName: Texas Boys State
+                welcomeMessage: Welcome to the program
+                logoUrl: https://cdn.example.com/logo.png
+                iconUrl: https://cdn.example.com/icon.png
+                bannerUrl: https://cdn.example.com/banner.png
+                colorPrimary: "#003366"
+                colorSecondary: "#CC0000"
+                colorBackground: "#FFFFFF"
+                contactEmail: info@txboysstate.org
+                contactPhone: "123-456-7890"
+                contactWebsite: https://txboysstate.org
+                contactFacebook: https://facebook.com/txboysstate
         "201":
           description: Created configuration
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                programName: Texas Boys State
+                welcomeMessage: Welcome to the program
+                logoUrl: https://cdn.example.com/logo.png
+                iconUrl: https://cdn.example.com/icon.png
+                bannerUrl: https://cdn.example.com/banner.png
+                colorPrimary: "#003366"
+                colorSecondary: "#CC0000"
+                colorBackground: "#FFFFFF"
+                contactEmail: info@txboysstate.org
+                contactPhone: "123-456-7890"
+                contactWebsite: https://txboysstate.org
+                contactFacebook: https://facebook.com/txboysstate
         "403":
           description: Forbidden
           content:
@@ -1141,7 +1202,15 @@ paths:
           description: Created grouping type
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                defaultName: City
+                customName: City
+                pluralName: Cities
+                levelOrder: 1
+                isRequired: true
+                status: active
         "400":
           description: Invalid input
           content:
@@ -1177,7 +1246,13 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 1
+                  defaultName: City
+                  customName: City
+                  pluralName: Cities
+                  levelOrder: 1
+                  isRequired: true
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -1220,7 +1295,15 @@ paths:
           description: Updated grouping type
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                programId: abc123
+                defaultName: City
+                customName: City
+                pluralName: Cities
+                levelOrder: 1
+                isRequired: true
+                status: active
         "403":
           description: Forbidden
           content:
@@ -1250,7 +1333,9 @@ paths:
           description: Retired grouping type
           content:
             application/json:
-              example: {}
+              example:
+                id: 1
+                status: retired
         "403":
           description: Forbidden
           content:
@@ -1302,7 +1387,13 @@ paths:
           description: Created grouping
           content:
             application/json:
-              example: {}
+              example:
+                id: 10
+                programId: abc123
+                groupingTypeId: 1
+                name: Austin
+                displayOrder: 1
+                status: active
         "400":
           description: Invalid input
           content:
@@ -1338,7 +1429,11 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 10
+                  groupingTypeId: 1
+                  name: Austin
+                  displayOrder: 1
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -1381,7 +1476,13 @@ paths:
           description: Updated grouping
           content:
             application/json:
-              example: {}
+              example:
+                id: 10
+                programId: abc123
+                groupingTypeId: 1
+                name: Austin
+                displayOrder: 1
+                status: active
         "403":
           description: Forbidden
           content:
@@ -1411,7 +1512,9 @@ paths:
           description: Retired grouping
           content:
             application/json:
-              example: {}
+              example:
+                id: 10
+                status: retired
         "403":
           description: Forbidden
           content:
@@ -1554,7 +1657,15 @@ paths:
           description: Created party
           content:
             application/json:
-              example: {}
+              example:
+                id: 5
+                programId: abc123
+                name: Federalist
+                abbreviation: FED
+                color: blue
+                icon: star
+                displayOrder: 1
+                status: active
         "400":
           description: Invalid input
           content:
@@ -1590,7 +1701,13 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 5
+                  name: Federalist
+                  abbreviation: FED
+                  color: blue
+                  icon: star
+                  displayOrder: 1
+                  status: active
         "403":
           description: Forbidden
           content:
@@ -1635,7 +1752,15 @@ paths:
           description: Updated party
           content:
             application/json:
-              example: {}
+              example:
+                id: 5
+                programId: abc123
+                name: Federalist
+                abbreviation: FED
+                color: blue
+                icon: star
+                displayOrder: 1
+                status: active
         "403":
           description: Forbidden
           content:
@@ -1665,7 +1790,9 @@ paths:
           description: Retired party
           content:
             application/json:
-              example: {}
+              example:
+                id: 5
+                status: retired
         "403":
           description: Forbidden
           content:
@@ -1710,7 +1837,10 @@ paths:
           description: Activated parties
           content:
             application/json:
-              example: {}
+              example:
+                activated:
+                  - 5
+                  - 6
         "400":
           description: Invalid input
           content:
@@ -1752,7 +1882,13 @@ paths:
                 items:
                   type: object
               example:
-                - null
+                - id: 5
+                  name: Federalist
+                  abbreviation: FED
+                  color: blue
+                  icon: star
+                  displayOrder: 1
+                  status: active
         "403":
           description: Forbidden
           content:
