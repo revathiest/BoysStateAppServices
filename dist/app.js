@@ -59,6 +59,7 @@ const staff_1 = __importDefault(require("./routes/staff"));
 const parents_1 = __importDefault(require("./routes/parents"));
 const elections_1 = __importDefault(require("./routes/elections"));
 const brandingContact_1 = __importDefault(require("./routes/brandingContact"));
+const applications_1 = __importDefault(require("./routes/applications"));
 const app = (0, express_1.default)();
 exports.default = app;
 const corsOptions = { origin: true, credentials: true };
@@ -73,7 +74,8 @@ const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 app.use((req, res, next) => {
     if (req.path === '/login' ||
         req.path === '/register' ||
-        req.path.startsWith('/docs')) {
+        req.path.startsWith('/docs') ||
+        (req.method === 'GET' && /^\/api\/programs\/[^/]+\/application$/.test(req.path))) {
         return next();
     }
     const auth = req.headers.authorization;
@@ -113,6 +115,7 @@ app.use(staff_1.default);
 app.use(parents_1.default);
 app.use(elections_1.default);
 app.use(brandingContact_1.default);
+app.use(applications_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();

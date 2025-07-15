@@ -93,6 +93,21 @@ const prisma = {
     create: jest.fn(),
     groupBy: jest.fn(),
   },
+  application: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  applicationQuestion: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  applicationQuestionOption: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
   log: {
     create: jest.fn().mockResolvedValue(null),
     findMany: jest.fn(),

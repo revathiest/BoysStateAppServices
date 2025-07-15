@@ -17,6 +17,7 @@ import staffRoutes from './routes/staff';
 import parentsRoutes from './routes/parents';
 import electionsRoutes from './routes/elections';
 import brandingContactRoutes from './routes/brandingContact';
+import applicationsRoutes from './routes/applications';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -35,7 +36,8 @@ app.use((req, res, next) => {
   if (
     req.path === '/login' ||
     req.path === '/register' ||
-    req.path.startsWith('/docs')
+    req.path.startsWith('/docs') ||
+    (req.method === 'GET' && /^\/api\/programs\/[^/]+\/application$/.test(req.path))
   ) {
     return next();
   }
@@ -76,6 +78,7 @@ app.use(staffRoutes);
 app.use(parentsRoutes);
 app.use(electionsRoutes);
 app.use(brandingContactRoutes);
+app.use(applicationsRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
