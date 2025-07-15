@@ -44,6 +44,11 @@ This document describes the backend service agents supporting the Boys State App
 * Links delegates to the correct program and permissions
 * Supports inviting parents during or after registration
 * Ensures secure, auditable account creation and assignment
+* Handles onboarding of accepted applicants who are designated as delegates via the Application/Admissions Agent
+* Automatically creates or updates user accounts and permissions for accepted applicants
+* Sends onboarding/invitation communications (email/SMS as configured)
+* Ensures access is granted only upon official acceptance
+
 
 ### 1.4. Program Management Website Agent
 
@@ -145,6 +150,29 @@ This document describes the backend service agents supporting the Boys State App
 **Google Docs Agent:** Provides access to program-linked education/resources via backend endpoints.
 
 **Discord Agent:** Manages Discord account linking, announcement relay, and optional communication via backend only.
+
+### 3.7. Application/Admissions Agent (NEW)
+
+**Description:**  
+Manages program-defined application forms (for delegate admissions), secure public application endpoints, submission handling, and admission workflow.
+
+**Responsibilities:**
+* Allows staff/admins to define and update their program’s application form:
+  * Supports multiple question types (text, essay, dropdown, multi-choice, file upload, etc)
+  * Supports required/optional questions and sectioning
+  * Allows admins to set application open/close dates and publish/unpublish the application link
+* Provides a secure, public web endpoint for applicants to fill out the program’s application (no login required)
+  * Includes anti-bot protections (e.g., CAPTCHA)
+  * Ensures each application form and all data are strictly scoped to a single program
+* Handles submission, validation, and storage of applicant data
+  * Notifies staff of new submissions
+  * Provides audit logging of all application activity
+* Enables staff/admins to review, accept, or reject applications
+  * When an application is accepted, the applicant is automatically designated as a delegate in the system
+    * Triggers delegate onboarding, assignment to program, and relevant notifications
+    * Removes applicant access if later revoked
+* Exposes endpoints for application management (search/filter/export applications, set statuses, etc)
+* All endpoints fully documented via Swagger/OpenAPI
 
 ---
 
