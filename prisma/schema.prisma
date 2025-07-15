@@ -35,6 +35,7 @@ model Program {
   parties       Party[]
   positions     Position[]
   brandingContacts ProgramBrandingContact[]
+  applications     Application[]
   status        String              @default("active")
   createdAt     DateTime            @default(now())
 }
@@ -387,4 +388,48 @@ model ProgramBrandingContactAudit {
   changedAt         DateTime @default(now())
 
   @@index([brandingContactId])
+}
+
+model Application {
+  id          String                @id @default(cuid())
+  program     Program               @relation(fields: [programId], references: [id])
+  programId   String
+  title       String
+  description String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  questions   ApplicationQuestion[]
+
+  @@index([programId])
+}
+
+model ApplicationQuestion {
+  id            Int                     @id @default(autoincrement())
+  application   Application             @relation(fields: [applicationId], references: [id])
+  applicationId String
+  parent        ApplicationQuestion?    @relation("QuestionChildren", fields: [parentId], references: [id])
+  parentId      Int?
+  children      ApplicationQuestion[]   @relation("QuestionChildren")
+  order         Int
+  type          String
+  text          String
+  required      Boolean?
+  accept        String?
+  maxFiles      Int?
+
+  options       ApplicationQuestionOption[]
+
+  @@index([applicationId])
+  @@index([parentId])
+}
+
+model ApplicationQuestionOption {
+  id         Int                 @id @default(autoincrement())
+  question   ApplicationQuestion @relation(fields: [questionId], references: [id])
+  questionId Int
+  value      String
+  order      Int
+
+  @@index([questionId])
 }
