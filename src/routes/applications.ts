@@ -92,6 +92,12 @@ async function saveApplication(req: express.Request, res: express.Response) {
     res.status(400).json({ error: 'title required' });
     return;
   }
+  await prisma.applicationQuestionOption.deleteMany({
+    where: { question: { application: { programId } } },
+  });
+  await prisma.applicationQuestion.deleteMany({
+    where: { application: { programId } },
+  });
   await prisma.application.deleteMany({ where: { programId } });
   const application = await prisma.application.create({ data: { programId, title, description } });
   await saveQuestions(application.id, questions || []);
@@ -115,9 +121,13 @@ router.delete('/api/programs/:programId/application', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
+  await prisma.applicationQuestionOption.deleteMany({
+    where: { question: { application: { programId } } },
+  });
+  await prisma.applicationQuestion.deleteMany({
+    where: { application: { programId } },
+  });
   await prisma.application.deleteMany({ where: { programId } });
-  await prisma.applicationQuestion.deleteMany({ where: { application: { programId } } });
-  await prisma.applicationQuestionOption.deleteMany({ where: { question: { application: { programId } } } });
   logger.info(programId, `Application deleted by ${caller.email}`);
   res.json({ status: 'deleted' });
 });
