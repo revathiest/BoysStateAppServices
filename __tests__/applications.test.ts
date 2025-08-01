@@ -201,6 +201,101 @@ describe('additional coverage for application routes', () => {
     expect(secondCall.data.parentId).toBe(100);
   });
 
+  it('saves and retrieves all question types including repeating groups', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.application.create.mockResolvedValueOnce({ id: 'app1' });
+    mockedPrisma.applicationQuestion.create
+      .mockResolvedValueOnce({ id: 1 })
+      .mockResolvedValueOnce({ id: 2 })
+      .mockResolvedValueOnce({ id: 3 })
+      .mockResolvedValueOnce({ id: 4 })
+      .mockResolvedValueOnce({ id: 5 })
+      .mockResolvedValueOnce({ id: 6 })
+      .mockResolvedValueOnce({ id: 7 });
+    mockedPrisma.applicationQuestionOption.create.mockResolvedValue({});
+
+    const createRes = await request(app)
+      .post('/api/programs/abc/application')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'App',
+        questions: [
+          { type: 'text', text: 't1' },
+          { type: 'essay', text: 't2' },
+          { type: 'dropdown', text: 't3', options: ['a', 'b'] },
+          { type: 'multi-choice', text: 't4', options: ['a', 'b', 'c'] },
+          { type: 'file', text: 't5', accept: 'image/*', maxFiles: 1 },
+          {
+            type: 'repeating-group',
+            text: 'group',
+            fields: [{ type: 'text', text: 'child' }],
+          },
+        ],
+      });
+
+    expect(createRes.status).toBe(201);
+    expect(mockedPrisma.applicationQuestion.create).toHaveBeenCalledTimes(7);
+    expect(mockedPrisma.applicationQuestionOption.create).toHaveBeenCalledTimes(5);
+    const parentCall = mockedPrisma.applicationQuestion.create.mock.calls[5][0];
+    const childCall = mockedPrisma.applicationQuestion.create.mock.calls[6][0];
+    expect(parentCall.data.parentId).toBeNull();
+    expect(childCall.data.parentId).toBe(6);
+
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.application.findFirst.mockResolvedValueOnce({
+      id: 'app1',
+      programId: 'abc',
+      title: 'App',
+      description: 'desc',
+    });
+    mockedPrisma.applicationQuestion.findMany.mockResolvedValueOnce([
+      { id: 1, parentId: null, order: 0, type: 'text', text: 't1', options: [] },
+      { id: 2, parentId: null, order: 1, type: 'essay', text: 't2', options: [] },
+      {
+        id: 3,
+        parentId: null,
+        order: 2,
+        type: 'dropdown',
+        text: 't3',
+        options: [
+          { value: 'a', order: 0 },
+          { value: 'b', order: 1 },
+        ],
+      },
+      {
+        id: 4,
+        parentId: null,
+        order: 3,
+        type: 'multi-choice',
+        text: 't4',
+        options: [
+          { value: 'a', order: 0 },
+          { value: 'b', order: 1 },
+          { value: 'c', order: 2 },
+        ],
+      },
+      {
+        id: 5,
+        parentId: null,
+        order: 4,
+        type: 'file',
+        text: 't5',
+        accept: 'image/*',
+        maxFiles: 1,
+        options: [],
+      },
+      { id: 6, parentId: null, order: 5, type: 'repeating-group', text: 'group', options: [] },
+      { id: 7, parentId: 6, order: 0, type: 'text', text: 'child', options: [] },
+    ]);
+
+    const getRes = await request(app).get('/api/programs/abc/application');
+    expect(getRes.status).toBe(200);
+    expect(getRes.body.questions.length).toBe(6);
+    expect(getRes.body.questions[5].fields[0].id).toBe(7);
+    expect(getRes.body.questions[2].options).toEqual(['a', 'b']);
+  });
+
   it('returns 404 on delete when program missing', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
