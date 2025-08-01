@@ -88,6 +88,28 @@ describe('POST /api/programs/:id/application', () => {
   });
 });
 
+describe('PUT /api/programs/:id/application', () => {
+  it('replaces existing application when admin', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationQuestionOption.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.applicationQuestion.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.application.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.application.create.mockResolvedValueOnce({ id: 'app1' });
+    mockedPrisma.applicationQuestion.create.mockResolvedValue({ id: 1 });
+
+    const res = await request(app)
+      .put('/api/programs/abc/application')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'App', questions: [] });
+
+    expect(res.status).toBe(201);
+    expect(mockedPrisma.applicationQuestionOption.deleteMany).toHaveBeenCalled();
+    expect(mockedPrisma.applicationQuestion.deleteMany).toHaveBeenCalled();
+    expect(mockedPrisma.application.deleteMany).toHaveBeenCalled();
+  });
+});
+
 describe('DELETE /api/programs/:id/application', () => {
   it('deletes when admin', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
