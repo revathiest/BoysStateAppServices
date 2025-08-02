@@ -400,6 +400,7 @@ model Application {
   updatedAt   DateTime              @updatedAt
 
   questions   ApplicationQuestion[]
+  responses   ApplicationResponse[]
 
   @@index([programId])
 }
@@ -419,6 +420,7 @@ model ApplicationQuestion {
   maxFiles      Int?
 
   options       ApplicationQuestionOption[]
+  answers       ApplicationAnswer[]
 
   @@index([applicationId])
   @@index([parentId])
@@ -431,5 +433,27 @@ model ApplicationQuestionOption {
   value      String
   order      Int
 
+  @@index([questionId])
+}
+
+model ApplicationResponse {
+  id String @id @default(cuid())
+  application Application @relation(fields: [applicationId], references: [id])
+  applicationId String
+  createdAt DateTime @default(now())
+  answers ApplicationAnswer[]
+
+  @@index([applicationId])
+}
+
+model ApplicationAnswer {
+  id Int @id @default(autoincrement())
+  response ApplicationResponse @relation(fields: [responseId], references: [id])
+  responseId String
+  question ApplicationQuestion @relation(fields: [questionId], references: [id])
+  questionId Int
+  value String
+
+  @@index([responseId])
   @@index([questionId])
 }
