@@ -18,6 +18,8 @@ beforeEach(() => {
   mockedPrisma.applicationQuestion.deleteMany.mockReset();
   mockedPrisma.applicationQuestionOption.create.mockReset();
   mockedPrisma.applicationQuestionOption.deleteMany.mockReset();
+  mockedPrisma.applicationResponse.create.mockReset();
+  mockedPrisma.applicationResponse.findMany.mockReset();
 });
 
 describe('GET /api/programs/:id/application', () => {
@@ -302,6 +304,43 @@ describe('additional coverage for application routes', () => {
       .delete('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /api/programs/:id/application/responses', () => {
+  it('accepts public submission', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.application.findFirst.mockResolvedValueOnce({ id: 'app1' });
+    mockedPrisma.applicationResponse.create.mockResolvedValueOnce({ id: 'resp1' });
+    const res = await request(app)
+      .post('/api/programs/abc/application/responses')
+      .send({ answers: [{ questionId: 1, value: 'John' }] });
+    expect(res.status).toBe(201);
+    expect(mockedPrisma.applicationResponse.create).toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/programs/:id/application/responses', () => {
+  it('requires admin access', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .get('/api/programs/abc/application/responses')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(403);
+  });
+
+  it('returns responses for admin', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findMany.mockResolvedValueOnce([
+      { id: 'resp1', answers: [{ questionId: 1, value: 'John' }] },
+    ]);
+    const res = await request(app)
+      .get('/api/programs/abc/application/responses')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body[0].id).toBe('resp1');
   });
 });
 

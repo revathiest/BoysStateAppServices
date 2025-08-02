@@ -1121,6 +1121,85 @@ paths:
               example: {}
       security:
         - bearerAuth: []
+  /api/programs/{programId}/application/responses:
+    post:
+      tags:
+        - applications
+      summary: Submit application response
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      questionId:
+                        type: integer
+                      value:
+                        type: string
+            example:
+              answers:
+                - questionId: 1
+                  value: John Doe
+      responses:
+        "201":
+          description: Created response
+          content:
+            application/json:
+              example:
+                responseId: resp123
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
+    get:
+      tags:
+        - applications
+      summary: List application responses
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Responses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+              example:
+                - id: resp123
+                  answers:
+                    - questionId: 1
+                      value: John Doe
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              example: {}
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example: {}
+      security:
+        - bearerAuth: []
   /programs/{programId}/users:
     post:
       tags:

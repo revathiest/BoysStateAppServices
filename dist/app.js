@@ -75,7 +75,8 @@ app.use((req, res, next) => {
     if (req.path === '/login' ||
         req.path === '/register' ||
         req.path.startsWith('/docs') ||
-        (req.method === 'GET' && /^\/api\/programs\/[^/]+\/application$/.test(req.path))) {
+        (req.method === 'GET' && /^\/api\/programs\/[^/]+\/application$/.test(req.path)) ||
+        (req.method === 'POST' && /^\/api\/programs\/[^/]+\/application\/responses$/.test(req.path))) {
         return next();
     }
     const auth = req.headers.authorization;

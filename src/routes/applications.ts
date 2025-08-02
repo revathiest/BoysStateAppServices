@@ -132,5 +132,52 @@ router.delete('/api/programs/:programId/application', async (req, res) => {
   res.json({ status: 'deleted' });
 });
 
+router.post('/api/programs/:programId/application/responses', async (req, res) => {
+  const { programId } = req.params as { programId: string };
+  const program = await prisma.program.findUnique({ where: { id: programId } });
+  if (!program) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const application = await prisma.application.findFirst({ where: { programId } });
+  if (!application) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const body = req.body as { answers: { questionId: number; value: string }[] };
+  if (!Array.isArray(body.answers)) {
+    res.status(400).json({ error: 'answers required' });
+    return;
+  }
+  const created = await prisma.applicationResponse.create({
+    data: {
+      applicationId: application.id,
+      answers: { create: body.answers.map((a) => ({ questionId: a.questionId, value: a.value })) },
+    },
+  });
+  logger.info(programId, `Application submitted ${created.id}`);
+  res.status(201).json({ responseId: created.id });
+});
+
+router.get('/api/programs/:programId/application/responses', async (req, res) => {
+  const { programId } = req.params as { programId: string };
+  const caller = (req as any).user as { userId: number; email: string };
+  const program = await prisma.program.findUnique({ where: { id: programId } });
+  if (!program) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  const isAdmin = await isProgramAdmin(caller.userId, programId);
+  if (!isAdmin) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const responses = await prisma.applicationResponse.findMany({
+    where: { application: { programId } },
+    include: { answers: true },
+  });
+  res.json(responses);
+});
+
 export default router;
 
