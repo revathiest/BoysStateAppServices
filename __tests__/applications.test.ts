@@ -318,6 +318,25 @@ describe('POST /api/programs/:id/application/responses', () => {
     expect(res.status).toBe(201);
     expect(mockedPrisma.applicationResponse.create).toHaveBeenCalled();
   });
+
+  it('supports array and object answers', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.application.findFirst.mockResolvedValueOnce({ id: 'app1' });
+    mockedPrisma.applicationResponse.create.mockResolvedValueOnce({ id: 'resp1' });
+    const res = await request(app)
+      .post('/api/programs/abc/application/responses')
+      .send({
+        answers: [
+          { questionId: 1, value: ['a', 'b'] },
+          { questionId: 2, value: { start: '2025-01-01', end: '2025-01-02' } },
+        ],
+      });
+    expect(res.status).toBe(201);
+    expect(mockedPrisma.applicationResponse.create).toHaveBeenCalled();
+    const args = mockedPrisma.applicationResponse.create.mock.calls[0][0];
+    expect(args.data.answers.create[0].value).toEqual(['a', 'b']);
+    expect(args.data.answers.create[1].value).toEqual({ start: '2025-01-01', end: '2025-01-02' });
+  });
 });
 
 describe('GET /api/programs/:id/application/responses', () => {
