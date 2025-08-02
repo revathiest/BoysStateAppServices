@@ -151,30 +151,36 @@ This document describes the backend service agents supporting the Boys State App
 
 **Discord Agent:** Manages Discord account linking, announcement relay, and optional communication via backend only.
 
-### 3.7. Application/Admissions Agent (NEW)
+### 3.7. Application/Admissions Agent
 
 **Description:**  
-Manages program-defined application forms (for delegate admissions), secure public application endpoints, submission handling, and admission workflow.
+Manages program-defined application forms (for delegate admissions), secure public API endpoints, submission handling, and the complete admission workflow—including unauthenticated (public) access.
 
 **Responsibilities:**
-* Allows staff/admins to define and update their program’s application form:
-  * Supports multiple question types (text, essay, dropdown, multi-choice, file upload, etc)
-  * Supports required/optional questions and sectioning
-  * Allows admins to set application open/close dates and publish/unpublish the application link
-* Provides a secure, public web endpoint for applicants to fill out the program’s application (no login required)
-  * Includes anti-bot protections (e.g., CAPTCHA)
-  * Ensures each application form and all data are strictly scoped to a single program
-* Handles submission, validation, and storage of applicant data
-  * Notifies staff of new submissions
-  * Provides audit logging of all application activity
-* Enables staff/admins to review, accept, or reject applications
-  * When an application is accepted, the applicant is automatically designated as a delegate in the system
-    * Triggers delegate onboarding, assignment to program, and relevant notifications
-    * Removes applicant access if later revoked
-* Exposes endpoints for application management (search/filter/export applications, set statuses, etc)
-* All endpoints fully documented via Swagger/OpenAPI
+- Allows staff/admins to define, update, and publish public application forms:
+  - Multiple question types, required/optional, sectioning
+  - Set open/close dates, publish/unpublish, and **generate public, non-guessable application URLs** (using a UUID/token, not just programId)
+- Exposes **secure public API endpoints** for applications (**no login/account required**)
+  - Serves full form schema and branding, program-scoped
+  - **Anti-bot protection** (e.g., CAPTCHA) and **rate limiting** enforced on all public endpoints
+  - All submitted data is strictly per-program and never viewable by other applicants
+- Handles submission and storage:
+  - Each submission is logged with timestamp, IP, browser info (never userId)
+  - File uploads are scanned for malware/abuse (if enabled)
+  - Each successful submission returns a unique reference code
+- Notifies staff/admins of new application submissions and status changes
+- Enables staff/admins to review, accept/reject applications (acceptance triggers delegate onboarding)
+- All public endpoints must be **fully documented in Swagger/OpenAPI**, including compliance, anti-abuse, and audit logging features
+- All actions (public and admin) are logged/audited with programId, action, timestamp, and relevant context
+- Automated tests for all public, unauthenticated flows (submission, anti-abuse, error handling, compliance)
 
----
+**Security, Privacy, and Compliance:**
+- All public endpoints require **CAPTCHA and rate limiting**; excess or abusive traffic is blocked and logged
+- Application forms display all required privacy and non-affiliation disclaimers
+- “Save Draft” (if enabled) for unauthenticated users must use client/browser storage only (never persistent backend storage)
+- No persistent user data is stored unless provided as part of the application form
+- Full compliance with COPPA, FERPA, GDPR for all data collection and storage
+- Automated tests and API docs required for all public-facing flows
 
 ## 4. Security, Privacy, and Compliance
 
