@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../prisma';
 import * as logger from '../logger';
 import { isProgramAdmin } from '../utils/auth';
+import { Prisma } from '@prisma/client';
 
 const router = express.Router();
 
@@ -144,7 +145,9 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  const body = req.body as { answers: { questionId: number; value: string }[] };
+  const body = req.body as {
+    answers: { questionId: number; value?: Prisma.InputJsonValue }[];
+  };
   if (!Array.isArray(body.answers)) {
     res.status(400).json({ error: 'answers required' });
     return;
@@ -152,7 +155,12 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
   const created = await prisma.applicationResponse.create({
     data: {
       applicationId: application.id,
-      answers: { create: body.answers.map((a) => ({ questionId: a.questionId, value: a.value })) },
+      answers: {
+        create: body.answers.map((a) => ({
+          questionId: a.questionId,
+          value: a.value ?? null,
+        })) as Prisma.ApplicationAnswerUncheckedCreateWithoutResponseInput[],
+      },
     },
   });
   logger.info(programId, `Application submitted ${created.id}`);

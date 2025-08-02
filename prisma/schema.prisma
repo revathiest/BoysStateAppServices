@@ -452,7 +452,7 @@ model ApplicationAnswer {
   responseId String
   question ApplicationQuestion @relation(fields: [questionId], references: [id])
   questionId Int
-  value String
+  value Json
 
   @@index([responseId])
   @@index([questionId])
