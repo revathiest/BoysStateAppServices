@@ -55,7 +55,7 @@ describe('POST /api/programs/:id/application', () => {
     const res = await request(app)
       .post('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'App', questions: [] });
+      .send({ title: 'App', questions: [], year: 2024, type: 'delegate' });
     expect(res.status).toBe(201);
     expect(mockedPrisma.application.create).toHaveBeenCalled();
   });
@@ -66,7 +66,7 @@ describe('POST /api/programs/:id/application', () => {
     const res = await request(app)
       .post('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'App' });
+      .send({ title: 'App', year: 2024, type: 'delegate' });
     expect(res.status).toBe(403);
   });
 
@@ -85,7 +85,7 @@ describe('POST /api/programs/:id/application', () => {
     const res = await request(app)
       .post('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'App' });
+      .send({ title: 'App', year: 2024, type: 'delegate' });
     expect(res.status).toBe(404);
   });
 });
@@ -103,7 +103,7 @@ describe('PUT /api/programs/:id/application', () => {
     const res = await request(app)
       .put('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
-      .send({ title: 'App', questions: [] });
+      .send({ title: 'App', questions: [], year: 2024, type: 'delegate' });
 
     expect(res.status).toBe(201);
     expect(mockedPrisma.applicationQuestionOption.deleteMany).toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('DELETE /api/programs/:id/application', () => {
     mockedPrisma.applicationQuestion.deleteMany.mockResolvedValueOnce({});
     mockedPrisma.applicationQuestionOption.deleteMany.mockResolvedValueOnce({});
     const res = await request(app)
-      .delete('/api/programs/abc/application')
+      .delete('/api/programs/abc/application?year=2024&type=delegate')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(mockedPrisma.application.deleteMany).toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('DELETE /api/programs/:id/application', () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce(null);
     const res = await request(app)
-      .delete('/api/programs/abc/application')
+      .delete('/api/programs/abc/application?year=2024&type=delegate')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
   });
@@ -184,6 +184,8 @@ describe('additional coverage for application routes', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'App',
+        year: 2024,
+        type: 'delegate',
         questions: [
           {
             type: 'radio',
@@ -222,6 +224,8 @@ describe('additional coverage for application routes', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({
         title: 'App',
+        year: 2024,
+        type: 'delegate',
         questions: [
           { type: 'text', text: 't1' },
           { type: 'essay', text: 't2' },
@@ -301,7 +305,7 @@ describe('additional coverage for application routes', () => {
   it('returns 404 on delete when program missing', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
-      .delete('/api/programs/abc/application')
+      .delete('/api/programs/abc/application?year=2024&type=delegate')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(404);
   });

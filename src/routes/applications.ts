@@ -52,12 +52,19 @@ async function saveQuestions(applicationId: string, items: any[], parentId?: num
 
 router.get('/api/programs/:programId/application', async (req, res) => {
   const { programId } = req.params as { programId: string };
+  const { year, type } = req.query as { year?: string; type?: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  const application = await prisma.application.findFirst({ where: { programId } });
+  const application = await prisma.application.findFirst({
+    where: {
+      programId,
+      ...(year ? { year: Number(year) } : {}),
+      ...(type ? { type } : {}),
+    },
+  });
   if (!application) {
     res.status(404).json({ error: 'Not found' });
     return;
@@ -68,7 +75,14 @@ router.get('/api/programs/:programId/application', async (req, res) => {
     include: { options: { orderBy: { order: 'asc' } } },
   });
   const result = buildTree(questions);
-  res.json({ applicationId: application.id, title: application.title, description: application.description, questions: result });
+  res.json({
+    applicationId: application.id,
+    title: application.title,
+    description: application.description,
+    year: application.year,
+    type: application.type,
+    questions: result,
+  });
 });
 
 async function saveApplication(req: express.Request, res: express.Response) {
@@ -88,22 +102,31 @@ async function saveApplication(req: express.Request, res: express.Response) {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { title, description, questions } = req.body as any;
+  const { title, description, questions, year, type } = req.body as any;
   if (!title) {
     res.status(400).json({ error: 'title required' });
     return;
   }
+  if (year === undefined) {
+    res.status(400).json({ error: 'year required' });
+    return;
+  }
+  if (!type) {
+    res.status(400).json({ error: 'type required' });
+    return;
+  }
+  const yr = Number(year);
   await prisma.applicationQuestionOption.deleteMany({
-    where: { question: { application: { programId } } },
+    where: { question: { application: { programId, year: yr, type } } },
   });
   await prisma.applicationQuestion.deleteMany({
-    where: { application: { programId } },
+    where: { application: { programId, year: yr, type } },
   });
-  await prisma.application.deleteMany({ where: { programId } });
-  const application = await prisma.application.create({ data: { programId, title, description } });
+  await prisma.application.deleteMany({ where: { programId, year: yr, type } });
+  const application = await prisma.application.create({ data: { programId, title, description, year: yr, type } });
   await saveQuestions(application.id, questions || []);
   logger.info(programId, `Application saved by ${caller.email}`);
-  res.status(201).json({ applicationId: application.id, title, description, questions });
+  res.status(201).json({ applicationId: application.id, title, description, year: yr, type, questions });
 }
 
 router.post('/api/programs/:programId/application', saveApplication);
@@ -111,6 +134,7 @@ router.put('/api/programs/:programId/application', saveApplication);
 
 router.delete('/api/programs/:programId/application', async (req, res) => {
   const { programId } = req.params as { programId: string };
+  const { year, type } = req.query as { year?: string; type?: string };
   const caller = (req as any).user as { userId: number; email: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
@@ -122,25 +146,37 @@ router.delete('/api/programs/:programId/application', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
+  if (year === undefined || !type) {
+    res.status(400).json({ error: 'year and type required' });
+    return;
+  }
+  const yr = Number(year);
   await prisma.applicationQuestionOption.deleteMany({
-    where: { question: { application: { programId } } },
+    where: { question: { application: { programId, year: yr, type } } },
   });
   await prisma.applicationQuestion.deleteMany({
-    where: { application: { programId } },
+    where: { application: { programId, year: yr, type } },
   });
-  await prisma.application.deleteMany({ where: { programId } });
+  await prisma.application.deleteMany({ where: { programId, year: yr, type } });
   logger.info(programId, `Application deleted by ${caller.email}`);
   res.json({ status: 'deleted' });
 });
 
 router.post('/api/programs/:programId/application/responses', async (req, res) => {
   const { programId } = req.params as { programId: string };
+  const { year, type } = req.query as { year?: string; type?: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  const application = await prisma.application.findFirst({ where: { programId } });
+  const application = await prisma.application.findFirst({
+    where: {
+      programId,
+      ...(year ? { year: Number(year) } : {}),
+      ...(type ? { type } : {}),
+    },
+  });
   if (!application) {
     res.status(404).json({ error: 'Not found' });
     return;
@@ -175,6 +211,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
 
 router.get('/api/programs/:programId/application/responses', async (req, res) => {
   const { programId } = req.params as { programId: string };
+  const { year, type } = req.query as { year?: string; type?: string };
   const caller = (req as any).user as { userId: number; email: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
@@ -187,7 +224,13 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
     return;
   }
   const responses = await prisma.applicationResponse.findMany({
-    where: { application: { programId } },
+    where: {
+      application: {
+        programId,
+        ...(year ? { year: Number(year) } : {}),
+        ...(type ? { type } : {}),
+      },
+    },
     include: { answers: true },
   });
   res.json(responses);
