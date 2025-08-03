@@ -146,7 +146,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
     return;
   }
   const body = req.body as {
-    answers: { questionId: number; value?: Prisma.InputJsonValue }[];
+    answers: Record<string, Prisma.InputJsonValue | undefined>[];
   };
   if (!Array.isArray(body.answers)) {
     res.status(400).json({ error: 'answers required' });
@@ -156,10 +156,16 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
     data: {
       applicationId: application.id,
       answers: {
-        create: body.answers.map((a) => ({
-          questionId: a.questionId,
-          value: a.value ?? null,
-        })) as Prisma.ApplicationAnswerUncheckedCreateWithoutResponseInput[],
+        create: body.answers.map((a) => {
+          const { questionId, value, ...rest } = a as {
+            questionId: number;
+            value?: Prisma.InputJsonValue;
+            [key: string]: Prisma.InputJsonValue | number | undefined;
+          };
+          const finalValue =
+            value !== undefined ? value : Object.keys(rest).length ? (rest as Prisma.JsonObject) : null;
+          return { questionId, value: finalValue };
+        }) as Prisma.ApplicationAnswerUncheckedCreateWithoutResponseInput[],
       },
     },
   });
