@@ -975,6 +975,17 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: year
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [delegate, staff]
       responses:
         "200":
           description: Application configuration
@@ -984,6 +995,8 @@ paths:
                 type: object
               example:
                 applicationId: app123
+                year: 2024
+                type: delegate
                 title: Delegate Application
                 description: Please complete the application
                 questions:
@@ -1015,6 +1028,20 @@ paths:
           application/json:
             schema:
               type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                questions:
+                  type: array
+                  items:
+                    type: object
+                year:
+                  type: integer
+                type:
+                  type: string
+                  enum: [delegate, staff]
       responses:
         "201":
           description: Created configuration
@@ -1024,6 +1051,8 @@ paths:
                 type: object
               example:
                 applicationId: app123
+                year: 2024
+                type: delegate
                 title: Delegate Application
                 description: Please complete the application
                 questions:
@@ -1062,6 +1091,20 @@ paths:
           application/json:
             schema:
               type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                questions:
+                  type: array
+                  items:
+                    type: object
+                year:
+                  type: integer
+                type:
+                  type: string
+                  enum: [delegate, staff]
       responses:
         "201":
           description: Created configuration
@@ -1071,6 +1114,8 @@ paths:
                 type: object
               example:
                 applicationId: app123
+                year: 2024
+                type: delegate
                 title: Delegate Application
                 description: Please complete the application
                 questions:
@@ -1103,6 +1148,17 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [delegate, staff]
       responses:
         "200":
           description: Deleted
@@ -1132,6 +1188,17 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: year
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [delegate, staff]
       requestBody:
         required: true
         content:
@@ -1174,6 +1241,17 @@ paths:
           required: true
           schema:
             type: string
+        - in: query
+          name: year
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: type
+          required: false
+          schema:
+            type: string
+            enum: [delegate, staff]
       responses:
         "200":
           description: Responses

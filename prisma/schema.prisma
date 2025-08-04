@@ -394,6 +394,8 @@ model Application {
   id          String                @id @default(cuid())
   program     Program               @relation(fields: [programId], references: [id])
   programId   String
+  year        Int?
+  type        String?
   title       String
   description String?
   createdAt   DateTime              @default(now())
@@ -403,6 +405,7 @@ model Application {
   responses   ApplicationResponse[]
 
   @@index([programId])
+  @@index([programId, year, type])
 }
 
 model ApplicationQuestion {
