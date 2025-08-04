@@ -32,17 +32,17 @@ describe('GET /api/programs/:id/application', () => {
     expect(mockedPrisma.application.findFirst).toHaveBeenCalled();
   });
 
-  it('returns 404 when missing', async () => {
+  it('returns 204 when missing', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app).get('/api/programs/abc/application');
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
-  it('returns 404 when no application', async () => {
+  it('returns 204 when no application', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.application.findFirst.mockResolvedValueOnce(null);
     const res = await request(app).get('/api/programs/abc/application');
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 });
 
@@ -80,13 +80,13 @@ describe('POST /api/programs/:id/application', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 for invalid program', async () => {
+  it('returns 204 for invalid program', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .post('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'App' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 });
 
@@ -298,12 +298,12 @@ describe('additional coverage for application routes', () => {
     expect(getRes.body.questions[2].options).toEqual(['a', 'b']);
   });
 
-  it('returns 404 on delete when program missing', async () => {
+  it('returns 204 on delete when program missing', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 });
 

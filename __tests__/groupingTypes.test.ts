@@ -58,13 +58,13 @@ describe('GroupingType endpoints', () => {
     expect(mockedPrisma.groupingType.update).toHaveBeenCalled();
   });
 
-  it('returns 404 when grouping type not found', async () => {
+  it('returns 204 when grouping type not found', async () => {
     mockedPrisma.groupingType.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/grouping-types/99')
       .set('Authorization', `Bearer ${token}`)
       .send({ customName: 'Town' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('retires grouping type', async () => {

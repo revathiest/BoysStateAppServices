@@ -76,14 +76,14 @@ describe('GET /api/branding-contact/:programId forbidden', () => {
 });
 
 describe('GET /api/branding-contact/:programId not found', () => {
-  it('returns 404 when record missing', async () => {
+  it('returns 204 when record missing', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({});
     mockedPrisma.programBrandingContact.findFirst.mockResolvedValueOnce(null);
     const res = await request(app)
       .get('/api/branding-contact/abc')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 });
 

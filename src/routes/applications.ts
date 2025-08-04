@@ -54,12 +54,12 @@ router.get('/api/programs/:programId/application', async (req, res) => {
   const { programId } = req.params as { programId: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const application = await prisma.application.findFirst({ where: { programId } });
   if (!application) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const questions = await prisma.applicationQuestion.findMany({
@@ -80,7 +80,7 @@ async function saveApplication(req: express.Request, res: express.Response) {
   }
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, programId);
@@ -114,7 +114,7 @@ router.delete('/api/programs/:programId/application', async (req, res) => {
   const caller = (req as any).user as { userId: number; email: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, programId);
@@ -137,12 +137,12 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
   const { programId } = req.params as { programId: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const application = await prisma.application.findFirst({ where: { programId } });
   if (!application) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const body = req.body as {
@@ -178,7 +178,7 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
   const caller = (req as any).user as { userId: number; email: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, programId);

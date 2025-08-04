@@ -10,7 +10,7 @@ router.post('/program-years/:id/elections', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -49,7 +49,7 @@ router.get('/program-years/:id/elections', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);
@@ -66,12 +66,12 @@ router.put('/elections/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const election = await prisma.election.findUnique({ where: { id: Number(id) } });
   if (!election) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: election.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -101,12 +101,12 @@ router.delete('/elections/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const election = await prisma.election.findUnique({ where: { id: Number(id) } });
   if (!election) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: election.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -124,12 +124,12 @@ router.post('/elections/:id/vote', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const election = await prisma.election.findUnique({ where: { id: Number(id) } });
   if (!election) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: election.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);
@@ -158,12 +158,12 @@ router.get('/elections/:id/results', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const election = await prisma.election.findUnique({ where: { id: Number(id) } });
   if (!election) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: election.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);

@@ -27,13 +27,13 @@ describe('Election error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when program year missing', async () => {
+  it('returns 204 when program year missing', async () => {
     mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .post('/program-years/1/elections')
       .set('Authorization', `Bearer ${token}`)
       .send({ positionId: 1, groupingId: 2, method: 'plurality' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('requires required fields', async () => {
@@ -55,13 +55,13 @@ describe('Election error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing election', async () => {
+  it('returns 204 when updating missing election', async () => {
     mockedPrisma.election.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/elections/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: 'closed' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -75,12 +75,12 @@ describe('Election error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing election', async () => {
+  it('returns 204 when deleting missing election', async () => {
     mockedPrisma.election.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/elections/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {
@@ -124,38 +124,38 @@ describe('Election error cases', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
   });
-it('returns 404 when listing elections and program year missing', async () => {
+it('returns 204 when listing elections and program year missing', async () => {
   mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
   const res = await request(app)
     .get('/program-years/1/elections')
     .set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
-it('returns 404 when voting and program year missing', async () => {
+it('returns 204 when voting and program year missing', async () => {
   mockedPrisma.election.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1 });
   mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
   const res = await request(app)
     .post('/elections/1/vote')
     .set('Authorization', `Bearer ${token}`)
     .send({ candidateId: 2, voterId: 3 });
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
-it('returns 404 when results election missing', async () => {
+it('returns 204 when results election missing', async () => {
   mockedPrisma.election.findUnique.mockResolvedValueOnce(null);
   const res = await request(app)
     .get('/elections/1/results')
     .set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
-it('returns 404 when results program year missing', async () => {
+it('returns 204 when results program year missing', async () => {
   mockedPrisma.election.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1 });
   mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
   const res = await request(app)
     .get('/elections/1/results')
     .set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 });

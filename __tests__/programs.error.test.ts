@@ -41,13 +41,13 @@ describe('Program error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing program', async () => {
+  it('returns 204 when updating missing program', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/programs/abc')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'New' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -59,10 +59,10 @@ describe('Program error cases', () => {
       .send({ name: 'New' });
     expect(res.status).toBe(403);
   });
-it('returns 404 when getting missing program', async () => {
+it('returns 204 when getting missing program', async () => {
   mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
   const res = await request(app).get('/programs/p1').set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
 it('rejects get program when not member', async () => {
@@ -73,10 +73,10 @@ it('rejects get program when not member', async () => {
 });
 
 
-it('returns 404 when deleting missing program', async () => {
+it('returns 204 when deleting missing program', async () => {
   mockedPrisma.program.findUnique.mockResolvedValueOnce(null);
   const res = await request(app).delete('/programs/p1').set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
 it('rejects delete when not admin', async () => {

@@ -67,7 +67,7 @@ router.put('/groupings/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const grouping = await prisma.grouping.findUnique({ where: { id: Number(id) } });
   if (!grouping) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, grouping.programId);
@@ -95,7 +95,7 @@ router.delete('/groupings/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const grouping = await prisma.grouping.findUnique({ where: { id: Number(id) } });
   if (!grouping) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, grouping.programId);
@@ -116,7 +116,7 @@ router.post('/program-years/:id/groupings/activate', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -145,7 +145,7 @@ router.get('/program-years/:id/groupings', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);

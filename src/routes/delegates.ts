@@ -10,7 +10,7 @@ router.post('/program-years/:id/delegates', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -53,7 +53,7 @@ router.get('/program-years/:id/delegates', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);
@@ -70,12 +70,12 @@ router.put('/delegates/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const delegate = await prisma.delegate.findUnique({ where: { id: Number(id) } });
   if (!delegate) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: delegate.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -106,12 +106,12 @@ router.delete('/delegates/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const delegate = await prisma.delegate.findUnique({ where: { id: Number(id) } });
   if (!delegate) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: delegate.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);

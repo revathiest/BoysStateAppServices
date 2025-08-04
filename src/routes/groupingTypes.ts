@@ -67,7 +67,7 @@ router.put('/grouping-types/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const gt = await prisma.groupingType.findUnique({ where: { id: Number(id) } });
   if (!gt) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, gt.programId);
@@ -95,7 +95,7 @@ router.delete('/grouping-types/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const gt = await prisma.groupingType.findUnique({ where: { id: Number(id) } });
   if (!gt) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, gt.programId);
