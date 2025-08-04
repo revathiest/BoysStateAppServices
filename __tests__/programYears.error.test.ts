@@ -41,13 +41,13 @@ describe('ProgramYear error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing year', async () => {
+  it('returns 204 when updating missing year', async () => {
     mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/program-years/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ status: 'archived' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -60,12 +60,12 @@ describe('ProgramYear error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing year', async () => {
+  it('returns 204 when deleting missing year', async () => {
     mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/program-years/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {
@@ -76,12 +76,12 @@ describe('ProgramYear error cases', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(403);
   });
-it('returns 404 when getting missing program year', async () => {
+it('returns 204 when getting missing program year', async () => {
   mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
   const res = await request(app)
     .get('/program-years/1')
     .set('Authorization', `Bearer ${token}`);
-  expect(res.status).toBe(404);
+  expect(res.status).toBe(204);
 });
 
 it('rejects get when not program member', async () => {

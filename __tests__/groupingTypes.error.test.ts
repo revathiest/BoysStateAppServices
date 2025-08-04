@@ -41,12 +41,12 @@ describe('GroupingType error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing type', async () => {
+  it('returns 204 when deleting missing type', async () => {
     mockedPrisma.groupingType.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/grouping-types/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {

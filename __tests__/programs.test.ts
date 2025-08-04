@@ -74,13 +74,13 @@ describe('GET /programs/:username', () => {
     expect(res.body).toEqual({ username: 'jane.doe', programs: [] });
   });
 
-  it('returns 404 when user does not exist', async () => {
+  it('returns 204 when user does not exist', async () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
     const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
     const res = await request(app)
       .get('/user-programs/missing')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('returns 400 when username missing', async () => {

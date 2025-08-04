@@ -33,13 +33,13 @@ describe('Grouping error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing grouping', async () => {
+  it('returns 204 when updating missing grouping', async () => {
     mockedPrisma.grouping.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/groupings/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'Updated' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -52,12 +52,12 @@ describe('Grouping error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing grouping', async () => {
+  it('returns 204 when deleting missing grouping', async () => {
     mockedPrisma.grouping.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/groupings/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {

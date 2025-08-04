@@ -41,13 +41,13 @@ describe('Position error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing position', async () => {
+  it('returns 204 when updating missing position', async () => {
     mockedPrisma.position.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/positions/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'New' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -60,12 +60,12 @@ describe('Position error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing position', async () => {
+  it('returns 204 when deleting missing position', async () => {
     mockedPrisma.position.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/positions/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {

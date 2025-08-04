@@ -40,13 +40,13 @@ describe('Party error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing party', async () => {
+  it('returns 204 when updating missing party', async () => {
     mockedPrisma.party.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/parties/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ name: 'B' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -59,12 +59,12 @@ describe('Party error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing party', async () => {
+  it('returns 204 when deleting missing party', async () => {
     mockedPrisma.party.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/parties/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {

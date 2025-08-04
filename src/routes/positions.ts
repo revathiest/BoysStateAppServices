@@ -57,7 +57,7 @@ router.put('/positions/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const position = await prisma.position.findUnique({ where: { id: Number(id) } });
   if (!position) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, position.programId);
@@ -84,7 +84,7 @@ router.delete('/positions/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const position = await prisma.position.findUnique({ where: { id: Number(id) } });
   if (!position) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, position.programId);

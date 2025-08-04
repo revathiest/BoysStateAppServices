@@ -28,7 +28,7 @@ export async function getUserPrograms(
 
   const user = await prisma.user.findUnique({ where: { email: username } });
   if (!user) {
-    res.status(404).json({ error: 'User not found' });
+    res.status(204).end();
     return;
   }
 

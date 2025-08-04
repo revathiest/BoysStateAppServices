@@ -10,7 +10,7 @@ router.post('/program-years/:id/parents', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -49,7 +49,7 @@ router.get('/program-years/:id/parents', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isMember = await isProgramMember(caller.userId, py.programId);
@@ -66,12 +66,12 @@ router.put('/parents/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const parent = await prisma.parent.findUnique({ where: { id: Number(id) } });
   if (!parent) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: parent.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -100,12 +100,12 @@ router.delete('/parents/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const parent = await prisma.parent.findUnique({ where: { id: Number(id) } });
   if (!parent) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: parent.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -131,7 +131,7 @@ router.post('/delegate-parent-links', async (req, res) => {
   }
   const py = await prisma.programYear.findUnique({ where: { id: programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);
@@ -151,12 +151,12 @@ router.put('/delegate-parent-links/:id', async (req, res) => {
   const caller = (req as any).user as { userId: number };
   const link = await prisma.delegateParentLink.findUnique({ where: { id: Number(id) } });
   if (!link) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const py = await prisma.programYear.findUnique({ where: { id: link.programYearId } });
   if (!py) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const isAdmin = await isProgramAdmin(caller.userId, py.programId);

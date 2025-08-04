@@ -21,7 +21,7 @@ async function saveBrandingContact(req: express.Request, res: express.Response) 
   /* istanbul ignore next */
   /* c8 ignore next */
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const admin = await isProgramAdmin(caller.userId, programId);
@@ -113,7 +113,7 @@ router.get('/api/branding-contact/:programId', async (req, res) => {
   const program = await prisma.program.findUnique({ where: { id: programId } });
   /* c8 ignore next */
   if (!program) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   const member = await isProgramMember(caller.userId, programId);
@@ -129,7 +129,7 @@ router.get('/api/branding-contact/:programId', async (req, res) => {
   /* istanbul ignore next */
   /* c8 ignore next */
   if (!record) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(204).end();
     return;
   }
   res.json({ ...record, programName: program.name });

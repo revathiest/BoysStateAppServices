@@ -26,13 +26,13 @@ describe('ProgramYearPosition error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when program year missing', async () => {
+  it('returns 204 when program year missing', async () => {
     mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .post('/program-years/1/positions')
       .set('Authorization', `Bearer ${token}`)
       .send({ positionId: 2 });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects list when not member', async () => {
@@ -44,13 +44,13 @@ describe('ProgramYearPosition error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when updating missing record', async () => {
+  it('returns 204 when updating missing record', async () => {
     mockedPrisma.programYearPosition.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .put('/program-year-positions/1')
       .set('Authorization', `Bearer ${token}`)
       .send({ delegateId: 5 });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects update when not admin', async () => {
@@ -64,12 +64,12 @@ describe('ProgramYearPosition error cases', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when deleting missing record', async () => {
+  it('returns 204 when deleting missing record', async () => {
     mockedPrisma.programYearPosition.findUnique.mockResolvedValueOnce(null);
     const res = await request(app)
       .delete('/program-year-positions/1')
       .set('Authorization', `Bearer ${token}`);
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 
   it('rejects delete when not admin', async () => {
