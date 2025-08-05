@@ -443,6 +443,7 @@ model ApplicationResponse {
   id String @id @default(cuid())
   application Application @relation(fields: [applicationId], references: [id])
   applicationId String
+  status String @default("pending")
   createdAt DateTime @default(now())
   answers ApplicationAnswer[]
 

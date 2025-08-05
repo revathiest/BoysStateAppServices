@@ -60,6 +60,7 @@ const parents_1 = __importDefault(require("./routes/parents"));
 const elections_1 = __importDefault(require("./routes/elections"));
 const brandingContact_1 = __importDefault(require("./routes/brandingContact"));
 const applications_1 = __importDefault(require("./routes/applications"));
+const applicationReviews_1 = __importDefault(require("./routes/applicationReviews"));
 const app = (0, express_1.default)();
 exports.default = app;
 const corsOptions = { origin: true, credentials: true };
@@ -117,6 +118,7 @@ app.use(parents_1.default);
 app.use(elections_1.default);
 app.use(brandingContact_1.default);
 app.use(applications_1.default);
+app.use(applicationReviews_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();
