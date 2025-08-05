@@ -1278,6 +1278,174 @@ paths:
               example: {}
       security:
         - bearerAuth: []
+
+  /api/programs/{programId}/applications/delegate:
+    get:
+      tags:
+        - applications
+      summary: List delegate applications
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, accepted, rejected]
+      responses:
+        "200":
+          description: List of applications
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+      security:
+        - bearerAuth: []
+  /api/programs/{programId}/applications/staff:
+    get:
+      tags:
+        - applications
+      summary: List staff applications
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [pending, accepted, rejected]
+      responses:
+        "200":
+          description: List of applications
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+      security:
+        - bearerAuth: []
+  /api/programs/{programId}/applications/{type}/{applicationId}:
+    get:
+      tags:
+        - applications
+      summary: Get application details
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [delegate, staff]
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Application details
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+      security:
+        - bearerAuth: []
+  /api/programs/{programId}/applications/{type}/{applicationId}/accept:
+    post:
+      tags:
+        - applications
+      summary: Accept a pending application
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [delegate, staff]
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+      responses:
+        "200":
+          description: Application accepted
+        "400":
+          description: Already decided
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+      security:
+        - bearerAuth: []
+  /api/programs/{programId}/applications/{type}/{applicationId}/reject:
+    post:
+      tags:
+        - applications
+      summary: Reject an application
+      parameters:
+        - in: path
+          name: programId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [delegate, staff]
+        - in: path
+          name: applicationId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Application rejected
+        "400":
+          description: Already decided
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+      security:
+        - bearerAuth: []
   /programs/{programId}/users:
     post:
       tags:

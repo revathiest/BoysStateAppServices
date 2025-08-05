@@ -18,6 +18,7 @@ import parentsRoutes from './routes/parents';
 import electionsRoutes from './routes/elections';
 import brandingContactRoutes from './routes/brandingContact';
 import applicationsRoutes from './routes/applications';
+import applicationReviewRoutes from './routes/applicationReviews';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -80,6 +81,7 @@ app.use(parentsRoutes);
 app.use(electionsRoutes);
 app.use(brandingContactRoutes);
 app.use(applicationsRoutes);
+app.use(applicationReviewRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

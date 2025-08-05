@@ -111,6 +111,13 @@ const prisma = {
   applicationResponse: {
     create: jest.fn(),
     findMany: jest.fn(),
+    findFirst: jest.fn(),
+    update: jest.fn(),
+  },
+  auditLog: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
   },
   log: {
     create: jest.fn().mockResolvedValue(null),

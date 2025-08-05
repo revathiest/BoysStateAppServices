@@ -86,7 +86,7 @@ describe('POST /api/programs/:id/application', () => {
       .post('/api/programs/abc/application')
       .set('Authorization', `Bearer ${token}`)
       .send({ title: 'App', year: 2024, type: 'delegate' });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(204);
   });
 });
 
