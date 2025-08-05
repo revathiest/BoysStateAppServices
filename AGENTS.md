@@ -182,6 +182,77 @@ Manages program-defined application forms (for delegate admissions), secure publ
 - Full compliance with COPPA, FERPA, GDPR for all data collection and storage
 - Automated tests and API docs required for all public-facing flows
 
+### 3.8. Application Review & User Management Agents
+
+**Description:**  
+Manages the secure, auditable review, acceptance, and rejection of delegate and staff applications by authorized program personnel. Handles user provisioning, application status, audit logging, and onboarding after acceptance.  
+**Distinct endpoints, workflows, and data handling for delegate and staff applications.**
+
+**Responsibilities:**
+
+- Expose secure, authenticated REST API endpoints for:
+  - Listing, filtering, and searching **pending delegate applications**
+  - Listing, filtering, and searching **pending staff applications** (separate endpoints)
+  - Fetching full application details and supporting files for each type (subject to role)
+  - Approving (accepting) applications, which:
+    - Creates a user account (delegate or staff), linked to application and program
+    - Triggers appropriate onboarding (delegate or staff)
+    - Sends notification(s) as configured (email, SMS, etc.)
+    - Audits who approved, when, and any comments
+  - Rejecting applications, which:
+    - Marks as rejected, with optional reason and notification
+    - Prevents duplicate or future login for rejected applications
+    - Audits rejection action (who/when/why)
+  - Bulk operations: Accept or reject multiple applications (as permitted by UI/role)
+  - Export/download application data for permitted users (audited, program-scoped)
+
+- **Role-based API security:**  
+  - Only users with staff/admin roles for the current program can access or take actions on applications for their program
+  - Delegate reviewers *cannot* see or review staff applications, and vice versa
+
+- **Strict per-program data isolation:**  
+  - All application data and user actions are scoped by `programId` and enforced at API and DB level
+
+- **Audit and compliance:**
+  - All review actions (approve/reject) are logged with:
+    - Reviewer user ID, action type, timestamp, program ID, application ID, and action context (reason, comments)
+  - Export/download and notification actions are also fully logged
+  - All data exports, notifications, and account creations must meet compliance (COPPA, FERPA, GDPR, etc.)
+
+- **Automated test coverage:**
+  - All endpoints for application review, acceptance, and rejection have automated tests (logic, permissions, error cases, audit, double-accept, undo, etc.)
+  - All API endpoints documented in Swagger/OpenAPI (with role requirements, error codes, and example payloads)
+
+- **No duplicate user accounts:**  
+  - Accepting an application must check for existing users and link, not duplicate
+
+- **Future extensibility:**  
+  - Planned: Background check integrations, multi-stage review, custom onboarding steps, more granular reviewer roles
+
+**Key API Endpoints (Examples):**
+
+- `GET   /api/programs/:programId/applications/delegate?status=pending`
+- `GET   /api/programs/:programId/applications/staff?status=pending`
+- `GET   /api/programs/:programId/applications/:type/:applicationId`  
+  (type = delegate\|staff)
+- `POST  /api/programs/:programId/applications/:type/:applicationId/accept`
+- `POST  /api/programs/:programId/applications/:type/:applicationId/reject`
+- `POST  /api/programs/:programId/applications/:type/bulk-action`  
+  (accept/reject in bulk, role/permission-limited)
+
+**Security, Privacy, and Compliance:**
+
+- All review and status-change endpoints require authentication, authorization, and audit
+- Exported/downloaded data is strictly program-scoped and audit-logged
+- Onboarding and notification actions are triggered via secure backend processes only (never directly by client)
+- Full compliance with minor privacy laws and organizational rules (COPPA, FERPA, GDPR, etc.)
+- All endpoints reject cross-program or cross-role access
+
+**Automated Testing & Documentation:**
+
+- Automated tests for all review actions, onboarding triggers, audit logging, and permissions
+- API docs (Swagger/OpenAPI) must include detailed endpoint, security, and workflow docs for all review actions and user provisioning
+
 ## 4. Security, Privacy, and Compliance
 
 * **Per-program data isolation:** All data is scoped to a single program. No cross-program sharing.
