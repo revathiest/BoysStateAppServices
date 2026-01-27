@@ -398,6 +398,7 @@ model Application {
   type        String?
   title       String
   description String?
+  closingDate DateTime?
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 

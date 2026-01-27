@@ -34,9 +34,66 @@ function listHandler(appType: string) {
           ...(year ? { year: Number(year) } : {}),
         },
       },
+      include: {
+        application: true,
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
     });
 
-    res.json(responses);
+    // Transform responses to include year and extract name/role from answers
+    const transformedResponses = responses.map((response) => {
+      // Find first name and last name fields (should always be first two questions)
+      const firstNameAnswer = response.answers.find(
+        (a) => a.question.text === 'First Name' || a.question.text.toLowerCase() === 'first name'
+      );
+      const lastNameAnswer = response.answers.find(
+        (a) => a.question.text === 'Last Name' || a.question.text.toLowerCase() === 'last name'
+      );
+
+      const firstName = firstNameAnswer?.value
+        ? typeof firstNameAnswer.value === 'string'
+          ? firstNameAnswer.value
+          : (firstNameAnswer.value as any)?.toString() || ''
+        : '';
+      const lastName = lastNameAnswer?.value
+        ? typeof lastNameAnswer.value === 'string'
+          ? lastNameAnswer.value
+          : (lastNameAnswer.value as any)?.toString() || ''
+        : '';
+
+      // Combine first and last name
+      const name = `${firstName} ${lastName}`.trim() ||
+        // Fallback to old "Full Name" field for legacy applications
+        response.answers.find(a => a.question.text === 'Full Name' || a.question.text.toLowerCase().includes('full name'))?.value?.toString() || '';
+
+      // Find role field (for staff applications)
+      const roleAnswer = response.answers.find(
+        (a) =>
+          a.question.text.toLowerCase().includes('role') ||
+          a.question.text.toLowerCase().includes('position')
+      );
+      const role = roleAnswer?.value
+        ? typeof roleAnswer.value === 'string'
+          ? roleAnswer.value
+          : (roleAnswer.value as any)?.toString() || ''
+        : '';
+
+      return {
+        id: response.id,
+        name,
+        fullName: name,
+        role: appType === 'staff' ? role : undefined,
+        year: response.application.year,
+        status: response.status,
+        submittedAt: response.createdAt,
+      };
+    });
+
+    res.json(transformedResponses);
   };
 }
 
@@ -76,13 +133,75 @@ router.get(
 
     const response = await prisma.applicationResponse.findFirst({
       where: { id: applicationId, application: { programId, type } },
-      include: { answers: true },
+      include: {
+        application: true,
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
     });
     if (!response) {
       res.status(404).json({ error: 'Not found' });
       return;
     }
-    res.json(response);
+
+    // Transform answers into a more usable format
+    const formattedAnswers = response.answers.map((answer) => ({
+      questionId: answer.questionId,
+      label: answer.question.text,
+      type: answer.question.type,
+      value: answer.value,
+      answer: answer.value,
+    }));
+
+    // Extract name and role for convenience
+    // Name should be First Name + Last Name (first two questions)
+    const firstNameAnswer = response.answers.find(
+      (a) => a.question.text === 'First Name' || a.question.text.toLowerCase() === 'first name'
+    );
+    const lastNameAnswer = response.answers.find(
+      (a) => a.question.text === 'Last Name' || a.question.text.toLowerCase() === 'last name'
+    );
+
+    const firstName = firstNameAnswer?.value
+      ? typeof firstNameAnswer.value === 'string'
+        ? firstNameAnswer.value
+        : (firstNameAnswer.value as any)?.toString() || ''
+      : '';
+    const lastName = lastNameAnswer?.value
+      ? typeof lastNameAnswer.value === 'string'
+        ? lastNameAnswer.value
+        : (lastNameAnswer.value as any)?.toString() || ''
+      : '';
+
+    // Combine first and last name
+    const name = `${firstName} ${lastName}`.trim() ||
+      // Fallback to old "Full Name" field for legacy applications
+      response.answers.find(a => a.question.text === 'Full Name' || a.question.text.toLowerCase().includes('full name'))?.value?.toString() || '';
+
+    const roleAnswer = response.answers.find(
+      (a) =>
+        a.question.text.toLowerCase().includes('role') ||
+        a.question.text.toLowerCase().includes('position')
+    );
+    const role = roleAnswer?.value
+      ? typeof roleAnswer.value === 'string'
+        ? roleAnswer.value
+        : (roleAnswer.value as any)?.toString() || ''
+      : '';
+
+    res.json({
+      id: response.id,
+      name,
+      fullName: name,
+      role: type === 'staff' ? role : undefined,
+      year: response.application.year,
+      status: response.status,
+      submittedAt: response.createdAt,
+      answers: formattedAnswers,
+    });
   },
 );
 

@@ -96,6 +96,8 @@ const prisma = {
   application: {
     create: jest.fn(),
     findFirst: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
     deleteMany: jest.fn(),
   },
   applicationQuestion: {
@@ -106,6 +108,9 @@ const prisma = {
   applicationQuestionOption: {
     create: jest.fn(),
     findMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  applicationAnswer: {
     deleteMany: jest.fn(),
   },
   applicationResponse: {

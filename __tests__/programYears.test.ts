@@ -13,6 +13,8 @@ beforeEach(() => {
   mockedPrisma.programYear.findMany.mockReset();
   mockedPrisma.programYear.findUnique.mockReset();
   mockedPrisma.programYear.update.mockReset();
+  mockedPrisma.program.findUnique.mockReset();
+  mockedPrisma.application.findMany.mockReset();
 });
 
 describe('ProgramYear endpoints', () => {
@@ -29,12 +31,15 @@ describe('ProgramYear endpoints', () => {
 
   it('lists program years for member', async () => {
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ year: 2025 });
     mockedPrisma.programYear.findMany.mockResolvedValueOnce([{ id: 1, programId: 'abc', year: 2025 }]);
+    mockedPrisma.application.findMany.mockResolvedValueOnce([]);
     const res = await request(app)
       .get('/programs/abc/years')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(1);
+    expect(res.body[0].year).toBe(2025);
   });
 
   it('gets program year details for member', async () => {

@@ -12,12 +12,14 @@ beforeEach(() => {
   mockedPrisma.programAssignment.findFirst.mockReset();
   mockedPrisma.application.create.mockReset();
   mockedPrisma.application.findFirst.mockReset();
+  mockedPrisma.application.update.mockReset();
   mockedPrisma.application.deleteMany.mockReset();
   mockedPrisma.applicationQuestion.create.mockReset();
   mockedPrisma.applicationQuestion.findMany.mockReset();
   mockedPrisma.applicationQuestion.deleteMany.mockReset();
   mockedPrisma.applicationQuestionOption.create.mockReset();
   mockedPrisma.applicationQuestionOption.deleteMany.mockReset();
+  mockedPrisma.applicationAnswer.deleteMany.mockReset();
   mockedPrisma.applicationResponse.create.mockReset();
   mockedPrisma.applicationResponse.findMany.mockReset();
 });
@@ -91,12 +93,10 @@ describe('POST /api/programs/:id/application', () => {
 });
 
 describe('PUT /api/programs/:id/application', () => {
-  it('replaces existing application when admin', async () => {
+  it('creates new application when none exists', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationQuestionOption.deleteMany.mockResolvedValueOnce({});
-    mockedPrisma.applicationQuestion.deleteMany.mockResolvedValueOnce({});
-    mockedPrisma.application.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.application.findFirst.mockResolvedValueOnce(null);
     mockedPrisma.application.create.mockResolvedValueOnce({ id: 'app1' });
     mockedPrisma.applicationQuestion.create.mockResolvedValue({ id: 1 });
 
@@ -106,9 +106,57 @@ describe('PUT /api/programs/:id/application', () => {
       .send({ title: 'App', questions: [], year: 2024, type: 'delegate' });
 
     expect(res.status).toBe(201);
+    expect(mockedPrisma.application.create).toHaveBeenCalled();
+  });
+
+  it('updates existing application with no responses', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.application.findFirst.mockResolvedValueOnce({
+      id: 'app1',
+      programId: 'abc',
+      year: 2024,
+      type: 'delegate',
+      responses: []
+    });
+    mockedPrisma.applicationAnswer.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.applicationQuestionOption.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.applicationQuestion.deleteMany.mockResolvedValueOnce({});
+    mockedPrisma.application.update.mockResolvedValueOnce({ id: 'app1' });
+    mockedPrisma.applicationQuestion.create.mockResolvedValue({ id: 1 });
+
+    const res = await request(app)
+      .put('/api/programs/abc/application')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Updated App', questions: [], year: 2024, type: 'delegate' });
+
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.applicationAnswer.deleteMany).toHaveBeenCalled();
     expect(mockedPrisma.applicationQuestionOption.deleteMany).toHaveBeenCalled();
     expect(mockedPrisma.applicationQuestion.deleteMany).toHaveBeenCalled();
-    expect(mockedPrisma.application.deleteMany).toHaveBeenCalled();
+    expect(mockedPrisma.application.update).toHaveBeenCalled();
+  });
+
+  it('updates metadata only when application has responses', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.application.findFirst.mockResolvedValueOnce({
+      id: 'app1',
+      programId: 'abc',
+      year: 2024,
+      type: 'delegate',
+      responses: [{ id: 'resp1' }]
+    });
+    mockedPrisma.application.update.mockResolvedValueOnce({ id: 'app1' });
+
+    const res = await request(app)
+      .put('/api/programs/abc/application')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Updated Title', questions: [], year: 2024, type: 'delegate' });
+
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.application.update).toHaveBeenCalled();
+    expect(mockedPrisma.applicationQuestion.deleteMany).not.toHaveBeenCalled();
   });
 });
 
