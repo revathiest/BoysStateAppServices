@@ -82,14 +82,6 @@ router.get('/api/programs/:programId/application', async (req, res) => {
   const hasResponses = responseCount > 0;
   const responseText = responseCount === 1 ? '1 response' : `${responseCount} responses`;
 
-  // DEBUG: Log response details
-  console.log('[DEBUG] Application responses check:', {
-    applicationId: application.id,
-    responsesArray: application.responses,
-    responseCount,
-    hasResponses
-  });
-
   const responseData = {
     applicationId: application.id,
     title: application.title,
@@ -104,13 +96,6 @@ router.get('/api/programs/:programId/application', async (req, res) => {
       message: `Questions are locked because ${responseText} have been submitted. You can update the title, description, and closing date, or delete all responses to unlock question editing.`
     } : {})
   };
-
-  // DEBUG: Log final response being sent
-  console.log('[DEBUG] Sending response data:', {
-    hasLockedField: 'locked' in responseData,
-    locked: responseData.locked,
-    messageIncluded: 'message' in responseData
-  });
 
   res.json(responseData);
 });
