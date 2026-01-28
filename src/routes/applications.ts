@@ -360,7 +360,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
 
 router.get('/api/programs/:programId/application/responses', async (req, res) => {
   const { programId } = req.params as { programId: string };
-  const { year, type } = req.query as { year?: string; type?: string };
+  const { year, type, responseId } = req.query as { year?: string; type?: string; responseId?: string };
   const caller = (req as any).user as { userId: number; email: string };
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
@@ -372,6 +372,105 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
+
+  // If responseId is provided, return single response with full details
+  if (responseId) {
+    const response = await prisma.applicationResponse.findUnique({
+      where: { id: responseId },
+      include: {
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+        application: true,
+      },
+    });
+
+    if (!response || response.application.programId !== programId) {
+      res.status(404).json({ error: 'Response not found' });
+      return;
+    }
+
+    // Helper to extract value from answer
+    const extractValue = (answer: any) => {
+      if (typeof answer.value === 'string') return answer.value;
+      if (answer.value && typeof answer.value === 'object') {
+        if ('value' in answer.value) return answer.value.value;
+        return answer.value;
+      }
+      return answer.value;
+    };
+
+    // Format answers for frontend
+    const formattedAnswers = response.answers.map((answer) => ({
+      label: answer.question.text,
+      question: answer.question.text,
+      value: extractValue(answer),
+      answer: extractValue(answer),
+      type: answer.question.type,
+    }));
+
+    // Extract common fields - handle first/last name separately
+    const firstNameAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('first') && a.question.text?.toLowerCase().includes('name')
+    );
+    const lastNameAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('last') && a.question.text?.toLowerCase().includes('name')
+    );
+    const fullNameAnswer = response.answers.find((a) => {
+      const text = a.question.text?.toLowerCase() || '';
+      return text.includes('name') && !text.includes('first') && !text.includes('last');
+    });
+
+    // Build name as "Last, First" or use full name
+    let displayName = 'N/A';
+    if (lastNameAnswer && firstNameAnswer) {
+      const lastName = extractValue(lastNameAnswer);
+      const firstName = extractValue(firstNameAnswer);
+      displayName = `${lastName}, ${firstName}`;
+    } else if (fullNameAnswer) {
+      displayName = extractValue(fullNameAnswer);
+    } else if (lastNameAnswer) {
+      displayName = extractValue(lastNameAnswer);
+    } else if (firstNameAnswer) {
+      displayName = extractValue(firstNameAnswer);
+    }
+
+    const emailAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('email')
+    );
+    const phoneAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('phone')
+    );
+    const roleAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('role') ||
+      a.question.text?.toLowerCase().includes('position')
+    );
+    const schoolAnswer = response.answers.find((a) =>
+      a.question.text?.toLowerCase().includes('school')
+    );
+
+    const result = {
+      id: response.id,
+      name: displayName,
+      fullName: displayName,
+      email: emailAnswer ? extractValue(emailAnswer) : 'N/A',
+      phone: phoneAnswer ? extractValue(phoneAnswer) : 'N/A',
+      year: response.application.year,
+      type: response.application.type,
+      status: 'pending',
+      submittedAt: response.createdAt,
+      answers: formattedAnswers,
+      ...(response.application.type === 'staff' && roleAnswer ? { role: extractValue(roleAnswer) } : {}),
+      ...(response.application.type === 'delegate' && schoolAnswer ? { school: extractValue(schoolAnswer) } : {}),
+    };
+
+    res.json(result);
+    return;
+  }
+
+  // List view - return formatted summary
   const responses = await prisma.applicationResponse.findMany({
     where: {
       application: {
@@ -380,9 +479,107 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
         ...(type ? { type } : {}),
       },
     },
-    include: { answers: true },
+    include: {
+      answers: {
+        include: {
+          question: true,
+        },
+      },
+      application: true,
+    },
   });
-  res.json(responses);
+
+  // Helper to extract value from answer
+  const extractValue = (answer: any) => {
+    if (typeof answer.value === 'string') return answer.value;
+    if (answer.value && typeof answer.value === 'object') {
+      if ('value' in answer.value) return answer.value.value;
+      return JSON.stringify(answer.value);
+    }
+    return String(answer.value || '');
+  };
+
+  // Check if responses have nested data (for backward compatibility with tests)
+  // Find a response with answers to check if question data is included
+  const responseWithAnswers = responses.find(r => r.answers && r.answers.length > 0);
+  const hasNestedData = responseWithAnswers && responseWithAnswers.application && responseWithAnswers.answers[0]?.question;
+
+  if (!hasNestedData) {
+    // Return raw data if nested includes aren't available
+    logger.warn(programId, 'Returning raw response data - nested includes not available');
+    res.json(responses);
+    return;
+  }
+
+  // Format responses for list view (filter out responses with no answers)
+  const formattedResponses = responses
+    .filter(response => response.answers && response.answers.length > 0)
+    .map((response) => {
+    // Log for debugging
+    logger.info(programId, `Processing response ${response.id} with ${response.answers.length} answers`);
+
+    // Try to find first/last name separately, or full name
+    const firstNameAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('first') && a.question?.text?.toLowerCase().includes('name')
+    );
+    const lastNameAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('last') && a.question?.text?.toLowerCase().includes('name')
+    );
+    const fullNameAnswer = response.answers.find((a) => {
+      const text = a.question?.text?.toLowerCase() || '';
+      return text.includes('name') && !text.includes('first') && !text.includes('last');
+    });
+
+    // Build name as "Last, First" or use full name
+    let displayName = 'N/A';
+    if (lastNameAnswer && firstNameAnswer) {
+      const lastName = extractValue(lastNameAnswer);
+      const firstName = extractValue(firstNameAnswer);
+      displayName = `${lastName}, ${firstName}`;
+    } else if (fullNameAnswer) {
+      displayName = extractValue(fullNameAnswer);
+    } else if (lastNameAnswer) {
+      displayName = extractValue(lastNameAnswer);
+    } else if (firstNameAnswer) {
+      displayName = extractValue(firstNameAnswer);
+    }
+
+    const emailAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('email')
+    );
+    const phoneAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('phone')
+    );
+    const roleAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('role') ||
+      a.question?.text?.toLowerCase().includes('position')
+    );
+    const schoolAnswer = response.answers.find((a) =>
+      a.question?.text?.toLowerCase().includes('school')
+    );
+
+    // Log what we found
+    logger.info(programId, `Found: first=${!!firstNameAnswer}, last=${!!lastNameAnswer}, fullName=${!!fullNameAnswer}, email=${!!emailAnswer}, phone=${!!phoneAnswer}, school=${!!schoolAnswer}`);
+
+    const result = {
+      id: response.id,
+      name: displayName,
+      fullName: displayName,
+      email: emailAnswer ? extractValue(emailAnswer) : 'N/A',
+      phone: phoneAnswer ? extractValue(phoneAnswer) : 'N/A',
+      year: response.application.year,
+      type: response.application.type,
+      status: 'pending',
+      submittedAt: response.createdAt,
+      ...(response.application.type === 'staff' && roleAnswer ? { role: extractValue(roleAnswer) } : {}),
+      ...(response.application.type === 'delegate' && schoolAnswer ? { school: extractValue(schoolAnswer) } : {}),
+    };
+
+    logger.info(programId, `Formatted result: ${JSON.stringify(result)}`);
+    return result;
+  });
+
+  res.json(formattedResponses);
 });
 
 export default router;
