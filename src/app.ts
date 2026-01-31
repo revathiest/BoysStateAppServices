@@ -2,6 +2,7 @@ import express from 'express';
 import cors, { CorsOptions } from 'cors';
 import { execSync } from 'child_process';
 import { verify } from './jwt';
+import { config } from './config';
 import * as logger from './logger';
 import authRoutes, { loginAttempts } from './routes/auth';
 import systemRoutes, { swaggerDoc } from './routes/system';
@@ -31,8 +32,6 @@ app.use((req, _res, next) => {
   next();
 });
 
-const jwtSecret = process.env.JWT_SECRET || 'development-secret';
-
 app.use((req, res, next) => {
   if (
     req.path === '/login' ||
@@ -50,7 +49,7 @@ app.use((req, res, next) => {
   }
   const token = auth.slice(7);
   try {
-    (req as any).user = verify(token, jwtSecret);
+    (req as any).user = verify(token, config.jwtSecret);
     next();
   } catch {
     res.status(401).json({ error: 'Unauthorized' });

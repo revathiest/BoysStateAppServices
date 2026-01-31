@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import prisma from '../prisma';
 import { sign } from '../jwt';
 import * as logger from '../logger';
+import { config } from '../config';
 
 const scrypt = promisify(_scrypt);
 const router = express.Router();
@@ -11,7 +12,6 @@ const router = express.Router();
 export const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 
 router.post('/register', async (req: express.Request, res: express.Response) => {
   const { email, password } = req.body as { email?: string; password?: string };
@@ -70,7 +70,7 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
 
   loginAttempts.delete(ip);
 
-  const token = sign({ userId: user.id, email: user.email }, jwtSecret);
+  const token = sign({ userId: user.id, email: user.email }, config.jwtSecret);
   logger.info('system', `User logged in: ${email}`);
   res.json({ token });
 });
