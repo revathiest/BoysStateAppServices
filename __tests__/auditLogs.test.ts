@@ -4,7 +4,7 @@ import app from '../src/index';
 import { sign } from '../src/jwt';
 import prisma from '../src/prisma';
 
-const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 
 beforeEach(() => {
   (prisma as any).auditLog = {

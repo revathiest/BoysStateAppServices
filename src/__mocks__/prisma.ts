@@ -17,6 +17,7 @@ const prisma = {
   },
   programYear: {
     create: jest.fn(),
+    findFirst: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
     update: jest.fn(),
@@ -47,14 +48,17 @@ const prisma = {
   },
   programYearGrouping: {
     create: jest.fn(),
+    createMany: jest.fn(),
     findMany: jest.fn(),
   },
   programYearParty: {
     create: jest.fn(),
+    createMany: jest.fn(),
     findMany: jest.fn(),
   },
   programYearPosition: {
     create: jest.fn(),
+    createMany: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
     update: jest.fn(),
@@ -117,7 +121,9 @@ const prisma = {
     create: jest.fn(),
     findMany: jest.fn(),
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
     update: jest.fn(),
+    deleteMany: jest.fn(),
   },
   auditLog: {
     create: jest.fn(),

@@ -20,7 +20,7 @@ describe('GET /programs/:username', () => {
       { role: 'admin', program: { id: 'abc123', name: 'Boys State Texas' } },
       { role: 'counselor', program: { id: 'def456', name: 'Girls State Florida' } },
     ]);
-    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/user-programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
@@ -48,7 +48,7 @@ describe('GET /programs/:username', () => {
       { id: 'abc123', name: 'Boys State Texas' },
       { id: 'def456', name: 'Girls State Florida' },
     ]);
-    const token = sign({ userId: 3, email: 'dev@example.com' }, 'development-secret');
+    const token = sign({ userId: 3, email: 'dev@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/user-programs/dev@example.com')
       .set('Authorization', `Bearer ${token}`);
@@ -66,7 +66,7 @@ describe('GET /programs/:username', () => {
   it('returns empty array when user has no programs', async () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce({ id: 2, email: 'jane.doe' });
     mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([]);
-    const token = sign({ userId: 2, email: 'jane.doe' }, 'development-secret');
+    const token = sign({ userId: 2, email: 'jane.doe' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/user-programs/jane.doe')
       .set('Authorization', `Bearer ${token}`);
@@ -76,7 +76,7 @@ describe('GET /programs/:username', () => {
 
   it('returns 204 when user does not exist', async () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
-    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'jane.doe' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/user-programs/missing')
       .set('Authorization', `Bearer ${token}`);
@@ -108,7 +108,7 @@ describe('POST /programs', () => {
       year: 2025,
     });
     mockedPrisma.programAssignment.create.mockResolvedValueOnce({});
-    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .post('/programs')
       .set('Authorization', `Bearer ${token}`)
@@ -123,7 +123,7 @@ describe('POST /programs', () => {
   });
 
   it('requires name and year', async () => {
-    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .post('/programs')
       .set('Authorization', `Bearer ${token}`)
@@ -142,7 +142,7 @@ describe('Program assignments', () => {
   it('assigns user when admin', async () => {
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
     mockedPrisma.programAssignment.create.mockResolvedValueOnce({});
-    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .post('/programs/abc/users')
       .set('Authorization', `Bearer ${token}`)
@@ -153,7 +153,7 @@ describe('Program assignments', () => {
 
   it('rejects non-admin assignment', async () => {
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'counselor' });
-    const token = sign({ userId: 1, email: 'counselor@example.com' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'counselor@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .post('/programs/abc/users')
       .set('Authorization', `Bearer ${token}`)
@@ -167,7 +167,7 @@ describe('Program assignments', () => {
       { userId: 1, role: 'admin' },
       { userId: 2, role: 'delegate' },
     ]);
-    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+    const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/programs/abc/users')
       .set('Authorization', `Bearer ${token}`);
@@ -177,7 +177,7 @@ describe('Program assignments', () => {
 
   it('forbids listing for non-admin', async () => {
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'delegate' });
-    const token = sign({ userId: 2, email: 'delegate@example.com' }, 'development-secret');
+    const token = sign({ userId: 2, email: 'delegate@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .get('/programs/abc/users')
       .set('Authorization', `Bearer ${token}`);
@@ -193,7 +193,7 @@ describe('Program CRUD', () => {
     mockedPrisma.programAssignment.findFirst.mockReset();
   });
 
-  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 
   it('lists programs', async () => {
     mockedPrisma.program.findMany.mockResolvedValueOnce([{ id: 'p1' }]);

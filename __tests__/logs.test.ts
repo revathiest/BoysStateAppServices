@@ -11,7 +11,7 @@ import { sign } from '../src/jwt';
 import prisma from '../src/prisma';
 
 describe('POST /logs', () => {
-  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
   const logsDir = process.env.LOGS_DIR as string;
 
   beforeAll(() => {
@@ -90,7 +90,7 @@ describe('POST /logs', () => {
 });
 
 describe('GET /logs', () => {
-  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+  const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 
   beforeEach(() => {
     (prisma as any).log.findMany.mockReset();

@@ -284,7 +284,7 @@ function decisionHandler(decision: 'accept' | 'reject') {
     }
 
     // For staff acceptance, require role in request body
-    const { role, comment, reason } = req.body as {
+    const { role, comment, reason } = (req.body || {}) as {
       role?: string;
       comment?: string;
       reason?: string;

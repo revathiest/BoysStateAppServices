@@ -60,8 +60,5 @@ export async function getUserPrograms(
     });
   }
 
-  programs.forEach((p: any) => {
-    logger.info(p.programId, `Program lookup for ${user.email}`);
-  });
   res.json({ username: user.email, programs });
 }

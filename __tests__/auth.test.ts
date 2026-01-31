@@ -51,7 +51,7 @@ describe('Auth endpoints', () => {
         .send({ email: 'test@example.com', password: 'secret' });
       expect(res.status).toBe(200);
       expect(typeof res.body.token).toBe('string');
-      const payload = verify(res.body.token, 'development-secret');
+      const payload = verify(res.body.token, 'development-secret-for-testing-only');
       expect(payload.userId).toBe(1);
       expect(payload.email).toBe('test@example.com');
       expect(payload.exp - payload.iat).toBe(1800);
@@ -109,8 +109,8 @@ describe('Auth endpoints', () => {
     });
 
     it('rejects expired tokens', () => {
-      const token = sign({ userId: 1, email: 'test@example.com' }, 'development-secret', -1);
-      expect(() => verify(token, 'development-secret')).toThrow('Token expired');
+      const token = sign({ userId: 1, email: 'test@example.com' }, 'development-secret-for-testing-only', -1);
+      expect(() => verify(token, 'development-secret-for-testing-only')).toThrow('Token expired');
     });
   });
 });

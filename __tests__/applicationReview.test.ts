@@ -4,7 +4,7 @@ import prisma from '../src/prisma';
 import app from '../src/index';
 import { sign } from '../src/jwt';
 
-const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 const mockedPrisma = prisma as any;
 
 beforeEach(() => {
@@ -14,6 +14,10 @@ beforeEach(() => {
   mockedPrisma.applicationResponse.findFirst.mockReset();
   mockedPrisma.applicationResponse.update.mockReset();
   mockedPrisma.auditLog.create.mockReset();
+  mockedPrisma.programYear.findFirst.mockReset();
+  mockedPrisma.programYear.create.mockReset();
+  mockedPrisma.delegate.create.mockReset();
+  mockedPrisma.staff.create.mockReset();
 });
 
 describe('GET /api/programs/:id/applications/delegate', () => {
@@ -287,7 +291,18 @@ describe('POST accept application', () => {
   it('accepts pending application', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+        { question: { text: 'Email' }, value: 'john@example.com' },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)
@@ -299,12 +314,18 @@ describe('POST accept application', () => {
       where: { id: 'resp1' },
       data: { status: 'accepted' },
     });
+    expect(res.body.delegateId).toBe(10);
   });
 
   it('rejects already decided', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'accepted' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'accepted',
+      application: { year: 2025 },
+      answers: [],
+    });
     const res = await request(app)
       .post('/api/programs/abc/applications/delegate/resp1/accept')
       .set('Authorization', `Bearer ${token}`);
@@ -339,7 +360,18 @@ describe('POST accept application', () => {
   it('creates audit log with comment', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+        { question: { text: 'Email' }, value: 'john@example.com' },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)
@@ -351,7 +383,7 @@ describe('POST accept application', () => {
       data: expect.objectContaining({
         action: 'accept',
         userId: 1,
-        changes: { comment: 'Looks good!' },
+        changes: expect.objectContaining({ comment: 'Looks good!' }),
       }),
     });
   });
@@ -359,13 +391,158 @@ describe('POST accept application', () => {
   it('works with staff applications', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'Jane' },
+        { question: { text: 'Last Name' }, value: 'Smith' },
+        { question: { text: 'Email' }, value: 'jane@example.com' },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.staff.create.mockResolvedValueOnce({ id: 20 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)
       .post('/api/programs/abc/applications/staff/resp1/accept')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ role: 'Counselor' });
+    expect(res.status).toBe(200);
+    expect(res.body.staffId).toBe(20);
+  });
+
+  it('returns 400 when accepting staff without role', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [],
+    });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/staff/resp1/accept')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Role is required when accepting staff applications');
+  });
+
+  it('returns 400 when accepting with missing required fields', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        // Missing Last Name and Email
+      ],
+    });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/delegate/resp1/accept')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Application is missing required fields (First Name, Last Name, Email)');
+  });
+
+  it('returns 400 when application has no year', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: null, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+        { question: { text: 'Email' }, value: 'john@example.com' },
+      ],
+    });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/delegate/resp1/accept')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Application has no year specified');
+  });
+
+  it('auto-creates program year when it does not exist', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2026, programId: 'abc' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+        { question: { text: 'Email' }, value: 'john@example.com' },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce(null);
+    mockedPrisma.programYear.create.mockResolvedValueOnce({ id: 5, programId: 'abc', year: 2026 });
+    mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 15 });
+    mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
+    mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/delegate/resp1/accept')
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
+    expect(mockedPrisma.programYear.create).toHaveBeenCalledWith({
+      data: { programId: 'abc', year: 2026, status: 'active' },
+    });
+    expect(res.body.delegateId).toBe(15);
+  });
+
+  it('uses partial match fallback for field names', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: "Applicant's First Name" }, value: 'John' },
+        { question: { text: "Applicant's Last Name" }, value: 'Doe' },
+        { question: { text: 'Contact Email Address' }, value: 'john@example.com' },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
+    mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
+    mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/delegate/resp1/accept')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.delegateId).toBe(10);
+  });
+
+  it('handles non-string values with toString in partial match', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc' },
+      answers: [
+        { question: { text: "Applicant's First Name" }, value: { toString: () => 'Bob' } },
+        { question: { text: "Applicant's Last Name" }, value: { toString: () => 'Smith' } },
+        { question: { text: 'Contact Email' }, value: { toString: () => 'bob@example.com' } },
+      ],
+    });
+    mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 11 });
+    mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
+    mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
+    const res = await request(app)
+      .post('/api/programs/abc/applications/delegate/resp1/accept')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.delegateId).toBe(11);
   });
 });
 
@@ -373,7 +550,15 @@ describe('POST reject application', () => {
   it('rejects pending application', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025 },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+      ],
+    });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)
@@ -416,7 +601,15 @@ describe('POST reject application', () => {
   it('creates audit log with reason', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025 },
+      answers: [
+        { question: { text: 'First Name' }, value: 'John' },
+        { question: { text: 'Last Name' }, value: 'Doe' },
+      ],
+    });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)
@@ -428,7 +621,7 @@ describe('POST reject application', () => {
       data: expect.objectContaining({
         action: 'reject',
         userId: 1,
-        changes: { comment: 'Incomplete application' },
+        changes: expect.objectContaining({ comment: 'Incomplete application' }),
       }),
     });
   });
@@ -445,7 +638,15 @@ describe('POST reject application', () => {
   it('works with staff applications', async () => {
     mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'abc' });
     mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
-    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({ id: 'resp1', status: 'pending' });
+    mockedPrisma.applicationResponse.findFirst.mockResolvedValueOnce({
+      id: 'resp1',
+      status: 'pending',
+      application: { year: 2025, programId: 'abc', type: 'staff' },
+      answers: [
+        { question: { text: 'First Name' }, value: 'Jane' },
+        { question: { text: 'Last Name' }, value: 'Smith' },
+      ],
+    });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
     const res = await request(app)

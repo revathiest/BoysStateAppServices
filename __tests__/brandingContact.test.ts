@@ -5,7 +5,7 @@ import app from '../src/index';
 import { sign } from '../src/jwt';
 
 const mockedPrisma = prisma as any;
-const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret');
+const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 
 beforeEach(() => {
   mockedPrisma.program.findUnique.mockReset();
