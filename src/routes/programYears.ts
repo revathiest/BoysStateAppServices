@@ -97,13 +97,13 @@ router.post('/programs/:programId/years', async (req, res) => {
 
       logger.info(
         programId,
-        `Program year ${year} created, copied ${mostRecentYear.groupings.length} groupings, ${mostRecentYear.parties.length} parties, ${mostRecentYear.programYearPositions.length} positions from year ${mostRecentYear.year}`
+        `Created program year ${year} by ${caller.email}, copied from ${mostRecentYear.year}: ${mostRecentYear.groupings.length} groupings, ${mostRecentYear.parties.length} parties, ${mostRecentYear.programYearPositions.length} positions`
       );
     } else {
-      logger.info(programId, `Program year ${year} created (no previous year found for copying)`);
+      logger.info(programId, `Created program year ${year} by ${caller.email} (no previous year to copy from)`);
     }
   } else {
-    logger.info(programId, `Program year ${year} created`);
+    logger.info(programId, `Created program year ${year} by ${caller.email}`);
   }
 
   res.status(201).json(py);
@@ -132,7 +132,7 @@ router.get('/programs/:programId/years', async (req, res) => {
   // Get years from ProgramYear table (explicitly managed years)
   const programYears = await prisma.programYear.findMany({
     where: { programId },
-    select: { year: true },
+    select: { id: true, year: true },
   });
 
   // Get distinct years from applications (years with actual applications)
@@ -142,15 +142,22 @@ router.get('/programs/:programId/years', async (req, res) => {
     distinct: ['year'],
   });
 
+  // Create a map of year -> programYear id (if exists)
+  const yearToProgramYearId = new Map<number, number>();
+  programYears.forEach(py => yearToProgramYearId.set(py.year, py.id));
+
   // Merge and deduplicate years from all sources (including program's base year)
   const yearSet = new Set<number>();
   if (program?.year) yearSet.add(program.year);
   programYears.forEach(py => yearSet.add(py.year));
   applications.forEach(app => { if (app.year) yearSet.add(app.year); });
 
-  // Sort descending and return in format expected by frontend
+  // Sort descending and return with id when available
   const years = Array.from(yearSet).sort((a, b) => b - a);
-  res.json(years.map(year => ({ year })));
+  res.json(years.map(year => {
+    const id = yearToProgramYearId.get(year);
+    return id ? { id, year, programId } : { year, programId };
+  }));
 });
 
 // Get a program year
@@ -173,7 +180,7 @@ router.get('/program-years/:id', async (req, res) => {
 // Update a program year
 router.put('/program-years/:id', async (req, res) => {
   const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
+  const caller = (req as any).user as { userId: number; email: string };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
     res.status(204).end();
@@ -199,14 +206,14 @@ router.put('/program-years/:id', async (req, res) => {
       notes,
     },
   });
-  logger.info(py.programId, `Program year ${py.year} updated`);
+  logger.info(py.programId, `Updated program year ${py.year} by ${caller.email}`);
   res.json(updated);
 });
 
 // Archive a program year
 router.delete('/program-years/:id', async (req, res) => {
   const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
+  const caller = (req as any).user as { userId: number; email: string };
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
     res.status(204).end();
@@ -221,7 +228,7 @@ router.delete('/program-years/:id', async (req, res) => {
     where: { id: Number(id) },
     data: { status: 'archived' },
   });
-  logger.info(py.programId, `Program year ${py.year} archived`);
+  logger.info(py.programId, `Archived program year ${py.year} by ${caller.email}`);
   res.json(updated);
 });
 

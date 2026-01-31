@@ -17,19 +17,31 @@ router.post('/programs/:programId/positions', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder } = req.body as {
+  const { name, description, displayOrder, groupingTypeId, isElected, seatCount } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
+    groupingTypeId?: number;
+    isElected?: boolean;
+    seatCount?: number;
   };
   if (!name) {
     res.status(400).json({ error: 'name required' });
     return;
   }
   const position = await prisma.position.create({
-    data: { programId, name, description, displayOrder, status: 'active' },
+    data: {
+      programId,
+      name,
+      description,
+      displayOrder,
+      groupingTypeId,
+      isElected: isElected ?? false,
+      seatCount: seatCount ?? 1,
+      status: 'active'
+    },
   });
-  logger.info(programId, `Position ${position.id} created`);
+  logger.info(programId, `Created position "${position.name}" (id: ${position.id}) by ${caller.email}`);
   res.status(201).json(position);
 });
 
@@ -54,7 +66,7 @@ router.get('/programs/:programId/positions', async (req, res) => {
 
 router.put('/positions/:id', async (req, res) => {
   const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
+  const caller = (req as any).user as { userId: number; email: string };
   const position = await prisma.position.findUnique({ where: { id: Number(id) } });
   if (!position) {
     res.status(204).end();
@@ -65,23 +77,26 @@ router.put('/positions/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, status } = req.body as {
+  const { name, description, displayOrder, status, groupingTypeId, isElected, seatCount } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
     status?: string;
+    groupingTypeId?: number;
+    isElected?: boolean;
+    seatCount?: number;
   };
   const updated = await prisma.position.update({
     where: { id: Number(id) },
-    data: { name, description, displayOrder, status },
+    data: { name, description, displayOrder, status, groupingTypeId, isElected, seatCount },
   });
-  logger.info(position.programId, `Position ${position.id} updated`);
+  logger.info(position.programId, `Updated position "${updated.name}" (id: ${position.id}) by ${caller.email}`);
   res.json(updated);
 });
 
 router.delete('/positions/:id', async (req, res) => {
   const { id } = req.params as { id?: string };
-  const caller = (req as any).user as { userId: number };
+  const caller = (req as any).user as { userId: number; email: string };
   const position = await prisma.position.findUnique({ where: { id: Number(id) } });
   if (!position) {
     res.status(204).end();
@@ -96,7 +111,7 @@ router.delete('/positions/:id', async (req, res) => {
     where: { id: Number(id) },
     data: { status: 'retired' },
   });
-  logger.info(position.programId, `Position ${position.id} retired`);
+  logger.info(position.programId, `Retired position "${position.name}" (id: ${position.id}) by ${caller.email}`);
   res.json(updated);
 });
 

@@ -200,7 +200,7 @@ async function saveApplication(req: express.Request, res: express.Response) {
     data: { programId, title, description, year: yr, type, closingDate: closingDateTime }
   });
   await saveQuestions(application.id, questions || []);
-  logger.info(programId, `Application created by ${caller.email}`);
+  logger.info(programId, `Created ${type} application "${title}" (year: ${yr}) by ${caller.email}`);
   res.status(201).json({
     applicationId: application.id,
     title,
@@ -242,7 +242,7 @@ router.delete('/api/programs/:programId/application', async (req, res) => {
     where: { application: { programId, year: yr, type } },
   });
   await prisma.application.deleteMany({ where: { programId, year: yr, type } });
-  logger.info(programId, `Application deleted by ${caller.email}`);
+  logger.info(programId, `Deleted ${type} application (year: ${yr}) by ${caller.email}`);
   res.json({ status: 'deleted' });
 });
 
@@ -309,6 +309,7 @@ router.delete('/api/programs/:programId/application/responses/all', async (req, 
 router.post('/api/programs/:programId/application/responses', async (req, res) => {
   const { programId } = req.params as { programId: string };
   const { year, type } = req.query as { year?: string; type?: string };
+
   const program = await prisma.program.findUnique({ where: { id: programId } });
   if (!program) {
     res.status(204).end();
@@ -340,6 +341,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
   const created = await prisma.applicationResponse.create({
     data: {
       applicationId: application.id,
+      status: 'pending', // Explicitly set status to ensure it's correct
       answers: {
         create: body.answers.map((a) => {
           const { questionId, value, ...rest } = a as {
@@ -354,7 +356,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
       },
     },
   });
-  logger.info(programId, `Application submitted ${created.id}`);
+  logger.info(programId, `New ${type || 'application'} response submitted (id: ${created.id}, year: ${year || application.year})`);
   res.status(201).json({ responseId: created.id });
 });
 
@@ -515,8 +517,6 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
   const formattedResponses = responses
     .filter(response => response.answers && response.answers.length > 0)
     .map((response) => {
-    // Log for debugging
-    logger.info(programId, `Processing response ${response.id} with ${response.answers.length} answers`);
 
     // Try to find first/last name separately, or full name
     const firstNameAnswer = response.answers.find((a) =>
@@ -558,9 +558,6 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
       a.question?.text?.toLowerCase().includes('school')
     );
 
-    // Log what we found
-    logger.info(programId, `Found: first=${!!firstNameAnswer}, last=${!!lastNameAnswer}, fullName=${!!fullNameAnswer}, email=${!!emailAnswer}, phone=${!!phoneAnswer}, school=${!!schoolAnswer}`);
-
     const result = {
       id: response.id,
       name: displayName,
@@ -575,7 +572,6 @@ router.get('/api/programs/:programId/application/responses', async (req, res) =>
       ...(response.application.type === 'delegate' && schoolAnswer ? { school: extractValue(schoolAnswer) } : {}),
     };
 
-    logger.info(programId, `Formatted result: ${JSON.stringify(result)}`);
     return result;
   });
 

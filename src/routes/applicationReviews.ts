@@ -25,15 +25,17 @@ function listHandler(appType: string) {
       return;
     }
 
-    const responses = await prisma.applicationResponse.findMany({
-      where: {
-        status: status as string,
-        application: {
-          programId,
-          type: appType,
-          ...(year ? { year: Number(year) } : {}),
-        },
+    const whereClause = {
+      status: status as string,
+      application: {
+        programId,
+        type: appType,
+        ...(year ? { year: Number(year) } : {}),
       },
+    };
+
+    const responses = await prisma.applicationResponse.findMany({
+      where: whereClause,
       include: {
         application: true,
         answers: {
@@ -205,6 +207,37 @@ router.get(
   },
 );
 
+// Helper to extract answer value from application answers
+// First tries exact match, then falls back to partial match (contains)
+function extractAnswerValue(
+  answers: Array<{ question: { text: string }; value: any }>,
+  ...fieldNames: string[]
+): string {
+  // First try exact match (case-insensitive)
+  for (const fieldName of fieldNames) {
+    const answer = answers.find(
+      (a) => a.question.text.toLowerCase() === fieldName.toLowerCase()
+    );
+    if (answer?.value) {
+      return typeof answer.value === 'string'
+        ? answer.value
+        : answer.value?.toString() || '';
+    }
+  }
+  // Fallback: try partial match (field name contains the search term)
+  for (const fieldName of fieldNames) {
+    const answer = answers.find(
+      (a) => a.question.text.toLowerCase().includes(fieldName.toLowerCase())
+    );
+    if (answer?.value) {
+      return typeof answer.value === 'string'
+        ? answer.value
+        : answer.value?.toString() || '';
+    }
+  }
+  return '';
+}
+
 function decisionHandler(decision: 'accept' | 'reject') {
   return async (req: express.Request, res: express.Response) => {
     const { programId, type, applicationId } = req.params as {
@@ -212,7 +245,7 @@ function decisionHandler(decision: 'accept' | 'reject') {
       type: string;
       applicationId: string;
     };
-    const caller = (req as any).user as { userId: number };
+    const caller = (req as any).user as { userId: number; email: string };
     if (!['delegate', 'staff'].includes(type)) {
       res.status(400).json({ error: 'Invalid type' });
       return;
@@ -229,8 +262,17 @@ function decisionHandler(decision: 'accept' | 'reject') {
       return;
     }
 
+    // Include answers for extracting applicant info when accepting
     const response = await prisma.applicationResponse.findFirst({
       where: { id: applicationId, application: { programId, type } },
+      include: {
+        application: true,
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
     });
     if (!response) {
       res.status(404).json({ error: 'Not found' });
@@ -241,27 +283,115 @@ function decisionHandler(decision: 'accept' | 'reject') {
       return;
     }
 
+    // For staff acceptance, require role in request body
+    const { role, comment, reason } = req.body as {
+      role?: string;
+      comment?: string;
+      reason?: string;
+    };
+
+    if (decision === 'accept' && type === 'staff' && !role) {
+      res.status(400).json({ error: 'Role is required when accepting staff applications' });
+      return;
+    }
+
+    // If accepting, create the Delegate or Staff record
+    let createdRecordId: number | null = null;
+    if (decision === 'accept') {
+      // Extract applicant info from answers
+      const firstName = extractAnswerValue(response.answers, 'First Name');
+      const lastName = extractAnswerValue(response.answers, 'Last Name');
+      const email = extractAnswerValue(response.answers, 'Email', 'Email Address');
+      const phone = extractAnswerValue(response.answers, 'Phone', 'Phone Number');
+
+      if (!firstName || !lastName || !email) {
+        res.status(400).json({
+          error: 'Application is missing required fields (First Name, Last Name, Email)',
+        });
+        return;
+      }
+
+      // Find or create the ProgramYear for this application
+      const applicationYear = response.application.year;
+      if (!applicationYear) {
+        res.status(400).json({ error: 'Application has no year specified' });
+        return;
+      }
+
+      let programYear = await prisma.programYear.findFirst({
+        where: { programId, year: applicationYear },
+      });
+
+      if (!programYear) {
+        // Create the program year if it doesn't exist
+        programYear = await prisma.programYear.create({
+          data: {
+            programId,
+            year: applicationYear,
+            status: 'active',
+          },
+        });
+        logger.info(programId, `Auto-created program year ${applicationYear} for application acceptance`);
+      }
+
+      if (type === 'delegate') {
+        // Create delegate with no grouping assignment (for random assignment later)
+        const delegate = await prisma.delegate.create({
+          data: {
+            programYearId: programYear.id,
+            firstName,
+            lastName,
+            email,
+            phone: phone || null,
+            status: 'pending_assignment',
+          },
+        });
+        createdRecordId = delegate.id;
+        logger.info(programId, `Created delegate "${firstName} ${lastName}" (id: ${delegate.id}) from application by ${caller.email}`);
+      } else {
+        // Create staff with the provided role
+        const staff = await prisma.staff.create({
+          data: {
+            programYearId: programYear.id,
+            firstName,
+            lastName,
+            email,
+            phone: phone || null,
+            role: role!,
+            status: 'active',
+          },
+        });
+        createdRecordId = staff.id;
+        logger.info(programId, `Created staff "${firstName} ${lastName}" as ${role} (id: ${staff.id}) from application by ${caller.email}`);
+      }
+    }
+
+    // Update application status
     await prisma.applicationResponse.update({
       where: { id: applicationId },
       data: { status: decision === 'accept' ? 'accepted' : 'rejected' },
     });
 
-    const comment = (req.body as any)?.comment || (req.body as any)?.reason;
+    const auditComment = comment || reason;
     await prisma.auditLog.create({
       data: {
         tableName: 'ApplicationResponse',
         recordId: applicationId,
         userId: caller.userId,
         action: decision,
-        ...(comment ? { changes: { comment } } : {}),
+        changes: {
+          ...(auditComment ? { comment: auditComment } : {}),
+          ...(createdRecordId ? { createdRecordId, recordType: type } : {}),
+        },
       },
     });
-    logger.info(
-      programId,
-      `Application ${applicationId} ${decision}ed by ${caller.userId}`,
-    );
+    const applicantName = extractAnswerValue(response.answers, 'First Name') + ' ' + extractAnswerValue(response.answers, 'Last Name');
+    logger.info(programId, `${decision === 'accept' ? 'Accepted' : 'Rejected'} ${type} application from "${applicantName.trim()}" by ${caller.email}`);
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      ...(createdRecordId ? { [`${type}Id`]: createdRecordId } : {}),
+    });
   };
 }
 
