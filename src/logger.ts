@@ -16,12 +16,27 @@ interface LogEntry {
 const baseLogsDir = process.env.LOGS_DIR || path.join(__dirname, '..', 'logs');
 
 function writeLog(entry: LogEntry) {
-  const logsDir = baseLogsDir;
-  if (!existsSync(logsDir)) {
-    mkdirSync(logsDir, { recursive: true });
+  // Always output to console for container environments
+  const logLine = `[${entry.timestamp}] [${entry.level.toUpperCase()}] [${entry.programId}] ${entry.message}${entry.error ? ` - ${entry.error}` : ''}`;
+  if (entry.level === 'error') {
+    console.error(logLine);
+  } else {
+    console.log(logLine);
   }
-  const file = path.join(logsDir, `${entry.programId}.log`);
-  appendFileSync(file, JSON.stringify(entry) + '\n');
+
+  // Try to write to file (may fail in read-only containers)
+  try {
+    const logsDir = baseLogsDir;
+    if (!existsSync(logsDir)) {
+      mkdirSync(logsDir, { recursive: true });
+    }
+    const file = path.join(logsDir, `${entry.programId}.log`);
+    appendFileSync(file, JSON.stringify(entry) + '\n');
+  } catch {
+    // Ignore file write failures in containerized environments
+  }
+
+  // Write to database
   prisma.log
     .create({
       data: {
