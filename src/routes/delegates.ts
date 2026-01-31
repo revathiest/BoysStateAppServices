@@ -27,8 +27,8 @@ router.post('/program-years/:id/delegates', async (req, res) => {
     groupingId?: number;
     partyId?: number;
   };
-  if (!firstName || !lastName || !email || !groupingId) {
-    res.status(400).json({ error: 'firstName, lastName, email and groupingId required' });
+  if (!firstName || !lastName || !email) {
+    res.status(400).json({ error: 'firstName, lastName and email required' });
     return;
   }
   const delegate = await prisma.delegate.create({

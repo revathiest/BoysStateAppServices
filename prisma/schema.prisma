@@ -175,8 +175,8 @@ model Delegate {
   email         String
   phone         String?
   userId        Int?
-  grouping      Grouping          @relation(fields: [groupingId], references: [id])
-  groupingId    Int
+  grouping      Grouping?         @relation(fields: [groupingId], references: [id])
+  groupingId    Int?
   party         ProgramYearParty? @relation(fields: [partyId], references: [id])
   partyId       Int?
   status        String            @default("active")
@@ -257,6 +257,7 @@ model Position {
   status        String             @default("active")
   isElected     Boolean            @default(false)
   groupingTypeId Int?
+  seatCount     Int                @default(1)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   programYearPositions ProgramYearPosition[]
