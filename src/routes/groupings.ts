@@ -134,6 +134,13 @@ router.post('/program-years/:id/groupings/activate', async (req, res) => {
     res.status(400).json({ error: 'groupingIds required' });
     return;
   }
+
+  // Delete existing activations for this program year
+  await prisma.programYearGrouping.deleteMany({
+    where: { programYearId: py.id },
+  });
+
+  // Create new activations
   const records = await Promise.all(
     groupingIds.map((gid) =>
       prisma.programYearGrouping.create({
@@ -160,7 +167,11 @@ router.get('/program-years/:id/groupings', async (req, res) => {
   }
   const records = await prisma.programYearGrouping.findMany({
     where: { programYearId: py.id, status: 'active' },
-    include: { grouping: true },
+    include: {
+      grouping: {
+        include: { groupingType: true },
+      },
+    },
   });
   res.json(records);
 });

@@ -22,6 +22,7 @@ import applicationsRoutes from './routes/applications';
 import applicationReviewRoutes from './routes/applicationReviews';
 import emailConfigRoutes from './routes/emailConfig';
 import emailTemplateRoutes from './routes/emailTemplates';
+import bulkOperationsRoutes from './routes/bulkOperations';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -85,6 +86,7 @@ app.use(applicationsRoutes);
 app.use(applicationReviewRoutes);
 app.use(emailConfigRoutes);
 app.use(emailTemplateRoutes);
+app.use(bulkOperationsRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

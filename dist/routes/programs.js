@@ -56,10 +56,18 @@ router.post('/programs', async (req, res) => {
             createdBy: { connect: { id: user.userId } },
         },
     });
+    // Create the initial ProgramYear record for the program's base year
+    await prisma_1.default.programYear.create({
+        data: {
+            programId: program.id,
+            year,
+            status: 'active',
+        },
+    });
     await prisma_1.default.programAssignment.create({
         data: { userId: user.userId, programId: program.id, role: 'admin' },
     });
-    logger.info(program.id, `Program created by ${user.email}`);
+    logger.info(program.id, `Created program "${program.name}" (year: ${year}) by ${user.email}`);
     res.status(201).json({
         id: program.id,
         name: program.name,
@@ -94,7 +102,7 @@ router.post('/programs/:programId/users', async (req, res) => {
     await prisma_1.default.programAssignment.create({
         data: { userId, programId, role },
     });
-    logger.info(programId, `User ${userId} assigned role ${role}`);
+    logger.info(programId, `Assigned user ${userId} to role "${role}" by ${caller.email}`);
     res.status(201).json({
         programId,
         userId,
@@ -119,7 +127,7 @@ router.get('/programs/:programId/users', async (req, res) => {
         where: { programId },
         select: { userId: true, role: true },
     });
-    logger.info(programId, `Listed users for program`);
+    logger.info(programId, `Listed ${assignments.length} user assignments by ${caller.email}`);
     res.json(assignments);
 });
 // Get programs for a user
@@ -159,7 +167,7 @@ router.put('/programs/:id', async (req, res) => {
         where: { id },
         data: { name, year, status },
     });
-    logger.info(id, `Program updated by ${caller.email}`);
+    logger.info(id, `Updated program "${updated.name}" by ${caller.email}`);
     res.json(updated);
 });
 // Retire a program
@@ -180,7 +188,7 @@ router.delete('/programs/:id', async (req, res) => {
         where: { id },
         data: { status: 'retired' },
     });
-    logger.info(id, `Program retired by ${caller.email}`);
+    logger.info(id, `Retired program "${program.name}" by ${caller.email}`);
     res.json(updated);
 });
 exports.default = router;

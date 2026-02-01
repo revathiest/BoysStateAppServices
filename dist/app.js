@@ -42,6 +42,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const child_process_1 = require("child_process");
 const jwt_1 = require("./jwt");
+const config_1 = require("./config");
 const logger = __importStar(require("./logger"));
 const auth_1 = __importStar(require("./routes/auth"));
 Object.defineProperty(exports, "loginAttempts", { enumerable: true, get: function () { return auth_1.loginAttempts; } });
@@ -61,6 +62,8 @@ const elections_1 = __importDefault(require("./routes/elections"));
 const brandingContact_1 = __importDefault(require("./routes/brandingContact"));
 const applications_1 = __importDefault(require("./routes/applications"));
 const applicationReviews_1 = __importDefault(require("./routes/applicationReviews"));
+const emailConfig_1 = __importDefault(require("./routes/emailConfig"));
+const emailTemplates_1 = __importDefault(require("./routes/emailTemplates"));
 const app = (0, express_1.default)();
 exports.default = app;
 const corsOptions = { origin: true, credentials: true };
@@ -71,7 +74,6 @@ app.use((req, _res, next) => {
     logger.info(programId, `${req.method} ${req.path}`);
     next();
 });
-const jwtSecret = process.env.JWT_SECRET || 'development-secret';
 app.use((req, res, next) => {
     if (req.path === '/login' ||
         req.path === '/register' ||
@@ -87,7 +89,7 @@ app.use((req, res, next) => {
     }
     const token = auth.slice(7);
     try {
-        req.user = (0, jwt_1.verify)(token, jwtSecret);
+        req.user = (0, jwt_1.verify)(token, config_1.config.jwtSecret);
         next();
     }
     catch {
@@ -119,6 +121,8 @@ app.use(elections_1.default);
 app.use(brandingContact_1.default);
 app.use(applications_1.default);
 app.use(applicationReviews_1.default);
+app.use(emailConfig_1.default);
+app.use(emailTemplates_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();

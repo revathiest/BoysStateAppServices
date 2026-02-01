@@ -50,6 +50,43 @@ router.get('/program-years/:id/positions', async (req, res) => {
   res.json(records);
 });
 
+// Bulk activate positions for a program year
+router.post('/program-years/:id/positions/activate', async (req, res) => {
+  const { id } = req.params as { id?: string };
+  const caller = (req as any).user as { userId: number };
+  const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
+  if (!py) {
+    res.status(204).end();
+    return;
+  }
+  const isAdmin = await isProgramAdmin(caller.userId, py.programId);
+  if (!isAdmin) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
+  const { positionIds } = req.body as { positionIds?: number[] };
+  if (!Array.isArray(positionIds) || positionIds.length === 0) {
+    res.status(400).json({ error: 'positionIds required' });
+    return;
+  }
+
+  // Delete existing activations for this program year
+  await prisma.programYearPosition.deleteMany({
+    where: { programYearId: py.id },
+  });
+
+  // Create new activations
+  const records = await Promise.all(
+    positionIds.map((pid) =>
+      prisma.programYearPosition.create({
+        data: { programYearId: py.id, positionId: pid, status: 'active' },
+      })
+    )
+  );
+  logger.info(py.programId, `Activated ${records.length} positions for PY ${py.year}`);
+  res.status(201).json(records);
+});
+
 router.put('/program-year-positions/:id', async (req, res) => {
   const { id } = req.params as { id?: string };
   const caller = (req as any).user as { userId: number };
