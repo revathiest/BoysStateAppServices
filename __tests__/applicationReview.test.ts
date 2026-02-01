@@ -18,6 +18,9 @@ beforeEach(() => {
   mockedPrisma.programYear.create.mockReset();
   mockedPrisma.delegate.create.mockReset();
   mockedPrisma.staff.create.mockReset();
+  mockedPrisma.user.findUnique.mockReset();
+  mockedPrisma.user.create.mockReset();
+  mockedPrisma.programAssignment.create.mockReset();
 });
 
 describe('GET /api/programs/:id/applications/delegate', () => {
@@ -302,6 +305,8 @@ describe('POST accept application', () => {
       ],
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 100, email: 'john@example.com' });
     mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
@@ -371,6 +376,8 @@ describe('POST accept application', () => {
       ],
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 100, email: 'john@example.com' });
     mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
@@ -402,6 +409,9 @@ describe('POST accept application', () => {
       ],
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 101, email: 'jane@example.com' });
+    mockedPrisma.programAssignment.create.mockResolvedValueOnce({ id: 1 });
     mockedPrisma.staff.create.mockResolvedValueOnce({ id: 20 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
@@ -484,6 +494,8 @@ describe('POST accept application', () => {
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce(null);
     mockedPrisma.programYear.create.mockResolvedValueOnce({ id: 5, programId: 'abc', year: 2026 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 102, email: 'john@example.com' });
     mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 15 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
@@ -511,6 +523,8 @@ describe('POST accept application', () => {
       ],
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 103, email: 'john@example.com' });
     mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 10 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });
@@ -535,6 +549,8 @@ describe('POST accept application', () => {
       ],
     });
     mockedPrisma.programYear.findFirst.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.user.findUnique.mockResolvedValueOnce(null);
+    mockedPrisma.user.create.mockResolvedValueOnce({ id: 104, email: 'bob@example.com' });
     mockedPrisma.delegate.create.mockResolvedValueOnce({ id: 11 });
     mockedPrisma.applicationResponse.update.mockResolvedValueOnce({ id: 'resp1' });
     mockedPrisma.auditLog.create.mockResolvedValueOnce({ id: 1 });

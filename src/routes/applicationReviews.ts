@@ -1,9 +1,81 @@
 import express from 'express';
+import { randomBytes, scrypt as _scrypt } from 'crypto';
+import { promisify } from 'util';
 import prisma from '../prisma';
 import * as logger from '../logger';
 import { isProgramAdmin } from '../utils/auth';
+import { sendAcceptanceEmail } from '../email';
 
+const scrypt = promisify(_scrypt);
 const router = express.Router();
+
+// Generate a random temporary password
+function generateTempPassword(): string {
+  return randomBytes(12).toString('base64').replace(/[+/=]/g, 'x');
+}
+
+// Hash a password using scrypt (same as auth.ts)
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const buf = (await scrypt(password, salt, 64)) as Buffer;
+  return `${salt}:${buf.toString('hex')}`;
+}
+
+// Create or find a user account for the applicant
+async function createUserAccount(
+  email: string,
+  programId: string,
+  role: 'delegate' | 'staff',
+  staffRole?: string,
+): Promise<{ userId: number; isNew: boolean; tempPassword?: string }> {
+  // Check if user already exists
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+
+  if (existingUser) {
+    // User exists - check if they already have a program assignment
+    const existingAssignment = await prisma.programAssignment.findFirst({
+      where: { userId: existingUser.id, programId },
+    });
+
+    // For staff, ensure they have a program assignment for web portal access
+    if (role === 'staff' && !existingAssignment) {
+      await prisma.programAssignment.create({
+        data: {
+          userId: existingUser.id,
+          programId,
+          role: staffRole || 'staff',
+        },
+      });
+    }
+
+    return { userId: existingUser.id, isNew: false };
+  }
+
+  // Create new user with temporary password
+  const tempPassword = generateTempPassword();
+  const hashedPassword = await hashPassword(tempPassword);
+
+  const newUser = await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+    },
+  });
+
+  // For staff, create a program assignment for web portal access
+  // Delegates don't get a program assignment (mobile app only)
+  if (role === 'staff') {
+    await prisma.programAssignment.create({
+      data: {
+        userId: newUser.id,
+        programId,
+        role: staffRole || 'staff',
+      },
+    });
+  }
+
+  return { userId: newUser.id, isNew: true, tempPassword };
+}
 
 function listHandler(appType: string) {
   return async (req: express.Request, res: express.Response) => {
@@ -246,6 +318,8 @@ function decisionHandler(decision: 'accept' | 'reject') {
       applicationId: string;
     };
     const caller = (req as any).user as { userId: number; email: string };
+
+    try {
     if (!['delegate', 'staff'].includes(type)) {
       res.status(400).json({ error: 'Invalid type' });
       return;
@@ -297,6 +371,8 @@ function decisionHandler(decision: 'accept' | 'reject') {
 
     // If accepting, create the Delegate or Staff record
     let createdRecordId: number | null = null;
+    let userAccountInfo: { userId: number; isNew: boolean; tempPassword?: string } | null = null;
+
     if (decision === 'accept') {
       // Extract applicant info from answers
       const firstName = extractAnswerValue(response.answers, 'First Name');
@@ -313,7 +389,9 @@ function decisionHandler(decision: 'accept' | 'reject') {
 
       // Find or create the ProgramYear for this application
       const applicationYear = response.application.year;
+      logger.info(programId, `Application year: ${applicationYear}, Application ID: ${response.application.id}`);
       if (!applicationYear) {
+        logger.error(programId, 'Application has no year specified');
         res.status(400).json({ error: 'Application has no year specified' });
         return;
       }
@@ -321,6 +399,7 @@ function decisionHandler(decision: 'accept' | 'reject') {
       let programYear = await prisma.programYear.findFirst({
         where: { programId, year: applicationYear },
       });
+      logger.info(programId, `Found existing programYear: ${programYear ? `id=${programYear.id}` : 'none'}`);
 
       if (!programYear) {
         // Create the program year if it doesn't exist
@@ -331,10 +410,15 @@ function decisionHandler(decision: 'accept' | 'reject') {
             status: 'active',
           },
         });
-        logger.info(programId, `Auto-created program year ${applicationYear} for application acceptance`);
+        logger.info(programId, `Auto-created program year ${applicationYear} (id: ${programYear.id}) for application acceptance`);
+      } else {
+        logger.info(programId, `Using existing program year ${applicationYear} (id: ${programYear.id})`);
       }
 
       if (type === 'delegate') {
+        // Create user account for mobile app access (no web portal)
+        userAccountInfo = await createUserAccount(email, programId, 'delegate');
+
         // Create delegate with no grouping assignment (for random assignment later)
         const delegate = await prisma.delegate.create({
           data: {
@@ -343,27 +427,51 @@ function decisionHandler(decision: 'accept' | 'reject') {
             lastName,
             email,
             phone: phone || null,
+            userId: userAccountInfo.userId,
             status: 'pending_assignment',
           },
         });
         createdRecordId = delegate.id;
-        logger.info(programId, `Created delegate "${firstName} ${lastName}" (id: ${delegate.id}) from application by ${caller.email}`);
+        logger.info(programId, `Created delegate "${firstName} ${lastName}" (id: ${delegate.id}, userId: ${userAccountInfo.userId}) from application by ${caller.email}`);
       } else {
         // Create staff with the provided role
-        const staff = await prisma.staff.create({
-          data: {
-            programYearId: programYear.id,
-            firstName,
-            lastName,
-            email,
-            phone: phone || null,
-            role: role!,
-            status: 'active',
-          },
-        });
-        createdRecordId = staff.id;
-        logger.info(programId, `Created staff "${firstName} ${lastName}" as ${role} (id: ${staff.id}) from application by ${caller.email}`);
+        // Create user account for web portal access
+        userAccountInfo = await createUserAccount(email, programId, 'staff', role);
+
+        try {
+          const staff = await prisma.staff.create({
+            data: {
+              programYearId: programYear.id,
+              firstName,
+              lastName,
+              email,
+              phone: phone || null,
+              userId: userAccountInfo.userId,
+              role: role!,
+              status: 'active',
+            },
+          });
+          createdRecordId = staff.id;
+          logger.info(programId, `Created staff "${firstName} ${lastName}" as ${role} (id: ${staff.id}, userId: ${userAccountInfo.userId}) from application by ${caller.email}`);
+        } catch (staffCreateError: any) {
+          throw staffCreateError;
+        }
       }
+
+      // Send acceptance email (don't block on failure)
+      const programName = program.name || 'Boys State';
+      const applicantFullName = `${firstName} ${lastName}`;
+      sendAcceptanceEmail(
+        programId,
+        email,
+        applicantFullName,
+        programName,
+        type as 'delegate' | 'staff',
+        role,
+        userAccountInfo?.tempPassword,
+      ).catch((err) => {
+        logger.warn(programId, `Failed to send acceptance email to ${email}: ${err.message}`);
+      });
     }
 
     // Update application status
@@ -388,10 +496,24 @@ function decisionHandler(decision: 'accept' | 'reject') {
     const applicantName = extractAnswerValue(response.answers, 'First Name') + ' ' + extractAnswerValue(response.answers, 'Last Name');
     logger.info(programId, `${decision === 'accept' ? 'Accepted' : 'Rejected'} ${type} application from "${applicantName.trim()}" by ${caller.email}`);
 
-    res.json({
+    const responsePayload = {
       success: true,
       ...(createdRecordId ? { [`${type}Id`]: createdRecordId } : {}),
-    });
+      ...(userAccountInfo ? {
+        userAccount: {
+          userId: userAccountInfo.userId,
+          isNew: userAccountInfo.isNew,
+          // Include temp password so it can be communicated to the user
+          // In production, you would email this instead of returning it
+          ...(userAccountInfo.tempPassword ? { tempPassword: userAccountInfo.tempPassword } : {}),
+        },
+      } : {}),
+    };
+    res.json(responsePayload);
+    } catch (error: any) {
+      logger.error(programId, `Error in ${decision} handler: ${error.message}`, error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
   };
 }
 
