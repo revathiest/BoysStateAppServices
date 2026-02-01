@@ -17,11 +17,12 @@ router.post('/programs/:programId/positions', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, groupingTypeId, isElected, seatCount } = req.body as {
+  const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
     groupingTypeId?: number;
+    ballotGroupingTypeId?: number;
     isElected?: boolean;
     seatCount?: number;
   };
@@ -36,6 +37,7 @@ router.post('/programs/:programId/positions', async (req, res) => {
       description,
       displayOrder,
       groupingTypeId,
+      ballotGroupingTypeId: isElected ? (ballotGroupingTypeId ?? groupingTypeId) : null,
       isElected: isElected ?? false,
       seatCount: seatCount ?? 1,
       status: 'active'
@@ -77,18 +79,24 @@ router.put('/positions/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, status, groupingTypeId, isElected, seatCount } = req.body as {
+  const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
     status?: string;
     groupingTypeId?: number;
+    ballotGroupingTypeId?: number;
     isElected?: boolean;
     seatCount?: number;
   };
+  // For elected positions, set ballotGroupingTypeId (default to groupingTypeId if not provided)
+  // For appointed positions, clear ballotGroupingTypeId
+  const resolvedBallotGroupingTypeId = isElected
+    ? (ballotGroupingTypeId ?? groupingTypeId ?? position.groupingTypeId)
+    : null;
   const updated = await prisma.position.update({
     where: { id: Number(id) },
-    data: { name, description, displayOrder, status, groupingTypeId, isElected, seatCount },
+    data: { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId: resolvedBallotGroupingTypeId, isElected, seatCount },
   });
   logger.info(position.programId, `Updated position "${updated.name}" (id: ${position.id}) by ${caller.email}`);
   res.json(updated);

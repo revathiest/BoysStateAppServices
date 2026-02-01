@@ -259,6 +259,7 @@ model Position {
   status        String             @default("active")
   isElected     Boolean            @default(false)
   groupingTypeId Int?
+  ballotGroupingTypeId Int?        // Which level's ballot this position appears on (for elected positions)
   seatCount     Int                @default(1)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -266,6 +267,7 @@ model Position {
 
   @@index([programId])
   @@index([groupingTypeId])
+  @@index([ballotGroupingTypeId])
 }
 
 model ProgramYearPosition {
