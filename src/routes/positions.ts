@@ -17,14 +17,18 @@ router.post('/programs/:programId/positions', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body as {
+  const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
     groupingTypeId?: number;
     ballotGroupingTypeId?: number;
     isElected?: boolean;
+    isNonPartisan?: boolean;
     seatCount?: number;
+    requiresDeclaration?: boolean;
+    requiresPetition?: boolean;
+    petitionSignatures?: number;
   };
   if (!name) {
     res.status(400).json({ error: 'name required' });
@@ -39,7 +43,11 @@ router.post('/programs/:programId/positions', async (req, res) => {
       groupingTypeId,
       ballotGroupingTypeId: isElected ? (ballotGroupingTypeId ?? groupingTypeId) : null,
       isElected: isElected ?? false,
+      isNonPartisan: isElected ? (isNonPartisan ?? false) : false,
       seatCount: seatCount ?? 1,
+      requiresDeclaration: isElected ? (requiresDeclaration ?? false) : false,
+      requiresPetition: isElected ? (requiresPetition ?? false) : false,
+      petitionSignatures: isElected && requiresPetition ? petitionSignatures : null,
       status: 'active'
     },
   });
@@ -79,7 +87,7 @@ router.put('/positions/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body as {
+  const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
@@ -87,16 +95,38 @@ router.put('/positions/:id', async (req, res) => {
     groupingTypeId?: number;
     ballotGroupingTypeId?: number;
     isElected?: boolean;
+    isNonPartisan?: boolean;
     seatCount?: number;
+    requiresDeclaration?: boolean;
+    requiresPetition?: boolean;
+    petitionSignatures?: number;
   };
   // For elected positions, set ballotGroupingTypeId (default to groupingTypeId if not provided)
   // For appointed positions, clear ballotGroupingTypeId
   const resolvedBallotGroupingTypeId = isElected
     ? (ballotGroupingTypeId ?? groupingTypeId ?? position.groupingTypeId)
     : null;
+  // These fields only apply to elected positions
+  const resolvedIsNonPartisan = isElected ? (isNonPartisan ?? false) : false;
+  const resolvedRequiresDeclaration = isElected ? (requiresDeclaration ?? false) : false;
+  const resolvedRequiresPetition = isElected ? (requiresPetition ?? false) : false;
+  const resolvedPetitionSignatures = isElected && resolvedRequiresPetition ? petitionSignatures : null;
   const updated = await prisma.position.update({
     where: { id: Number(id) },
-    data: { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId: resolvedBallotGroupingTypeId, isElected, seatCount },
+    data: {
+      name,
+      description,
+      displayOrder,
+      status,
+      groupingTypeId,
+      ballotGroupingTypeId: resolvedBallotGroupingTypeId,
+      isElected,
+      isNonPartisan: resolvedIsNonPartisan,
+      seatCount,
+      requiresDeclaration: resolvedRequiresDeclaration,
+      requiresPetition: resolvedRequiresPetition,
+      petitionSignatures: resolvedPetitionSignatures,
+    },
   });
   logger.info(position.programId, `Updated position "${updated.name}" (id: ${position.id}) by ${caller.email}`);
   res.json(updated);

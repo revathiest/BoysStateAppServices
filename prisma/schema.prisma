@@ -163,6 +163,7 @@ model ProgramYearParty {
   partyId       Int
   status        String      @default("active")
   delegates     Delegate[]
+  electionCandidates ElectionCandidate[]
 
   @@index([programYearId])
   @@index([partyId])
@@ -188,6 +189,7 @@ model Delegate {
   programYearPositions ProgramYearPosition[]
   votesCast     ElectionVote[] @relation("Voter")
   votesReceived ElectionVote[] @relation("Candidate")
+  candidacies   ElectionCandidate[]
 
   @@index([programYearId])
   @@index([groupingId])
@@ -209,6 +211,7 @@ model Staff {
   status        String      @default("active")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  nominations   ElectionCandidate[]
 
   @@index([programYearId])
   @@index([groupingId])
@@ -258,9 +261,13 @@ model Position {
   displayOrder  Int?
   status        String             @default("active")
   isElected     Boolean            @default(false)
+  isNonPartisan Boolean            @default(false) // If true, no primary election (non-partisan race). Only applies to elected positions.
   groupingTypeId Int?
   ballotGroupingTypeId Int?        // Which level's ballot this position appears on (for elected positions)
   seatCount     Int                @default(1)
+  requiresDeclaration Boolean      @default(false) // Whether candidates must formally declare candidacy
+  requiresPetition Boolean         @default(false) // Whether candidates need petition signatures
+  petitionSignatures Int?          // Number of signatures required (only if requiresPetition is true)
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   programYearPositions ProgramYearPosition[]
@@ -301,16 +308,47 @@ model Election {
   positionId    Int
   grouping      Grouping            @relation(fields: [groupingId], references: [id])
   groupingId    Int
-  status        String             @default("scheduled")
-  method        String
+  electionType  String?            // "primary" or "general" (null for non-partisan single-round)
+  status        String             @default("nomination") // nomination, scheduled, active, completed
+  method        String?            // voting method (plurality, ranked, etc.)
   startTime     DateTime?
   endTime       DateTime?
   createdAt     DateTime           @default(now())
   votes         ElectionVote[]
+  candidates    ElectionCandidate[]
 
   @@index([programYearId])
   @@index([positionId])
   @@index([groupingId])
+  @@index([electionType])
+}
+
+model ElectionCandidate {
+  id            Int         @id @default(autoincrement())
+  election      Election    @relation(fields: [electionId], references: [id])
+  electionId    Int
+  delegate      Delegate    @relation(fields: [delegateId], references: [id])
+  delegateId    Int
+  party         ProgramYearParty? @relation(fields: [partyId], references: [id])
+  partyId       Int?        // Required for primary elections
+  nominatedBy   Staff?      @relation(fields: [nominatedByStaffId], references: [id])
+  nominatedByStaffId Int?
+  status        String      @default("nominated") // nominated, qualified, withdrawn, advanced, elected
+  // Candidacy requirement tracking
+  declarationReceived Boolean   @default(false) // Has declaration of candidacy been received?
+  declarationReceivedAt DateTime?
+  petitionVerified    Boolean   @default(false) // Has petition been verified?
+  petitionSignatureCount Int?   // Actual number of valid signatures (if applicable)
+  petitionVerifiedAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([electionId, delegateId]) // A delegate can only be nominated once per election
+  @@index([electionId])
+  @@index([delegateId])
+  @@index([partyId])
+  @@index([nominatedByStaffId])
+  @@index([status])
 }
 
 model ElectionVote {

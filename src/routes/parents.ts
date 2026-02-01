@@ -1,7 +1,18 @@
 import express from 'express';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
 import prisma from '../prisma';
 import * as logger from '../logger';
 import { isProgramAdmin, isProgramMember } from '../utils/auth';
+
+const scryptAsync = promisify(scrypt);
+
+// Hash a password using scrypt (same as auth.ts)
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${salt}:${buf.toString('hex')}`;
+}
 
 const router = express.Router();
 
@@ -57,7 +68,23 @@ router.get('/program-years/:id/parents', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const parents = await prisma.parent.findMany({ where: { programYearId: py.id } });
+  const parents = await prisma.parent.findMany({
+    where: { programYearId: py.id },
+    include: {
+      links: {
+        include: {
+          delegate: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
   res.json(parents);
 });
 
@@ -79,14 +106,26 @@ router.put('/parents/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { firstName, lastName, email, phone, userId, status } = req.body as {
+  const { firstName, lastName, email, phone, userId, status, tempPassword } = req.body as {
     firstName?: string;
     lastName?: string;
     email?: string;
     phone?: string;
     userId?: number;
     status?: string;
+    tempPassword?: string;
   };
+
+  // If tempPassword provided and parent has a userId, update the user's password
+  if (tempPassword && parent.userId) {
+    const hashedPassword = await hashPassword(tempPassword);
+    await prisma.user.update({
+      where: { id: parent.userId },
+      data: { password: hashedPassword },
+    });
+    logger.info(py.programId, `Password updated for parent ${parent.id}`);
+  }
+
   const updated = await prisma.parent.update({
     where: { id: Number(id) },
     data: { firstName, lastName, email, phone, userId, status },

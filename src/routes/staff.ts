@@ -1,7 +1,18 @@
 import express from 'express';
+import { scrypt, randomBytes } from 'crypto';
+import { promisify } from 'util';
 import prisma from '../prisma';
 import * as logger from '../logger';
 import { isProgramAdmin, isProgramMember } from '../utils/auth';
+
+const scryptAsync = promisify(scrypt);
+
+// Hash a password using scrypt (same as auth.ts)
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${salt}:${buf.toString('hex')}`;
+}
 
 const router = express.Router();
 
@@ -87,7 +98,7 @@ router.put('/staff/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { firstName, lastName, email, phone, userId, role, groupingId, status } = req.body as {
+  const { firstName, lastName, email, phone, userId, role, groupingId, status, tempPassword } = req.body as {
     firstName?: string;
     lastName?: string;
     email?: string;
@@ -96,7 +107,19 @@ router.put('/staff/:id', async (req, res) => {
     role?: string;
     groupingId?: number;
     status?: string;
+    tempPassword?: string;
   };
+
+  // If tempPassword provided and staff has a userId, update the user's password
+  if (tempPassword && staff.userId) {
+    const hashedPassword = await hashPassword(tempPassword);
+    await prisma.user.update({
+      where: { id: staff.userId },
+      data: { password: hashedPassword },
+    });
+    logger.info(py.programId, `Password updated for staff ${staff.id}`);
+  }
+
   const updated = await prisma.staff.update({
     where: { id: Number(id) },
     data: { firstName, lastName, email, phone, userId, role, groupingId, status },
