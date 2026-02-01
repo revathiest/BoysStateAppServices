@@ -315,6 +315,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
     res.status(204).end();
     return;
   }
+
   const application = await prisma.application.findFirst({
     where: {
       programId,
@@ -338,10 +339,11 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
     res.status(400).json({ error: 'answers required' });
     return;
   }
+
   const created = await prisma.applicationResponse.create({
     data: {
       applicationId: application.id,
-      status: 'pending', // Explicitly set status to ensure it's correct
+      status: 'pending',
       answers: {
         create: body.answers.map((a) => {
           const { questionId, value, ...rest } = a as {
@@ -356,7 +358,7 @@ router.post('/api/programs/:programId/application/responses', async (req, res) =
       },
     },
   });
-  logger.info(programId, `New ${type || 'application'} response submitted (id: ${created.id}, year: ${year || application.year})`);
+  logger.info(programId, `New ${application.type} response submitted (id: ${created.id}, year: ${application.year})`);
   res.status(201).json({ responseId: created.id });
 });
 

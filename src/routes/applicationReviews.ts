@@ -28,10 +28,14 @@ async function createUserAccount(
   role: 'delegate' | 'staff',
   staffRole?: string,
 ): Promise<{ userId: number; isNew: boolean; tempPassword?: string }> {
+  logger.info(programId, `[USER ACCOUNT] Looking up user by email: "${email}"`);
+
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
   if (existingUser) {
+    logger.info(programId, `[USER ACCOUNT] Found existing user: id=${existingUser.id}, email="${existingUser.email}"`);
+
     // User exists - check if they already have a program assignment
     const existingAssignment = await prisma.programAssignment.findFirst({
       where: { userId: existingUser.id, programId },
@@ -48,8 +52,11 @@ async function createUserAccount(
       });
     }
 
+    logger.info(programId, `[USER ACCOUNT] Returning existing user (isNew=false, NO tempPassword)`);
     return { userId: existingUser.id, isNew: false };
   }
+
+  logger.info(programId, `[USER ACCOUNT] No existing user found, creating new user...`);
 
   // Create new user with temporary password
   const tempPassword = generateTempPassword();
@@ -62,6 +69,8 @@ async function createUserAccount(
     },
   });
 
+  logger.info(programId, `[USER ACCOUNT] Created new user: id=${newUser.id}, tempPassword generated`);
+
   // For staff, create a program assignment for web portal access
   // Delegates don't get a program assignment (mobile app only)
   if (role === 'staff') {
@@ -72,8 +81,10 @@ async function createUserAccount(
         role: staffRole || 'staff',
       },
     });
+    logger.info(programId, `[USER ACCOUNT] Created program assignment for staff`);
   }
 
+  logger.info(programId, `[USER ACCOUNT] Returning new user (isNew=true, tempPassword="${tempPassword.substring(0, 4)}****")`);
   return { userId: newUser.id, isNew: true, tempPassword };
 }
 
@@ -460,12 +471,13 @@ function decisionHandler(decision: 'accept' | 'reject') {
 
       // Send acceptance email (don't block on failure)
       const programName = program.name || 'Boys State';
-      const applicantFullName = `${firstName} ${lastName}`;
       sendAcceptanceEmail(
         programId,
         email,
-        applicantFullName,
+        firstName,
+        lastName,
         programName,
+        applicationYear,
         type as 'delegate' | 'staff',
         role,
         userAccountInfo?.tempPassword,

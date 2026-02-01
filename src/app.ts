@@ -20,6 +20,8 @@ import electionsRoutes from './routes/elections';
 import brandingContactRoutes from './routes/brandingContact';
 import applicationsRoutes from './routes/applications';
 import applicationReviewRoutes from './routes/applicationReviews';
+import emailConfigRoutes from './routes/emailConfig';
+import emailTemplateRoutes from './routes/emailTemplates';
 
 const app = express();
 const corsOptions: CorsOptions = { origin: true, credentials: true };
@@ -81,6 +83,8 @@ app.use(electionsRoutes);
 app.use(brandingContactRoutes);
 app.use(applicationsRoutes);
 app.use(applicationReviewRoutes);
+app.use(emailConfigRoutes);
+app.use(emailTemplateRoutes);
 
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {

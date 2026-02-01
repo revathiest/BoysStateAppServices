@@ -51,17 +51,21 @@ router.post('/program-years/:id/staff', async (req, res) => {
 router.get('/program-years/:id/staff', async (req, res) => {
   const { id } = req.params as { id?: string };
   const caller = (req as any).user as { userId: number };
+  logger.info('unknown', `GET /program-years/${id}/staff requested by user ${caller.userId}`);
   const py = await prisma.programYear.findUnique({ where: { id: Number(id) } });
   if (!py) {
+    logger.info('unknown', `ProgramYear ${id} not found`);
     res.status(204).end();
     return;
   }
+  logger.info(py.programId, `Found ProgramYear ${py.id} (year: ${py.year}) for program ${py.programId}`);
   const isMember = await isProgramMember(caller.userId, py.programId);
   if (!isMember) {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
   const staff = await prisma.staff.findMany({ where: { programYearId: py.id } });
+  logger.info(py.programId, `Found ${staff.length} staff for programYear ${py.id}`);
   res.json(staff);
 });
 

@@ -57,7 +57,12 @@ router.get('/programs/:programId/groupings', async (req, res) => {
   }
   const groupings = await prisma.grouping.findMany({
     where: { programId },
-    orderBy: { displayOrder: 'asc' },
+    include: { groupingType: true },
+    orderBy: [
+      { groupingType: { levelOrder: 'asc' } },
+      { displayOrder: 'asc' },
+      { name: 'asc' },
+    ],
   });
   res.json(groupings);
 });

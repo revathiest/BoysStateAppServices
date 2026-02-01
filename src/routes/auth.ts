@@ -75,4 +75,151 @@ router.post('/login', async (req: express.Request, res: express.Response) => {
   res.json({ token });
 });
 
+// Refresh token (authenticated user)
+router.post('/refresh', async (req: express.Request, res: express.Response) => {
+  const caller = (req as any).user as { userId: number; email: string } | undefined;
+  if (!caller) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  // Verify user still exists
+  const user = await prisma.user.findUnique({ where: { id: caller.userId } });
+  if (!user) {
+    res.status(401).json({ error: 'User not found' });
+    return;
+  }
+
+  // Issue a new token
+  const token = sign({ userId: user.id, email: user.email }, config.jwtSecret);
+  logger.info('system', `Token refreshed for: ${user.email}`);
+  res.json({ token });
+});
+
+// Change own password (authenticated user)
+router.put('/change-password', async (req: express.Request, res: express.Response) => {
+  const caller = (req as any).user as { userId: number; email: string } | undefined;
+  if (!caller) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword?: string;
+    newPassword?: string;
+  };
+
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: 'Current password and new password required' });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: 'New password must be at least 8 characters' });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: caller.userId } });
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  // Verify current password
+  const [salt, storedHash] = user.password.split(':');
+  const buf = (await scrypt(currentPassword, salt, 64)) as Buffer;
+  if (buf.toString('hex') !== storedHash) {
+    res.status(401).json({ error: 'Current password is incorrect' });
+    return;
+  }
+
+  // Hash new password
+  const newSalt = randomBytes(16).toString('hex');
+  const newBuf = (await scrypt(newPassword, newSalt, 64)) as Buffer;
+  const newHashed = `${newSalt}:${newBuf.toString('hex')}`;
+
+  await prisma.user.update({
+    where: { id: caller.userId },
+    data: { password: newHashed },
+  });
+
+  logger.info('system', `User ${caller.email} changed their password`);
+  res.json({ message: 'Password changed successfully' });
+});
+
+// Admin reset password for a user (by staff/delegate ID)
+router.put('/users/:userId/password', async (req: express.Request, res: express.Response) => {
+  const caller = (req as any).user as { userId: number; email: string } | undefined;
+  if (!caller) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const { userId } = req.params as { userId: string };
+  const { newPassword } = req.body as { newPassword?: string };
+
+  if (!newPassword) {
+    res.status(400).json({ error: 'New password required' });
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: 'Password must be at least 8 characters' });
+    return;
+  }
+
+  const targetUserId = parseInt(userId);
+  if (isNaN(targetUserId)) {
+    res.status(400).json({ error: 'Invalid user ID' });
+    return;
+  }
+
+  // Find the target user
+  const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+  if (!targetUser) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  // Check if caller has admin access to at least one program the target user is in
+  // Get programs where caller is admin
+  const callerAdminPrograms = await prisma.programAssignment.findMany({
+    where: { userId: caller.userId, role: 'admin' },
+    select: { programId: true },
+  });
+  const callerProgramIds = callerAdminPrograms.map((p) => p.programId);
+
+  // Check if target user is in any of those programs (via Staff or Delegate)
+  const targetStaff = await prisma.staff.findFirst({
+    where: {
+      userId: targetUserId,
+      programYear: { programId: { in: callerProgramIds } },
+    },
+  });
+  const targetDelegate = await prisma.delegate.findFirst({
+    where: {
+      userId: targetUserId,
+      programYear: { programId: { in: callerProgramIds } },
+    },
+  });
+
+  if (!targetStaff && !targetDelegate) {
+    res.status(403).json({ error: 'Forbidden: You can only reset passwords for users in programs you administer' });
+    return;
+  }
+
+  // Hash new password
+  const salt = randomBytes(16).toString('hex');
+  const buf = (await scrypt(newPassword, salt, 64)) as Buffer;
+  const hashed = `${salt}:${buf.toString('hex')}`;
+
+  await prisma.user.update({
+    where: { id: targetUserId },
+    data: { password: hashed },
+  });
+
+  logger.info('system', `Admin ${caller.email} reset password for user ${targetUser.email}`);
+  res.json({ message: 'Password reset successfully' });
+});
+
 export default router;

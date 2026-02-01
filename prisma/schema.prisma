@@ -36,6 +36,8 @@ model Program {
   positions     Position[]
   brandingContacts ProgramBrandingContact[]
   applications     Application[]
+  emailConfig   EmailConfig?
+  emailTemplates EmailTemplate[]
   status        String              @default("active")
   createdAt     DateTime            @default(now())
 }
@@ -389,6 +391,38 @@ model ProgramBrandingContactAudit {
   changedAt         DateTime @default(now())
 
   @@index([brandingContactId])
+}
+
+model EmailConfig {
+  id            Int      @id @default(autoincrement())
+  program       Program  @relation(fields: [programId], references: [id])
+  programId     String   @unique
+  smtpHost      String
+  smtpPort      Int      @default(587)
+  smtpUser      String
+  smtpPass      String   // Encrypted in application layer
+  fromEmail     String
+  fromName      String?
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([programId])
+}
+
+model EmailTemplate {
+  id            Int      @id @default(autoincrement())
+  program       Program  @relation(fields: [programId], references: [id])
+  programId     String
+  templateType  String   // delegate_welcome, staff_welcome, etc.
+  subject       String
+  body          String   // HTML content with placeholders like {{firstName}}, {{programName}}
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([programId, templateType])
+  @@index([programId])
 }
 
 model Application {
