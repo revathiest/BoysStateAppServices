@@ -1,0 +1,539 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const prisma_1 = __importDefault(require("../prisma"));
+const logger = __importStar(require("../logger"));
+const auth_1 = require("../utils/auth");
+const router = express_1.default.Router();
+function buildTree(questions) {
+    const byId = {};
+    questions.forEach((q) => {
+        byId[q.id] = { ...q, options: q.options.map((o) => o.value), fields: [] };
+    });
+    const roots = [];
+    questions.forEach((q) => {
+        if (q.parentId) {
+            byId[q.parentId].fields.push(byId[q.id]);
+        }
+        else {
+            roots.push(byId[q.id]);
+        }
+    });
+    return roots.sort((a, b) => a.order - b.order);
+}
+async function saveQuestions(applicationId, items, parentId) {
+    for (let i = 0; i < items.length; i++) {
+        const q = items[i];
+        const created = await prisma_1.default.applicationQuestion.create({
+            data: {
+                applicationId,
+                parentId: parentId ?? null,
+                order: i,
+                type: q.type,
+                text: q.text,
+                required: q.required ?? null,
+                accept: q.accept,
+                maxFiles: q.maxFiles,
+            },
+        });
+        if (Array.isArray(q.options)) {
+            for (let j = 0; j < q.options.length; j++) {
+                await prisma_1.default.applicationQuestionOption.create({
+                    data: { questionId: created.id, value: q.options[j], order: j },
+                });
+            }
+        }
+        if (Array.isArray(q.fields)) {
+            await saveQuestions(applicationId, q.fields, created.id);
+        }
+    }
+}
+router.get('/api/programs/:programId/application', async (req, res) => {
+    const { programId } = req.params;
+    const { year, type } = req.query;
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const application = await prisma_1.default.application.findFirst({
+        where: {
+            programId,
+            ...(year ? { year: Number(year) } : {}),
+            ...(type ? { type } : {}),
+        },
+        include: { responses: true },
+    });
+    if (!application) {
+        res.status(204).end();
+        return;
+    }
+    const questions = await prisma_1.default.applicationQuestion.findMany({
+        where: { applicationId: application.id },
+        orderBy: { order: 'asc' },
+        include: { options: { orderBy: { order: 'asc' } } },
+    });
+    const result = buildTree(questions);
+    // Check if questions are locked (application has responses)
+    const responseCount = application.responses?.length || 0;
+    const hasResponses = responseCount > 0;
+    const responseText = responseCount === 1 ? '1 response' : `${responseCount} responses`;
+    const responseData = {
+        applicationId: application.id,
+        title: application.title,
+        description: application.description,
+        year: application.year,
+        type: application.type,
+        closingDate: application.closingDate,
+        questions: result,
+        ...(hasResponses ? {
+            locked: ['questions'],
+            updated: ['title', 'description', 'closingDate'],
+            message: `Questions are locked because ${responseText} have been submitted. You can update the title, description, and closing date, or delete all responses to unlock question editing.`
+        } : {})
+    };
+    res.json(responseData);
+});
+async function saveApplication(req, res) {
+    const { programId } = req.params;
+    const caller = req.user;
+    if (!programId) {
+        res.status(400).json({ error: 'programId required' });
+        return;
+    }
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const isAdmin = await (0, auth_1.isProgramAdmin)(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    const { title, description, questions, year, type, closingDate } = req.body;
+    if (!title) {
+        res.status(400).json({ error: 'title required' });
+        return;
+    }
+    if (year === undefined) {
+        res.status(400).json({ error: 'year required' });
+        return;
+    }
+    if (!type) {
+        res.status(400).json({ error: 'type required' });
+        return;
+    }
+    const yr = Number(year);
+    const closingDateTime = closingDate ? new Date(closingDate) : null;
+    // Check if application already exists
+    const existingApp = await prisma_1.default.application.findFirst({
+        where: { programId, year: yr, type },
+        include: { responses: true },
+    });
+    if (existingApp) {
+        // Application exists - update it
+        // Questions are only locked if there are responses
+        const responseCount = existingApp.responses?.length || 0;
+        const hasResponses = responseCount > 0;
+        const responseText = responseCount === 1 ? '1 response' : `${responseCount} responses`;
+        // If no responses, allow question updates
+        if (!hasResponses) {
+            // Delete in order to respect foreign key constraints:
+            // 1. Delete answers (references questions)
+            await prisma_1.default.applicationAnswer.deleteMany({
+                where: { question: { applicationId: existingApp.id } },
+            });
+            // 2. Delete question options
+            await prisma_1.default.applicationQuestionOption.deleteMany({
+                where: { question: { applicationId: existingApp.id } },
+            });
+            // 3. Delete questions
+            await prisma_1.default.applicationQuestion.deleteMany({
+                where: { applicationId: existingApp.id },
+            });
+            // 4. Save new questions
+            await saveQuestions(existingApp.id, questions || []);
+        }
+        // Update metadata (always allowed)
+        await prisma_1.default.application.update({
+            where: { id: existingApp.id },
+            data: { title, description, closingDate: closingDateTime },
+        });
+        logger.info(programId, `Application updated by ${caller.email} (${hasResponses ? `${responseText} preserved, questions locked` : 'questions updated'})`);
+        res.status(200).json({
+            applicationId: existingApp.id,
+            title,
+            description,
+            year: yr,
+            type,
+            closingDate: closingDateTime,
+            questions: !hasResponses ? questions : undefined,
+            ...(hasResponses ? {
+                updated: ['title', 'description', 'closingDate'],
+                locked: ['questions'],
+                message: `Application metadata updated successfully. Questions are locked because ${responseText} have been submitted. ${responseText} preserved.`
+            } : {
+                message: 'Application updated successfully.'
+            })
+        });
+        return;
+    }
+    // No existing application - create new one with questions
+    const application = await prisma_1.default.application.create({
+        data: { programId, title, description, year: yr, type, closingDate: closingDateTime }
+    });
+    await saveQuestions(application.id, questions || []);
+    logger.info(programId, `Created ${type} application "${title}" (year: ${yr}) by ${caller.email}`);
+    res.status(201).json({
+        applicationId: application.id,
+        title,
+        description,
+        year: yr,
+        type,
+        closingDate: closingDateTime,
+        questions,
+        message: 'Application created successfully. Questions are now locked and cannot be modified.'
+    });
+}
+router.post('/api/programs/:programId/application', saveApplication);
+router.put('/api/programs/:programId/application', saveApplication);
+router.delete('/api/programs/:programId/application', async (req, res) => {
+    const { programId } = req.params;
+    const { year, type } = req.query;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const isAdmin = await (0, auth_1.isProgramAdmin)(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    if (year === undefined || !type) {
+        res.status(400).json({ error: 'year and type required' });
+        return;
+    }
+    const yr = Number(year);
+    await prisma_1.default.applicationQuestionOption.deleteMany({
+        where: { question: { application: { programId, year: yr, type } } },
+    });
+    await prisma_1.default.applicationQuestion.deleteMany({
+        where: { application: { programId, year: yr, type } },
+    });
+    await prisma_1.default.application.deleteMany({ where: { programId, year: yr, type } });
+    logger.info(programId, `Deleted ${type} application (year: ${yr}) by ${caller.email}`);
+    res.json({ status: 'deleted' });
+});
+// Delete all responses for an application (to unlock question editing)
+router.delete('/api/programs/:programId/application/responses/all', async (req, res) => {
+    const { programId } = req.params;
+    const { year, type } = req.query;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const isAdmin = await (0, auth_1.isProgramAdmin)(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    if (year === undefined || !type) {
+        res.status(400).json({ error: 'year and type required' });
+        return;
+    }
+    const yr = Number(year);
+    // Find the application
+    const application = await prisma_1.default.application.findFirst({
+        where: { programId, year: yr, type },
+        include: { responses: true },
+    });
+    if (!application) {
+        res.status(404).json({ error: 'Application not found' });
+        return;
+    }
+    const responseCount = application.responses?.length || 0;
+    // Delete all answers first (foreign key to responses)
+    await prisma_1.default.applicationAnswer.deleteMany({
+        where: { response: { applicationId: application.id } },
+    });
+    // Delete all responses
+    await prisma_1.default.applicationResponse.deleteMany({
+        where: { applicationId: application.id },
+    });
+    logger.info(programId, `All ${responseCount} responses deleted for ${type} application (year ${yr}) by ${caller.email}`);
+    res.json({
+        status: 'deleted',
+        deletedCount: responseCount,
+        message: `Successfully deleted ${responseCount} response${responseCount === 1 ? '' : 's'}. Questions can now be edited.`
+    });
+});
+router.post('/api/programs/:programId/application/responses', async (req, res) => {
+    const { programId } = req.params;
+    const { year, type } = req.query;
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const application = await prisma_1.default.application.findFirst({
+        where: {
+            programId,
+            ...(year ? { year: Number(year) } : {}),
+            ...(type ? { type } : {}),
+        },
+    });
+    if (!application) {
+        res.status(204).end();
+        return;
+    }
+    // Check if application is closed
+    if (application.closingDate && new Date() > new Date(application.closingDate)) {
+        res.status(400).json({ error: 'Applications are closed' });
+        return;
+    }
+    const body = req.body;
+    if (!Array.isArray(body.answers)) {
+        res.status(400).json({ error: 'answers required' });
+        return;
+    }
+    const created = await prisma_1.default.applicationResponse.create({
+        data: {
+            applicationId: application.id,
+            status: 'pending',
+            answers: {
+                create: body.answers.map((a) => {
+                    const { questionId, value, ...rest } = a;
+                    const finalValue = value !== undefined ? value : Object.keys(rest).length ? rest : null;
+                    return { questionId, value: finalValue };
+                }),
+            },
+        },
+    });
+    logger.info(programId, `New ${application.type} response submitted (id: ${created.id}, year: ${application.year})`);
+    res.status(201).json({ responseId: created.id });
+});
+router.get('/api/programs/:programId/application/responses', async (req, res) => {
+    const { programId } = req.params;
+    const { year, type, responseId } = req.query;
+    const caller = req.user;
+    const program = await prisma_1.default.program.findUnique({ where: { id: programId } });
+    if (!program) {
+        res.status(204).end();
+        return;
+    }
+    const isAdmin = await (0, auth_1.isProgramAdmin)(caller.userId, programId);
+    if (!isAdmin) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+    }
+    // If responseId is provided, return single response with full details
+    if (responseId) {
+        const response = await prisma_1.default.applicationResponse.findUnique({
+            where: { id: responseId },
+            include: {
+                answers: {
+                    include: {
+                        question: true,
+                    },
+                },
+                application: true,
+            },
+        });
+        if (!response || response.application.programId !== programId) {
+            res.status(404).json({ error: 'Response not found' });
+            return;
+        }
+        // Helper to extract value from answer
+        const extractValue = (answer) => {
+            if (typeof answer.value === 'string')
+                return answer.value;
+            if (answer.value && typeof answer.value === 'object') {
+                if ('value' in answer.value)
+                    return answer.value.value;
+                return answer.value;
+            }
+            return answer.value;
+        };
+        // Format answers for frontend
+        const formattedAnswers = response.answers.map((answer) => ({
+            label: answer.question.text,
+            question: answer.question.text,
+            value: extractValue(answer),
+            answer: extractValue(answer),
+            type: answer.question.type,
+        }));
+        // Extract common fields - handle first/last name separately
+        const firstNameAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('first') && a.question.text?.toLowerCase().includes('name'));
+        const lastNameAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('last') && a.question.text?.toLowerCase().includes('name'));
+        const fullNameAnswer = response.answers.find((a) => {
+            const text = a.question.text?.toLowerCase() || '';
+            return text.includes('name') && !text.includes('first') && !text.includes('last');
+        });
+        // Build name as "Last, First" or use full name
+        let displayName = 'N/A';
+        if (lastNameAnswer && firstNameAnswer) {
+            const lastName = extractValue(lastNameAnswer);
+            const firstName = extractValue(firstNameAnswer);
+            displayName = `${lastName}, ${firstName}`;
+        }
+        else if (fullNameAnswer) {
+            displayName = extractValue(fullNameAnswer);
+        }
+        else if (lastNameAnswer) {
+            displayName = extractValue(lastNameAnswer);
+        }
+        else if (firstNameAnswer) {
+            displayName = extractValue(firstNameAnswer);
+        }
+        const emailAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('email'));
+        const phoneAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('phone'));
+        const roleAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('role') ||
+            a.question.text?.toLowerCase().includes('position'));
+        const schoolAnswer = response.answers.find((a) => a.question.text?.toLowerCase().includes('school'));
+        const result = {
+            id: response.id,
+            name: displayName,
+            fullName: displayName,
+            email: emailAnswer ? extractValue(emailAnswer) : 'N/A',
+            phone: phoneAnswer ? extractValue(phoneAnswer) : 'N/A',
+            year: response.application.year,
+            type: response.application.type,
+            status: 'pending',
+            submittedAt: response.createdAt,
+            answers: formattedAnswers,
+            ...(response.application.type === 'staff' && roleAnswer ? { role: extractValue(roleAnswer) } : {}),
+            ...(response.application.type === 'delegate' && schoolAnswer ? { school: extractValue(schoolAnswer) } : {}),
+        };
+        res.json(result);
+        return;
+    }
+    // List view - return formatted summary
+    const responses = await prisma_1.default.applicationResponse.findMany({
+        where: {
+            application: {
+                programId,
+                ...(year ? { year: Number(year) } : {}),
+                ...(type ? { type } : {}),
+            },
+        },
+        include: {
+            answers: {
+                include: {
+                    question: true,
+                },
+            },
+            application: true,
+        },
+    });
+    // Helper to extract value from answer
+    const extractValue = (answer) => {
+        if (typeof answer.value === 'string')
+            return answer.value;
+        if (answer.value && typeof answer.value === 'object') {
+            if ('value' in answer.value)
+                return answer.value.value;
+            return JSON.stringify(answer.value);
+        }
+        return String(answer.value || '');
+    };
+    // Check if responses have nested data (for backward compatibility with tests)
+    // Find a response with answers to check if question data is included
+    const responseWithAnswers = responses.find(r => r.answers && r.answers.length > 0);
+    const hasNestedData = responseWithAnswers && responseWithAnswers.application && responseWithAnswers.answers[0]?.question;
+    if (!hasNestedData) {
+        // Return raw data if nested includes aren't available
+        logger.warn(programId, 'Returning raw response data - nested includes not available');
+        res.json(responses);
+        return;
+    }
+    // Format responses for list view (filter out responses with no answers)
+    const formattedResponses = responses
+        .filter(response => response.answers && response.answers.length > 0)
+        .map((response) => {
+        // Try to find first/last name separately, or full name
+        const firstNameAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('first') && a.question?.text?.toLowerCase().includes('name'));
+        const lastNameAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('last') && a.question?.text?.toLowerCase().includes('name'));
+        const fullNameAnswer = response.answers.find((a) => {
+            const text = a.question?.text?.toLowerCase() || '';
+            return text.includes('name') && !text.includes('first') && !text.includes('last');
+        });
+        // Build name as "Last, First" or use full name
+        let displayName = 'N/A';
+        if (lastNameAnswer && firstNameAnswer) {
+            const lastName = extractValue(lastNameAnswer);
+            const firstName = extractValue(firstNameAnswer);
+            displayName = `${lastName}, ${firstName}`;
+        }
+        else if (fullNameAnswer) {
+            displayName = extractValue(fullNameAnswer);
+        }
+        else if (lastNameAnswer) {
+            displayName = extractValue(lastNameAnswer);
+        }
+        else if (firstNameAnswer) {
+            displayName = extractValue(firstNameAnswer);
+        }
+        const emailAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('email'));
+        const phoneAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('phone'));
+        const roleAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('role') ||
+            a.question?.text?.toLowerCase().includes('position'));
+        const schoolAnswer = response.answers.find((a) => a.question?.text?.toLowerCase().includes('school'));
+        const result = {
+            id: response.id,
+            name: displayName,
+            fullName: displayName,
+            email: emailAnswer ? extractValue(emailAnswer) : 'N/A',
+            phone: phoneAnswer ? extractValue(phoneAnswer) : 'N/A',
+            year: response.application.year,
+            type: response.application.type,
+            status: 'pending',
+            submittedAt: response.createdAt,
+            ...(response.application.type === 'staff' && roleAnswer ? { role: extractValue(roleAnswer) } : {}),
+            ...(response.application.type === 'delegate' && schoolAnswer ? { school: extractValue(schoolAnswer) } : {}),
+        };
+        return result;
+    });
+    res.json(formattedResponses);
+});
+exports.default = router;
