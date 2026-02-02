@@ -40,6 +40,7 @@ const express_1 = __importDefault(require("express"));
 const prisma_1 = __importDefault(require("../prisma"));
 const logger = __importStar(require("../logger"));
 const auth_1 = require("../utils/auth");
+const permissions_1 = require("../utils/permissions");
 const router = express_1.default.Router();
 // Create a program and assign the creator as admin
 router.post('/programs', async (req, res) => {
@@ -67,7 +68,28 @@ router.post('/programs', async (req, res) => {
     await prisma_1.default.programAssignment.create({
         data: { userId: user.userId, programId: program.id, role: 'admin' },
     });
-    logger.info(program.id, `Created program "${program.name}" (year: ${year}) by ${user.email}`);
+    // Create default roles for the program
+    for (const roleConfig of permissions_1.DEFAULT_ROLES) {
+        const role = await prisma_1.default.programRole.create({
+            data: {
+                programId: program.id,
+                name: roleConfig.name,
+                description: roleConfig.description,
+                isDefault: roleConfig.isDefault,
+                displayOrder: roleConfig.displayOrder,
+            },
+        });
+        // Add permissions for the role
+        if (roleConfig.permissions.length > 0) {
+            await prisma_1.default.programRolePermission.createMany({
+                data: roleConfig.permissions.map(permission => ({
+                    roleId: role.id,
+                    permission,
+                })),
+            });
+        }
+    }
+    logger.info(program.id, `Created program "${program.name}" (year: ${year}) with default roles by ${user.email}`);
     res.status(201).json({
         id: program.id,
         name: program.name,
@@ -162,10 +184,15 @@ router.put('/programs/:id', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const { name, year, status } = req.body;
+    const { name, year, status, defaultVotingMethod } = req.body;
+    // Validate voting method if provided
+    if (defaultVotingMethod && !['plurality', 'majority', 'ranked'].includes(defaultVotingMethod)) {
+        res.status(400).json({ error: 'Invalid voting method. Must be plurality, majority, or ranked' });
+        return;
+    }
     const updated = await prisma_1.default.program.update({
         where: { id },
-        data: { name, year, status },
+        data: { name, year, status, defaultVotingMethod },
     });
     logger.info(id, `Updated program "${updated.name}" by ${caller.email}`);
     res.json(updated);

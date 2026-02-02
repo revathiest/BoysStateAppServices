@@ -64,6 +64,8 @@ const applications_1 = __importDefault(require("./routes/applications"));
 const applicationReviews_1 = __importDefault(require("./routes/applicationReviews"));
 const emailConfig_1 = __importDefault(require("./routes/emailConfig"));
 const emailTemplates_1 = __importDefault(require("./routes/emailTemplates"));
+const bulkOperations_1 = __importDefault(require("./routes/bulkOperations"));
+const permissions_1 = __importDefault(require("./routes/permissions"));
 const app = (0, express_1.default)();
 exports.default = app;
 const corsOptions = { origin: true, credentials: true };
@@ -123,6 +125,8 @@ app.use(applications_1.default);
 app.use(applicationReviews_1.default);
 app.use(emailConfig_1.default);
 app.use(emailTemplates_1.default);
+app.use(bulkOperations_1.default);
+app.use(permissions_1.default);
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'test') {
     ensureDatabase();

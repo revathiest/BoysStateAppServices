@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isProgramAdmin = isProgramAdmin;
 exports.isProgramMember = isProgramMember;
 exports.getUserPrograms = getUserPrograms;
+exports.getUserPermissions = getUserPermissions;
+exports.hasPermission = hasPermission;
+exports.getUserRoleAssignment = getUserRoleAssignment;
 const prisma_1 = __importDefault(require("../prisma"));
+const permissions_1 = require("./permissions");
 async function isProgramAdmin(userId, programId) {
     const assignment = await prisma_1.default.programAssignment.findFirst({
         where: { userId, programId },
@@ -52,4 +56,56 @@ async function getUserPrograms(req, res) {
         });
     }
     res.json({ username: user.email, programs });
+}
+/**
+ * Get all permissions for a user in a specific program.
+ * Admins get all permissions automatically.
+ * Other users get permissions from their assigned ProgramRole.
+ */
+async function getUserPermissions(userId, programId) {
+    const assignment = await prisma_1.default.programAssignment.findFirst({
+        where: { userId, programId },
+        include: {
+            programRole: {
+                include: {
+                    permissions: true,
+                },
+            },
+        },
+    });
+    if (!assignment) {
+        return [];
+    }
+    // Admins get all permissions
+    if (assignment.role === 'admin') {
+        return [...permissions_1.ALL_PERMISSIONS];
+    }
+    // If user has a programRole, return its permissions
+    if (assignment.programRole) {
+        return assignment.programRole.permissions.map((p) => p.permission);
+    }
+    // No role assigned = no permissions
+    return [];
+}
+/**
+ * Check if a user has a specific permission in a program.
+ */
+async function hasPermission(userId, programId, permission) {
+    const permissions = await getUserPermissions(userId, programId);
+    return permissions.includes(permission);
+}
+/**
+ * Get a user's role assignment for a program, including role details.
+ */
+async function getUserRoleAssignment(userId, programId) {
+    return prisma_1.default.programAssignment.findFirst({
+        where: { userId, programId },
+        include: {
+            programRole: {
+                include: {
+                    permissions: true,
+                },
+            },
+        },
+    });
 }

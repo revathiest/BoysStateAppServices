@@ -37,9 +37,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const crypto_1 = require("crypto");
+const util_1 = require("util");
 const prisma_1 = __importDefault(require("../prisma"));
 const logger = __importStar(require("../logger"));
 const auth_1 = require("../utils/auth");
+const scryptAsync = (0, util_1.promisify)(crypto_1.scrypt);
+// Hash a password using scrypt (same as auth.ts)
+async function hashPassword(password) {
+    const salt = (0, crypto_1.randomBytes)(16).toString('hex');
+    const buf = (await scryptAsync(password, salt, 64));
+    return `${salt}:${buf.toString('hex')}`;
+}
 const router = express_1.default.Router();
 router.post('/program-years/:id/staff', async (req, res) => {
     const { id } = req.params;
@@ -93,7 +102,22 @@ router.get('/program-years/:id/staff', async (req, res) => {
     }
     const staff = await prisma_1.default.staff.findMany({ where: { programYearId: py.id } });
     logger.info(py.programId, `Found ${staff.length} staff for programYear ${py.id}`);
-    res.json(staff);
+    // Enrich staff data with permission role information from ProgramAssignment
+    const enrichedStaff = await Promise.all(staff.map(async (s) => {
+        if (s.userId) {
+            const assignment = await prisma_1.default.programAssignment.findFirst({
+                where: { userId: s.userId, programId: py.programId },
+                include: { programRole: true },
+            });
+            return {
+                ...s,
+                programRoleId: assignment?.programRoleId || null,
+                programRole: assignment?.programRole || null,
+            };
+        }
+        return { ...s, programRoleId: null, programRole: null };
+    }));
+    res.json(enrichedStaff);
 });
 router.put('/staff/:id', async (req, res) => {
     const { id } = req.params;
@@ -113,7 +137,16 @@ router.put('/staff/:id', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const { firstName, lastName, email, phone, userId, role, groupingId, status } = req.body;
+    const { firstName, lastName, email, phone, userId, role, groupingId, status, tempPassword } = req.body;
+    // If tempPassword provided and staff has a userId, update the user's password
+    if (tempPassword && staff.userId) {
+        const hashedPassword = await hashPassword(tempPassword);
+        await prisma_1.default.user.update({
+            where: { id: staff.userId },
+            data: { password: hashedPassword },
+        });
+        logger.info(py.programId, `Password updated for staff ${staff.id}`);
+    }
     const updated = await prisma_1.default.staff.update({
         where: { id: Number(id) },
         data: { firstName, lastName, email, phone, userId, role, groupingId, status },
