@@ -37,9 +37,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const crypto_1 = require("crypto");
+const util_1 = require("util");
 const prisma_1 = __importDefault(require("../prisma"));
 const logger = __importStar(require("../logger"));
 const auth_1 = require("../utils/auth");
+const scryptAsync = (0, util_1.promisify)(crypto_1.scrypt);
+// Hash a password using scrypt (same as auth.ts)
+async function hashPassword(password) {
+    const salt = (0, crypto_1.randomBytes)(16).toString('hex');
+    const buf = (await scryptAsync(password, salt, 64));
+    return `${salt}:${buf.toString('hex')}`;
+}
 const router = express_1.default.Router();
 router.post('/program-years/:id/parents', async (req, res) => {
     const { id } = req.params;
@@ -86,7 +95,23 @@ router.get('/program-years/:id/parents', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const parents = await prisma_1.default.parent.findMany({ where: { programYearId: py.id } });
+    const parents = await prisma_1.default.parent.findMany({
+        where: { programYearId: py.id },
+        include: {
+            links: {
+                include: {
+                    delegate: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
     res.json(parents);
 });
 router.put('/parents/:id', async (req, res) => {
@@ -107,7 +132,16 @@ router.put('/parents/:id', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const { firstName, lastName, email, phone, userId, status } = req.body;
+    const { firstName, lastName, email, phone, userId, status, tempPassword } = req.body;
+    // If tempPassword provided and parent has a userId, update the user's password
+    if (tempPassword && parent.userId) {
+        const hashedPassword = await hashPassword(tempPassword);
+        await prisma_1.default.user.update({
+            where: { id: parent.userId },
+            data: { password: hashedPassword },
+        });
+        logger.info(py.programId, `Password updated for parent ${parent.id}`);
+    }
     const updated = await prisma_1.default.parent.update({
         where: { id: Number(id) },
         data: { firstName, lastName, email, phone, userId, status },

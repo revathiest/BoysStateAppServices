@@ -294,22 +294,18 @@ router.post('/program-years/:id/bulk/preview/:type', async (req, res) => {
     return;
   }
 
-  // Get groupings and parties for lookup
-  const groupings = await prisma.grouping.findMany({
-    where: { programId: py.programId, status: 'active' },
+  // Get year-activated groupings and parties for lookup (not base tables)
+  const activatedGroupings = await prisma.programYearGrouping.findMany({
+    where: { programYearId: py.id, status: 'active' },
+    include: { grouping: true },
   });
-  const groupingMap = new Map(groupings.map((g) => [g.name.toLowerCase(), g.id]));
+  const groupingMap = new Map(activatedGroupings.map((ag) => [ag.grouping.name.toLowerCase(), ag.grouping.id]));
 
-  const parties = await prisma.party.findMany({
-    where: { programId: py.programId, status: 'active' },
-  });
-  const partyMap = new Map(parties.map((p) => [p.name.toLowerCase(), p.id]));
-
-  // Get activated parties for this program year
   const activatedParties = await prisma.programYearParty.findMany({
     where: { programYearId: py.id, status: 'active' },
     include: { party: true },
   });
+  const partyMap = new Map(activatedParties.map((ap) => [ap.party.name.toLowerCase(), ap.party.id]));
   const partyToYearPartyMap = new Map(activatedParties.map((ap) => [ap.party.name.toLowerCase(), ap.id]));
 
   // Check for existing emails (both delegate and parent emails)
@@ -420,22 +416,18 @@ router.post('/program-years/:id/bulk/import/:type', async (req, res) => {
     return;
   }
 
-  // Get groupings and parties for lookup
-  const groupings = await prisma.grouping.findMany({
-    where: { programId: py.programId, status: 'active' },
+  // Get year-activated groupings and parties for lookup (not base tables)
+  const activatedGroupings = await prisma.programYearGrouping.findMany({
+    where: { programYearId: py.id, status: 'active' },
+    include: { grouping: true },
   });
-  const groupingMap = new Map(groupings.map((g) => [g.name.toLowerCase(), g.id]));
+  const groupingMap = new Map(activatedGroupings.map((ag) => [ag.grouping.name.toLowerCase(), ag.grouping.id]));
 
-  const parties = await prisma.party.findMany({
-    where: { programId: py.programId, status: 'active' },
-  });
-  const partyMap = new Map(parties.map((p) => [p.name.toLowerCase(), p.id]));
-
-  // Get activated parties for this program year
   const activatedParties = await prisma.programYearParty.findMany({
     where: { programYearId: py.id, status: 'active' },
     include: { party: true },
   });
+  const partyMap = new Map(activatedParties.map((ap) => [ap.party.name.toLowerCase(), ap.party.id]));
   const partyToYearPartyMap = new Map(activatedParties.map((ap) => [ap.party.name.toLowerCase(), ap.id]));
 
   const results = {

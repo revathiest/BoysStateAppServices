@@ -44,4 +44,39 @@ describe('GET /audit-logs', () => {
     expect(res.status).toBe(200);
     expect(res.body.auditLogs.length).toBe(1);
   });
+
+  it('filters by date range', async () => {
+    (prisma as any).auditLog.findMany.mockResolvedValueOnce([{ id: 1 }]);
+    (prisma as any).auditLog.count.mockResolvedValueOnce(1);
+    const res = await request(app)
+      .get('/audit-logs?dateFrom=2025-01-01&dateTo=2025-12-31')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect((prisma as any).auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          timestamp: expect.objectContaining({
+            gte: expect.any(Date),
+            lte: expect.any(Date),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('filters by tableName', async () => {
+    (prisma as any).auditLog.findMany.mockResolvedValueOnce([{ id: 1 }]);
+    (prisma as any).auditLog.count.mockResolvedValueOnce(1);
+    const res = await request(app)
+      .get('/audit-logs?tableName=Program')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect((prisma as any).auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tableName: 'Program',
+        }),
+      })
+    );
+  });
 });

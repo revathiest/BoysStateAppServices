@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from '../prisma';
 import * as logger from '../logger';
 import { isProgramAdmin, isProgramMember, getUserPrograms } from '../utils/auth';
+import { DEFAULT_ROLES } from '../utils/permissions';
 
 const router = express.Router();
 
@@ -36,7 +37,30 @@ router.post('/programs', async (req, res) => {
   await prisma.programAssignment.create({
     data: { userId: user.userId, programId: program.id, role: 'admin' },
   });
-  logger.info(program.id, `Created program "${program.name}" (year: ${year}) by ${user.email}`);
+
+  // Create default roles for the program
+  for (const roleConfig of DEFAULT_ROLES) {
+    const role = await prisma.programRole.create({
+      data: {
+        programId: program.id,
+        name: roleConfig.name,
+        description: roleConfig.description,
+        isDefault: roleConfig.isDefault,
+        displayOrder: roleConfig.displayOrder,
+      },
+    });
+    // Add permissions for the role
+    if (roleConfig.permissions.length > 0) {
+      await prisma.programRolePermission.createMany({
+        data: roleConfig.permissions.map(permission => ({
+          roleId: role.id,
+          permission,
+        })),
+      });
+    }
+  }
+
+  logger.info(program.id, `Created program "${program.name}" (year: ${year}) with default roles by ${user.email}`);
   res.status(201).json({
     id: program.id,
     name: program.name,
@@ -138,14 +162,20 @@ router.put('/programs/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, year, status } = req.body as {
+  const { name, year, status, defaultVotingMethod } = req.body as {
     name?: string;
     year?: number;
     status?: string;
+    defaultVotingMethod?: string;
   };
+  // Validate voting method if provided
+  if (defaultVotingMethod && !['plurality', 'majority', 'ranked'].includes(defaultVotingMethod)) {
+    res.status(400).json({ error: 'Invalid voting method. Must be plurality, majority, or ranked' });
+    return;
+  }
   const updated = await prisma.program.update({
     where: { id },
-    data: { name, year, status },
+    data: { name, year, status, defaultVotingMethod },
   });
   logger.info(id!, `Updated program "${updated.name}" by ${caller.email}`);
   res.json(updated);

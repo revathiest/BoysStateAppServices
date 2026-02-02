@@ -53,9 +53,15 @@ router.post('/programs/:programId/positions', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body;
+    const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures, electionMethod } = req.body;
     if (!name) {
         res.status(400).json({ error: 'name required' });
+        return;
+    }
+    // Validate electionMethod if provided
+    const validMethods = ['plurality', 'majority', 'ranked'];
+    if (electionMethod && !validMethods.includes(electionMethod)) {
+        res.status(400).json({ error: 'Invalid electionMethod. Must be plurality, majority, or ranked.' });
         return;
     }
     const position = await prisma_1.default.position.create({
@@ -67,7 +73,12 @@ router.post('/programs/:programId/positions', async (req, res) => {
             groupingTypeId,
             ballotGroupingTypeId: isElected ? (ballotGroupingTypeId ?? groupingTypeId) : null,
             isElected: isElected ?? false,
+            isNonPartisan: isElected ? (isNonPartisan ?? false) : false,
             seatCount: seatCount ?? 1,
+            requiresDeclaration: isElected ? (requiresDeclaration ?? false) : false,
+            requiresPetition: isElected ? (requiresPetition ?? false) : false,
+            petitionSignatures: isElected && requiresPetition ? petitionSignatures : null,
+            electionMethod: isElected ? (electionMethod || null) : null,
             status: 'active'
         },
     });
@@ -105,15 +116,42 @@ router.put('/positions/:id', async (req, res) => {
         res.status(403).json({ error: 'Forbidden' });
         return;
     }
-    const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, seatCount } = req.body;
+    const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures, electionMethod } = req.body;
+    // Validate electionMethod if provided (allow null to clear)
+    const validMethods = ['plurality', 'majority', 'ranked'];
+    if (electionMethod !== undefined && electionMethod !== null && !validMethods.includes(electionMethod)) {
+        res.status(400).json({ error: 'Invalid electionMethod. Must be plurality, majority, or ranked.' });
+        return;
+    }
     // For elected positions, set ballotGroupingTypeId (default to groupingTypeId if not provided)
     // For appointed positions, clear ballotGroupingTypeId
     const resolvedBallotGroupingTypeId = isElected
         ? (ballotGroupingTypeId ?? groupingTypeId ?? position.groupingTypeId)
         : null;
+    // These fields only apply to elected positions
+    const resolvedIsNonPartisan = isElected ? (isNonPartisan ?? false) : false;
+    const resolvedRequiresDeclaration = isElected ? (requiresDeclaration ?? false) : false;
+    const resolvedRequiresPetition = isElected ? (requiresPetition ?? false) : false;
+    const resolvedPetitionSignatures = isElected && resolvedRequiresPetition ? petitionSignatures : null;
+    // electionMethod only applies to elected positions; null means use program default
+    const resolvedElectionMethod = isElected ? (electionMethod === undefined ? position.electionMethod : (electionMethod || null)) : null;
     const updated = await prisma_1.default.position.update({
         where: { id: Number(id) },
-        data: { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId: resolvedBallotGroupingTypeId, isElected, seatCount },
+        data: {
+            name,
+            description,
+            displayOrder,
+            status,
+            groupingTypeId,
+            ballotGroupingTypeId: resolvedBallotGroupingTypeId,
+            isElected,
+            isNonPartisan: resolvedIsNonPartisan,
+            seatCount,
+            requiresDeclaration: resolvedRequiresDeclaration,
+            requiresPetition: resolvedRequiresPetition,
+            petitionSignatures: resolvedPetitionSignatures,
+            electionMethod: resolvedElectionMethod,
+        },
     });
     logger.info(position.programId, `Updated position "${updated.name}" (id: ${position.id}) by ${caller.email}`);
     res.json(updated);

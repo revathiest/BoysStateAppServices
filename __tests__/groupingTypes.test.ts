@@ -80,4 +80,12 @@ describe('GroupingType endpoints', () => {
       data: { status: 'retired' },
     });
   });
+
+  it('DELETE returns 204 when grouping type not found', async () => {
+    mockedPrisma.groupingType.findUnique.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .delete('/grouping-types/999')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(204);
+  });
 });

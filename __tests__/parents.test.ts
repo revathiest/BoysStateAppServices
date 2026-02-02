@@ -19,6 +19,36 @@ beforeEach(() => {
   mockedPrisma.delegateParentLink.update.mockReset();
 });
 
+describe('Parent endpoints - edge cases', () => {
+  it('POST returns 204 when program year not found', async () => {
+    mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .post('/program-years/999/parents')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ firstName: 'Jane', lastName: 'Doe', email: 'jd@example.com' });
+    expect(res.status).toBe(204);
+  });
+
+  it('POST returns 400 when required fields missing', async () => {
+    mockedPrisma.programYear.findUnique.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    const res = await request(app)
+      .post('/program-years/1/parents')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ firstName: 'Jane' }); // Missing lastName and email
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('firstName, lastName, and email required');
+  });
+
+  it('GET returns 204 when program year not found', async () => {
+    mockedPrisma.programYear.findUnique.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .get('/program-years/999/parents')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(204);
+  });
+});
+
 describe('Parent endpoints', () => {
   it('creates parent when admin', async () => {
     mockedPrisma.programYear.findUnique.mockResolvedValueOnce({ id: 1, programId: 'abc', year: 2025 });
@@ -66,6 +96,44 @@ describe('Parent endpoints', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(mockedPrisma.parent.update).toHaveBeenCalledWith({ where: { id: 1 }, data: { status: 'inactive' } });
+  });
+});
+
+describe('PUT /parents/:id - tempPassword handling', () => {
+  beforeEach(() => {
+    mockedPrisma.user.update.mockReset();
+  });
+
+  it('updates password when tempPassword provided and parent has userId', async () => {
+    mockedPrisma.parent.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1, userId: 10 });
+    mockedPrisma.programYear.findUnique.mockResolvedValueOnce({ id: 1, programId: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.user.update.mockResolvedValueOnce({ id: 10 });
+    mockedPrisma.parent.update.mockResolvedValueOnce({ id: 1, firstName: 'Janet' });
+    const res = await request(app)
+      .put('/parents/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ firstName: 'Janet', tempPassword: 'newpassword123' });
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 10 },
+        data: expect.objectContaining({ password: expect.any(String) }),
+      })
+    );
+  });
+
+  it('does not update password when parent has no userId', async () => {
+    mockedPrisma.parent.findUnique.mockResolvedValueOnce({ id: 1, programYearId: 1, userId: null });
+    mockedPrisma.programYear.findUnique.mockResolvedValueOnce({ id: 1, programId: 'abc' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.parent.update.mockResolvedValueOnce({ id: 1, firstName: 'Janet' });
+    const res = await request(app)
+      .put('/parents/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ firstName: 'Janet', tempPassword: 'newpassword123' });
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.user.update).not.toHaveBeenCalled();
   });
 });
 
