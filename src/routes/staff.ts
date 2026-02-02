@@ -77,7 +77,24 @@ router.get('/program-years/:id/staff', async (req, res) => {
   }
   const staff = await prisma.staff.findMany({ where: { programYearId: py.id } });
   logger.info(py.programId, `Found ${staff.length} staff for programYear ${py.id}`);
-  res.json(staff);
+
+  // Enrich staff data with permission role information from ProgramAssignment
+  const enrichedStaff = await Promise.all(staff.map(async (s) => {
+    if (s.userId) {
+      const assignment = await prisma.programAssignment.findFirst({
+        where: { userId: s.userId, programId: py.programId },
+        include: { programRole: true },
+      });
+      return {
+        ...s,
+        programRoleId: assignment?.programRoleId || null,
+        programRole: assignment?.programRole || null,
+      };
+    }
+    return { ...s, programRoleId: null, programRole: null };
+  }));
+
+  res.json(enrichedStaff);
 });
 
 router.put('/staff/:id', async (req, res) => {

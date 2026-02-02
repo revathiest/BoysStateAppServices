@@ -122,13 +122,32 @@ router.post('/program-years/:id/parties/activate', async (req, res) => {
     res.status(400).json({ error: 'partyIds required' });
     return;
   }
-  const records = await Promise.all(
-    partyIds.map((pid) =>
+  // Check for existing records and only create new ones
+  const existingRecords = await prisma.programYearParty.findMany({
+    where: { programYearId: py.id, partyId: { in: partyIds } },
+  });
+  const existingPartyIds = new Set(existingRecords.map(r => r.partyId));
+
+  // Reactivate any retired records
+  const toReactivate = existingRecords.filter(r => r.status !== 'active');
+  if (toReactivate.length > 0) {
+    await prisma.programYearParty.updateMany({
+      where: { id: { in: toReactivate.map(r => r.id) } },
+      data: { status: 'active' },
+    });
+  }
+
+  // Create only new records (parties not already linked to this year)
+  const newPartyIds = partyIds.filter(pid => !existingPartyIds.has(pid));
+  const newRecords = await Promise.all(
+    newPartyIds.map((pid) =>
       prisma.programYearParty.create({
         data: { programYearId: py.id, partyId: pid, status: 'active' },
       })
     )
   );
+
+  const records = [...existingRecords.filter(r => r.status === 'active'), ...toReactivate, ...newRecords];
   logger.info(py.programId, `Activated ${records.length} parties for PY ${py.year}`);
   res.status(201).json(records);
 });

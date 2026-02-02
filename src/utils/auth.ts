@@ -1,6 +1,7 @@
 import prisma from '../prisma';
 import * as logger from '../logger';
 import express from 'express';
+import { ALL_PERMISSIONS, Permission } from './permissions';
 
 export async function isProgramAdmin(userId: number, programId: string) {
   const assignment = await prisma.programAssignment.findFirst({
@@ -61,4 +62,70 @@ export async function getUserPrograms(
   }
 
   res.json({ username: user.email, programs });
+}
+
+/**
+ * Get all permissions for a user in a specific program.
+ * Admins get all permissions automatically.
+ * Other users get permissions from their assigned ProgramRole.
+ */
+export async function getUserPermissions(
+  userId: number,
+  programId: string
+): Promise<string[]> {
+  const assignment = await prisma.programAssignment.findFirst({
+    where: { userId, programId },
+    include: {
+      programRole: {
+        include: {
+          permissions: true,
+        },
+      },
+    },
+  });
+
+  if (!assignment) {
+    return [];
+  }
+
+  // Admins get all permissions
+  if (assignment.role === 'admin') {
+    return [...ALL_PERMISSIONS];
+  }
+
+  // If user has a programRole, return its permissions
+  if (assignment.programRole) {
+    return assignment.programRole.permissions.map((p: { permission: string }) => p.permission);
+  }
+
+  // No role assigned = no permissions
+  return [];
+}
+
+/**
+ * Check if a user has a specific permission in a program.
+ */
+export async function hasPermission(
+  userId: number,
+  programId: string,
+  permission: Permission | string
+): Promise<boolean> {
+  const permissions = await getUserPermissions(userId, programId);
+  return permissions.includes(permission);
+}
+
+/**
+ * Get a user's role assignment for a program, including role details.
+ */
+export async function getUserRoleAssignment(userId: number, programId: string) {
+  return prisma.programAssignment.findFirst({
+    where: { userId, programId },
+    include: {
+      programRole: {
+        include: {
+          permissions: true,
+        },
+      },
+    },
+  });
 }

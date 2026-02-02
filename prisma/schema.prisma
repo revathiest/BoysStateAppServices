@@ -29,6 +29,7 @@ model Program {
   createdBy     User                @relation("ProgramCreatedBy", fields: [createdById], references: [id])
   createdById   Int
   assignments   ProgramAssignment[]
+  roles         ProgramRole[]
   years         ProgramYear[]
   groupingTypes GroupingType[]
   groupings     Grouping[]
@@ -39,17 +40,52 @@ model Program {
   emailConfig   EmailConfig?
   emailTemplates EmailTemplate[]
   status        String              @default("active")
+  defaultVotingMethod String        @default("plurality") // plurality, majority, ranked
   createdAt     DateTime            @default(now())
 }
 
 model ProgramAssignment {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  program   Program  @relation(fields: [programId], references: [id])
-  programId String
-  role      String
-  createdAt DateTime @default(now())
+  id            Int          @id @default(autoincrement())
+  user          User         @relation(fields: [userId], references: [id])
+  userId        Int
+  program       Program      @relation(fields: [programId], references: [id])
+  programId     String
+  role          String       // Legacy: "admin" or "member"
+  programRole   ProgramRole? @relation(fields: [programRoleId], references: [id])
+  programRoleId Int?
+  createdAt     DateTime     @default(now())
+
+  @@index([programRoleId])
+}
+
+model ProgramRole {
+  id           Int                     @id @default(autoincrement())
+  program      Program                 @relation(fields: [programId], references: [id])
+  programId    String
+  name         String
+  description  String?
+  isDefault    Boolean                 @default(false)
+  isActive     Boolean                 @default(true)
+  displayOrder Int?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  permissions  ProgramRolePermission[]
+  assignments  ProgramAssignment[]
+
+  @@unique([programId, name])
+  @@index([programId])
+}
+
+model ProgramRolePermission {
+  id         Int         @id @default(autoincrement())
+  role       ProgramRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId     Int
+  permission String
+  createdAt  DateTime    @default(now())
+
+  @@unique([roleId, permission])
+  @@index([roleId])
 }
 
 model Log {
@@ -164,7 +200,9 @@ model ProgramYearParty {
   status        String      @default("active")
   delegates     Delegate[]
   electionCandidates ElectionCandidate[]
+  elections     Election[]  // Primary elections for this party
 
+  @@unique([programYearId, partyId])
   @@index([programYearId])
   @@index([partyId])
 }
@@ -268,6 +306,7 @@ model Position {
   requiresDeclaration Boolean      @default(false) // Whether candidates must formally declare candidacy
   requiresPetition Boolean         @default(false) // Whether candidates need petition signatures
   petitionSignatures Int?          // Number of signatures required (only if requiresPetition is true)
+  electionMethod String?           // Override program default: 'plurality', 'majority', or 'ranked'. Null = use program default.
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   programYearPositions ProgramYearPosition[]
@@ -290,6 +329,11 @@ model ProgramYearPosition {
   assignedByStaffId Int?
   isElected    Boolean     @default(false)
   status        String      @default("active")
+  // Year-specific overrides (nullable = inherit from base Position)
+  isNonPartisan        Boolean? // Override for non-partisan status
+  requiresDeclaration  Boolean? // Override for declaration requirement
+  requiresPetition     Boolean? // Override for petition requirement
+  petitionSignatures   Int?     // Override for petition signature count
   elections     Election[]
 
   @@index([programYearId])
@@ -308,6 +352,8 @@ model Election {
   positionId    Int
   grouping      Grouping            @relation(fields: [groupingId], references: [id])
   groupingId    Int
+  party         ProgramYearParty?   @relation(fields: [partyId], references: [id])
+  partyId       Int?               // For primary elections: which party this primary is for
   electionType  String?            // "primary" or "general" (null for non-partisan single-round)
   status        String             @default("nomination") // nomination, scheduled, active, completed
   method        String?            // voting method (plurality, ranked, etc.)
@@ -320,6 +366,7 @@ model Election {
   @@index([programYearId])
   @@index([positionId])
   @@index([groupingId])
+  @@index([partyId])
   @@index([electionType])
 }
 

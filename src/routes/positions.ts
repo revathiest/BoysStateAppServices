@@ -17,7 +17,7 @@ router.post('/programs/:programId/positions', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures } = req.body as {
+  const { name, description, displayOrder, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures, electionMethod } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
@@ -29,9 +29,16 @@ router.post('/programs/:programId/positions', async (req, res) => {
     requiresDeclaration?: boolean;
     requiresPetition?: boolean;
     petitionSignatures?: number;
+    electionMethod?: string;
   };
   if (!name) {
     res.status(400).json({ error: 'name required' });
+    return;
+  }
+  // Validate electionMethod if provided
+  const validMethods = ['plurality', 'majority', 'ranked'];
+  if (electionMethod && !validMethods.includes(electionMethod)) {
+    res.status(400).json({ error: 'Invalid electionMethod. Must be plurality, majority, or ranked.' });
     return;
   }
   const position = await prisma.position.create({
@@ -48,6 +55,7 @@ router.post('/programs/:programId/positions', async (req, res) => {
       requiresDeclaration: isElected ? (requiresDeclaration ?? false) : false,
       requiresPetition: isElected ? (requiresPetition ?? false) : false,
       petitionSignatures: isElected && requiresPetition ? petitionSignatures : null,
+      electionMethod: isElected ? (electionMethod || null) : null,
       status: 'active'
     },
   });
@@ -87,7 +95,7 @@ router.put('/positions/:id', async (req, res) => {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }
-  const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures } = req.body as {
+  const { name, description, displayOrder, status, groupingTypeId, ballotGroupingTypeId, isElected, isNonPartisan, seatCount, requiresDeclaration, requiresPetition, petitionSignatures, electionMethod } = req.body as {
     name?: string;
     description?: string;
     displayOrder?: number;
@@ -100,7 +108,14 @@ router.put('/positions/:id', async (req, res) => {
     requiresDeclaration?: boolean;
     requiresPetition?: boolean;
     petitionSignatures?: number;
+    electionMethod?: string | null;
   };
+  // Validate electionMethod if provided (allow null to clear)
+  const validMethods = ['plurality', 'majority', 'ranked'];
+  if (electionMethod !== undefined && electionMethod !== null && !validMethods.includes(electionMethod)) {
+    res.status(400).json({ error: 'Invalid electionMethod. Must be plurality, majority, or ranked.' });
+    return;
+  }
   // For elected positions, set ballotGroupingTypeId (default to groupingTypeId if not provided)
   // For appointed positions, clear ballotGroupingTypeId
   const resolvedBallotGroupingTypeId = isElected
@@ -111,6 +126,8 @@ router.put('/positions/:id', async (req, res) => {
   const resolvedRequiresDeclaration = isElected ? (requiresDeclaration ?? false) : false;
   const resolvedRequiresPetition = isElected ? (requiresPetition ?? false) : false;
   const resolvedPetitionSignatures = isElected && resolvedRequiresPetition ? petitionSignatures : null;
+  // electionMethod only applies to elected positions; null means use program default
+  const resolvedElectionMethod = isElected ? (electionMethod === undefined ? position.electionMethod : (electionMethod || null)) : null;
   const updated = await prisma.position.update({
     where: { id: Number(id) },
     data: {
@@ -126,6 +143,7 @@ router.put('/positions/:id', async (req, res) => {
       requiresDeclaration: resolvedRequiresDeclaration,
       requiresPetition: resolvedRequiresPetition,
       petitionSignatures: resolvedPetitionSignatures,
+      electionMethod: resolvedElectionMethod,
     },
   });
   logger.info(position.programId, `Updated position "${updated.name}" (id: ${position.id}) by ${caller.email}`);

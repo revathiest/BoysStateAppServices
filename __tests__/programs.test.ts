@@ -99,6 +99,9 @@ describe('POST /programs', () => {
   beforeEach(() => {
     mockedPrisma.program.create.mockReset();
     mockedPrisma.programAssignment.create.mockReset();
+    mockedPrisma.programYear.create.mockReset();
+    mockedPrisma.programRole.create.mockReset();
+    mockedPrisma.programRolePermission.createMany.mockReset();
   });
 
   it('creates a program and assigns admin role', async () => {
@@ -107,7 +110,16 @@ describe('POST /programs', () => {
       name: 'Boys State 2025',
       year: 2025,
     });
+    mockedPrisma.programYear.create.mockResolvedValueOnce({
+      id: 1,
+      programId: 'prog1',
+      year: 2025,
+      status: 'active',
+    });
     mockedPrisma.programAssignment.create.mockResolvedValueOnce({});
+    // Mock programRole.create for each default role (called 4 times in loop)
+    mockedPrisma.programRole.create.mockResolvedValue({ id: 1 });
+    mockedPrisma.programRolePermission.createMany.mockResolvedValue({ count: 1 });
     const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
     const res = await request(app)
       .post('/programs')
@@ -230,5 +242,27 @@ describe('Program CRUD', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
     expect(mockedPrisma.program.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { status: 'retired' } });
+  });
+
+  it('rejects invalid defaultVotingMethod', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    const res = await request(app)
+      .put('/programs/p1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ defaultVotingMethod: 'invalid' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Invalid voting method');
+  });
+
+  it('accepts valid defaultVotingMethod values', async () => {
+    mockedPrisma.program.findUnique.mockResolvedValueOnce({ id: 'p1' });
+    mockedPrisma.programAssignment.findFirst.mockResolvedValueOnce({ role: 'admin' });
+    mockedPrisma.program.update.mockResolvedValueOnce({ id: 'p1', defaultVotingMethod: 'ranked' });
+    const res = await request(app)
+      .put('/programs/p1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ defaultVotingMethod: 'ranked' });
+    expect(res.status).toBe(200);
   });
 });
