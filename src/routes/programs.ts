@@ -70,10 +70,28 @@ router.post('/programs', async (req, res) => {
   });
 });
 
-// List all programs
-router.get('/programs', async (_req, res) => {
-  const programs = await prisma.program.findMany();
-  res.json(programs);
+// List programs for the authenticated user
+router.get('/programs', async (req, res) => {
+  const caller = (req as any).user as { userId: number; email: string };
+
+  // Get user's program assignments with program details
+  const assignments = await prisma.programAssignment.findMany({
+    where: { userId: caller.userId },
+    include: {
+      program: true,
+    },
+  });
+
+  // Transform to include role and use programId for consistency
+  const programs = assignments.map((a) => ({
+    programId: a.programId,
+    programName: a.program.name,
+    year: a.program.year,
+    status: a.program.status,
+    role: a.role,
+  }));
+
+  res.json({ programs, username: caller.email });
 });
 
 // Assign a user to a program

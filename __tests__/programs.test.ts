@@ -207,11 +207,25 @@ describe('Program CRUD', () => {
 
   const token = sign({ userId: 1, email: 'admin@example.com' }, 'development-secret-for-testing-only');
 
-  it('lists programs', async () => {
-    mockedPrisma.program.findMany.mockResolvedValueOnce([{ id: 'p1' }]);
+  it('lists programs for authenticated user', async () => {
+    mockedPrisma.programAssignment.findMany.mockResolvedValueOnce([
+      {
+        programId: 'p1',
+        userId: 1,
+        role: 'admin',
+        program: { id: 'p1', name: 'Test Program', year: 2025, status: 'active' },
+      },
+    ]);
     const res = await request(app).get('/programs').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(mockedPrisma.program.findMany).toHaveBeenCalled();
+    expect(res.body.programs).toHaveLength(1);
+    expect(res.body.programs[0].programId).toBe('p1');
+    expect(res.body.programs[0].role).toBe('admin');
+    expect(res.body.username).toBe('admin@example.com');
+    expect(mockedPrisma.programAssignment.findMany).toHaveBeenCalledWith({
+      where: { userId: 1 },
+      include: { program: true },
+    });
   });
 
   it('gets program for member', async () => {
